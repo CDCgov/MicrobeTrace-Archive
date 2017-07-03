@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+<head>
+  <script>
+  const electron = require('electron');
+  const fasta    = require('fasta-parser');
+  const jetpack  = require('fs-jetpack');
+  const bioseq   = require('bioseq');
+  const fs       = require('fs');
+  const tn93     = require('tn93');
+  const Baby     = require('babyparse');
+
+  const HXB2_prrt =  'CCTCAGGTCACTCTTTGGCAACGACCCCTCGTCACAATAAAGATAGGGGGGCAACTAAAGGAAGCTCTATTAGATACAGGAGCAGATGATACAGTATTAGAAGAAATGAGTTTGCCAGGAAGATGGAAACCAAAAATGATAGGGGGAATTGGAGGTTTTATCAAAGTAAGACAGTATGATCAGATACTCATAGAAATCTGTGGACATAAAGCTATAGGTACAGTATTAGTAGGACCTACACCTGTCAACATAATTGGAAGAAATCTGTTGACTCAGATTGGTTGCACTTTAAATTTTCCCATTAGCCCTATTGAGACTGTACCAGTAAAATTAAAGCCAGGAATGGATGGCCCAAAAGTTAAACAATGGCCATTGACAGAAGAAAAAATAAAAGCATTAGTAGAAATTTGTACAGAGATGGAAAAGGAAGGGAAAATTTCAAAAATTGGGCCTGAAAATCCATACAATACTCCAGTATTTGCCATAAAGAAAAAAGACAGTACTAAATGGAGAAAATTAGTAGATTTCAGAGAACTTAATAAGAGAACTCAAGACTTCTGGGAAGTTCAATTAGGAATACCACATCCCGCAGGGTTAAAAAAGAAAAAATCAGTAACAGTACTGGATGTGGGTGATGCATATTTTTCAGTTCCCTTAGATGAAGACTTCAGGAAGTATACTGCATTTACCATACCTAGTATAAACAATGAGACACCAGGGATTAGATATCAGTACAATGTGCTTCCACAGGGATGGAAAGGATCACCAGCAATATTCCAAAGTAGCATGACAAAAATCTTAGAGCCTTTTAGAAAACAAAATCCAGACATAGTTATCTATCAATACATGGATGATTTGTATGTAGGATCTGACTTAGAAATAGGGCAGCATAGAACAAAAATAGAGGAGCTGAGACAACATCTGTTGAGGTGGGGACTTACCACACCAGACAAAAAACATCAGAAAGAACCTCCATTCCTTTGGATGGGTTATGAACTCCATCCTGATAAATGGACAGTACAGCCTATAGTGCTGCCAGAAAAAGACAGCTGGACTGTCAATGACATACAGAAGTTAGTGGGGAAATTGAATTGGGCAAGTCAGATTTACCCAGGGATTAAAGTAAGGCAATTATGTAAACTCCTTAGAGGAACCAAAGCACTAACAGAAGTAATACCACTAACAGAAGAAGCAGAGCTAGAACTGGCAGAAAACAGAGAGATTCTAAAAGAACCAGTACATGGAGTGTATTATGACCCATCAAAAGACTTAATAGCAGAAATACAGAAGCAGGGGCAAGGCCAATGGACATATCAAATTTATCAAGAGCCATTTAAAAATCTGAAAACAGGAAAATATGCAAGAATGAGGGGTGCCCACACTAATGATGTAAAACAATTAACAGAGGCAGTGCAAAAAATAACCACAGAAAGCATAGTAATATGGGGAAAGACTCCTAAATTTAAACTGCCCATACAAAAGGAAACATGGGAAACATGGTGGACAGAGTATTGGCAAGCCACCTGGATTCCTGAGTGGGAGTTTGTTAATACCCCTCCCTTAGTGAAATTATGGTACCAGTTAGAGAAAGAACCCATAGTAGGAGCAGAAACCTTC';
+
+  var data = {
+    nodes: [],
+    links: []
+  };
+  var instructions = {
+    align: true,
+    penalties: [-1.7, -5]
+  };
+
+  electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
+    Object.assign(instructions, i);
+    parseFASTA();
+  });
+
+  function parseFASTA(){
+    var message = 'Parsing FASTA file';
+    if(instructions.align){
+      message += ' and aligning sequences';
+    }
+    electron.ipcRenderer.send('message', message + '...');
+    var filesize = fs.statSync(instructions.file).size;
+    var covered = 0;
+    var index = 0;
+    var parser = fasta()
+      .on('data', d => {
+        var node = d.toString();
+        covered += node.length;
+        node = JSON.parse(node);
+        node.padding = 0;
+        if(instructions.align){
+          var rst = bioseq.align(HXB2_prrt, node.seq, true, [1, -1], instructions.penalties);
+          var fmt = bioseq.cigar2gaps(HXB2_prrt, node.seq, rst.position, rst.CIGAR);
+          node.padding = rst.position;
+          node.seq = '-'.repeat(node.padding) + fmt[1];
+          if(HXB2_prrt.length > node.seq.length){
+            node.seq += '-'.repeat(HXB2_prrt.length - node.seq.length);
+          }
+        }
+        node.selected = false;
+        node.index = index++;
+        data.nodes.push(node);
+        electron.ipcRenderer.send('tick', covered / filesize * 100);
+      })
+      .on('end', () => {
+        electron.ipcRenderer.send('tick', 100);
+        electron.ipcRenderer.send('message', ' - Parsed ' + data.nodes.length + ' nodes.');
+        if(instructions.supplement !== ''){
+          matchCSV();
+        }
+        computeLinks();
+      });
+    parser.write(jetpack.read(instructions.file));
+    parser.end();
+  }
+
+  function matchCSV(){
+    electron.ipcRenderer.send('message', 'Parsing Node CSV...');
+    var parsed = Baby.parseFiles(instructions.supplement, {
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true
+    });
+    csvNodes = parsed.data;
+    electron.ipcRenderer.send('message', ' - Parsed ' + csvNodes.length + ' nodes from Supplement CSV.');
+
+    var k = 0;
+    electron.ipcRenderer.send('message', 'Matching to Inferred nodes...');
+    data.nodes.forEach(node => {
+      var match = csvNodes.find(n => n.id == node.id);
+      if(match){
+        Object.assign(node, match);
+        k++;
+      }
+    });
+    electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.');
+  }
+
+  function computeLinks(){
+    electron.ipcRenderer.send('message', 'Computing Links...');
+    var z = (data.nodes.length * (data.nodes.length - 1) / 2),
+        k = 0,
+        lastTick = 0;
+    for(var i = 0; i < data.nodes.length; i++){
+      for(var j = 0; j < i; j++){
+        data.links.push({
+          source: data.nodes[j].id,
+          target: data.nodes[i].id,
+          mst: false,
+          visible: false,
+          selected: false,
+          distance: tn93(
+            data.nodes[j]['seq'],
+            data.nodes[i]['seq'],
+            'AVERAGE'
+          )
+        });
+        if(k++ / z * 100 > lastTick + 1){
+          electron.ipcRenderer.send('tick', ++lastTick);
+        }
+      }
+    }
+    electron.ipcRenderer.send('message', ' - ' + z + ' links computed.');
+    computeMST();
+  }
+
+  function computeMST(){
+    electron.ipcRenderer.send('message', 'Computing Minimum Spanning Tree...');
+    data.links.sort((a, b) => a.distance - b.distance);
+    data.links[0].mst = true;
+    var nodes_in_tree = [data.links[0].source, data.links[0].target],
+        n = data.links.length;
+    for(var i = 0; i < n; i++){
+      for(var j = 0; j < n; j++){
+        if(nodes_in_tree.includes(data.links[j].source) && !nodes_in_tree.includes(data.links[j].target)){
+          nodes_in_tree.push(data.links[j].target);
+          data.links[j].mst = true;
+          break;
+        } else if(!nodes_in_tree.includes(data.links[j].source) && nodes_in_tree.includes(data.links[j].target)){
+          nodes_in_tree.push(data.links[j].source);
+          data.links[j].mst = true;
+          break;
+        }
+      }
+      electron.ipcRenderer.send('tick', 100 * nodes_in_tree.length / data.nodes.length);
+      if(nodes_in_tree.length === data.nodes.length){ break; }
+    }
+    electron.ipcRenderer.send('message', ' - MST Computation Completed.');
+    electron.ipcRenderer.send('update-data', data);
+    electron.remote.getCurrentWindow().close();
+  }
+  </script>
+</head>
+</html>

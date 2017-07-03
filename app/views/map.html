@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title></title>
+  <link rel="icon" href="img/image32.ico" />
+  <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+  <link href="../stylesheets/main.css" rel="stylesheet" type="text/css" />
+  <style>
+    .showForNational, .showForLocal{
+      display: none;
+    }
+
+    svg {
+      fill: #9bbff4;
+    }
+
+    #countries, #states, #counties {
+      fill: #bbdaa4;
+      stroke: #666666;
+    }
+
+    #main_panel {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="button-wrapper" class="btn-group" data-toggle="buttons">
+    <button id="button" class="btn btn-default">&#9776;</button>
+  </div>
+  <table id="groupKey"></table>
+  <div id="tooltip"></div>
+  <div class="modal fade" id="options" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Map Options</h4>
+        </div>
+        <table class="table">
+          <tbody>
+            <tr>
+              <td>Scope</td>
+              <td></td>
+              <td>
+                <div class="btn-group btn-group-xs" data-toggle="buttons">
+                  <label class="btn btn-default active">
+                    <input type="radio" name="ScopeOptions" id="globalScope" autocomplete="off" checked> Global
+                  </label>
+                  <label class="btn btn-default">
+                    <input type="radio" name="ScopeOptions" id="nationalScope" autocomplete="off"> National
+                  </label>
+                  <label class="btn btn-default">
+                    <input type="radio" name="ScopeOptions" id="localScope" autocomplete="off"> Local
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <tr class="showForGlobal">
+              <td>Latitude</td>
+              <td>
+                <select id="lat">
+                  <option value="lat" selected>lat</option>
+                </select>
+              </td>
+              <td></td>
+            </tr>
+            <tr class="showForGlobal">
+              <td>Longitude</td>
+              <td>
+                <select id="lon">
+                  <option value="lon" selected>lon</option>
+                </select>
+              </td>
+              <td></td>
+            </tr>
+            <tr class="showForNational showForLocal">
+              <td>State</td>
+              <td>
+                <select id="stateField" class="fields">
+                  <option>None</option>
+                </select>
+              </td>
+              <td>
+                <select id="state">
+                  <option>None</option>
+                  <option>Alabama</option>
+                	<option>Alaska</option>
+                	<option>Arizona</option>
+                	<option>Arkansas</option>
+                	<option>California</option>
+                	<option>Colorado</option>
+                	<option>Connecticut</option>
+                	<option>Delaware</option>
+                	<option>District Of Columbia</option>
+                	<option>Florida</option>
+                	<option>Georgia</option>
+                	<option>Hawaii</option>
+                	<option>Idaho</option>
+                	<option>Illinois</option>
+                	<option>Indiana</option>
+                	<option>Iowa</option>
+                	<option>Kansas</option>
+                	<option>Kentucky</option>
+                	<option>Louisiana</option>
+                	<option>Maine</option>
+                	<option>Maryland</option>
+                	<option>Massachusetts</option>
+                	<option>Michigan</option>
+                	<option>Minnesota</option>
+                	<option>Mississippi</option>
+                	<option>Missouri</option>
+                	<option>Montana</option>
+                	<option>Nebraska</option>
+                	<option>Nevada</option>
+                	<option>New Hampshire</option>
+                	<option>New Jersey</option>
+                	<option>New Mexico</option>
+                	<option>New York</option>
+                	<option>North Carolina</option>
+                	<option>North Dakota</option>
+                	<option>Ohio</option>
+                	<option>Oklahoma</option>
+                	<option>Oregon</option>
+                	<option>Pennsylvania</option>
+                	<option>Rhode Island</option>
+                	<option>South Carolina</option>
+                	<option>South Dakota</option>
+                	<option>Tennessee</option>
+                	<option>Texas</option>
+                	<option>Utah</option>
+                	<option>Vermont</option>
+                	<option>Virginia</option>
+                	<option>Washington</option>
+                	<option>West Virginia</option>
+                	<option>Wisconsin</option>
+                	<option>Wyoming</option>
+                </select>
+              </td>
+            </tr>
+            <tr class="showForLocal">
+              <td>County</td>
+              <td>
+                <select id="countyField" class="fields"></select>
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Radius</td>
+              <td>
+                <select id="radiusField" class="fields"></select>
+              </td>
+              <td>
+                <input type="range" id="radius" min="1" max="30" step="0.1" />
+              </td>
+            </tr>
+            <tr>
+              <td>Color</td>
+              <td>
+                <select id="nodeColorField" class="fields"></select>
+              </td>
+              <td>
+                <input type="color" id="color" value="#0000ff" />
+              </td>
+            </tr>
+            <tr>
+              <td>Opacity</td>
+              <td>
+                <select id="opacityField" class="fields"></select>
+              </td>
+              <td>
+                <input type="range" id="opacity" min="0.00" max="1.00" step="0.01" value="1.00" />
+              </td>
+            </tr>
+            <tr>
+              <td>Jitter</td>
+              <td></td>
+              <td>
+                <input type="range" id="jitter" min="0.00" max="30" step="0.1" value="0.00" />
+              </td>
+            </tr>
+            <tr>
+              <td>Tooltip</td>
+              <td>
+                <select id="nodeTooltipVariable"></select>
+              </td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+  <div id="main_panel"></div>
+  <script>
+  const electron = require('electron');
+  const _ = require('lodash');
+  const d3 = require('d3');
+
+  window.jQuery = window.$ = require('jquery');
+  require('bootstrap');
+
+  var countries, states, counties, projection, path, zoom, svg, g, zoomFit;
+
+  $(function(){
+
+    electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
+      $('title').text(manifest.productName + ' v. ' + manifest.version);
+      $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
+      $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
+    });
+    electron.ipcRenderer.send('get-manifest');
+
+    $('#button-wrapper').fadeIn();
+
+    electron.ipcRenderer.on('deliver-nodes', (e, nodes)=>{
+      window.nodes = nodes;
+      var fields = Object.keys(window.nodes[0]);
+      $('#lat').html('<option value="none"' + ('lat' in window.nodes[0]?'':' selected ') + '>None</option>' + fields.map(field => '<option value="'+field+'" ' + (field=='lat'?'selected':'') + '>'+field+'</option>'));
+      $('#lon').html('<option value="none"' + ('lon' in window.nodes[0]?'':' selected ') + '>None</option>' + fields.map(field => '<option value="'+field+'" ' + (field=='lon'?'selected':'') + '>'+field+'</option>'));
+      $('#nodeTooltipVariable').html('<option value="none"' + ('id' in window.nodes[0]?'':' selected ') + '>None</option>' + fields.map(field => '<option value="'+field+'" ' + (field=='id'?'selected':'') + '>'+field+'</option>'));
+      $('.fields').html('<option value="none" selected>None</option>' + fields.map(field => '<option value="'+field+'">'+field+'</option>'));
+      if('lat' in window.nodes[0] && 'lon' in window.nodes[0]){
+        plotPoints();
+      } else {
+        $('#options').modal('show');
+      }
+    });
+
+    var width = $(window).width(),
+        height = $(window).height();
+
+    projection = d3.geoMercator();
+
+    path = d3.geoPath().projection(projection);
+
+    svg = d3.select('#main_panel').append('svg')
+        .attr('width', width)
+        .attr('height', height)
+
+    zoom = d3.zoom().on('zoom', () => {
+      g.selectAll('g').attr('transform', d3.event.transform);
+    });
+
+    g = svg.append('g').call(zoom);
+
+    g.append('rect')
+      .attr('class', 'background')
+      .attr('width', width)
+      .attr('height', height);
+
+    countries = JSON.parse(jetpack.read('app/data/geo/countries.json'));
+
+    function showRegionToolTip(d){
+      if($('#nodeTooltipVariable').val() == 'none') return;
+      d3.select('#tooltip')
+        .html(d.properties.name)
+        .style('left', (d3.event.pageX + 8) + 'px')
+        .style('top', (d3.event.pageY - 28) + 'px')
+        .transition().duration(400)
+        .style('opacity', 1);
+    }
+
+    function hideTooltip(){
+      var tooltip = d3.select('#tooltip');
+      tooltip
+        .transition().duration(400)
+        .style('opacity', 0)
+        .on('end', () => tooltip.style('left', '0px').style('top', '0px'));
+    }
+
+    g.append('g').attr('id', 'countries')
+      .selectAll('path').data(countries.features).enter().append('path')
+        .attr('d', path)
+        .on('mouseenter', showRegionToolTip)
+        .on('mouseout', hideTooltip);
+
+    g.append('g').attr('id', 'states');
+
+    g.append('g').attr('id', 'counties');
+
+    function showNodeToolTip(d){
+      if($('#nodeTooltipVariable').val() == 'none') return;
+      d3.select('#tooltip')
+        .html(d[$('#nodeTooltipVariable').val()])
+        .style('left', (d3.event.pageX + 8) + 'px')
+        .style('top', (d3.event.pageY - 28) + 'px')
+        .transition().duration(400)
+        .style('opacity', 1);
+    }
+
+    function plotPoints(){
+      if($('#globalScope').is(':checked')){
+        lonVar = $('#lon').val();
+        latVar = $('#lat').val();
+        g.append('g').attr('id', 'nodes')
+          .selectAll('circle').data(window.nodes).enter()
+          .append('circle')
+          .attr('cx', d => projection([d[lonVar], d[latVar]])[0])
+          .attr('cy', d => projection([d[lonVar], d[latVar]])[1])
+          .attr('r', $('#radius').val())
+          .style('fill', $('#color').val())
+          .on('mouseenter', showNodeToolTip)
+          .on('mouseout', hideTooltip);
+      }
+    }
+
+    zoomFit = function(transitionDuration){
+      var bounds = g.node().getBBox();
+      var parent = svg.node();
+      var fullWidth  = parent.clientWidth  || parent.parentNode.clientWidth,
+          fullHeight = parent.clientHeight || parent.parentNode.clientHeight;
+      var scale = 0.85 / Math.max(width / fullWidth, height / fullHeight);
+
+      svg.transition()
+         .duration(transitionDuration || 600) // milliseconds
+         .call(zoom.transform,
+           d3.zoomIdentity.translate(
+             fullWidth  / 2 - scale * (bounds.x + width  / 2),
+             fullHeight / 2 - scale * (bounds.y + height / 2)
+           ).scale(scale)
+        );
+    };
+
+    $('#button').click(() => $('#options').modal('show'));
+
+    $('#globalScope').parent().click(e => {
+      $('.showForNational, .showForLocal').hide();
+      $('.showForGlobal').css('display', 'table-row');
+      g.selectAll('#states, #counties').html(null);
+    });
+
+    $('#nationalScope').parent().click(e => {
+      $('.showForGlobal, .showForLocal').hide();
+      $('.showForNational').css('display', 'table-row');
+      g.select('#counties').html(null);
+      if(!states) states = JSON.parse(jetpack.read('app/data/geo/states.json'));
+      g.select('#states').selectAll('path')
+            .data(states.features)
+          .enter().append('path')
+            .attr('d', path);
+    });
+
+    $('#localScope').parent().click(e => {
+      $('.showForGlobal, .showForNational').hide();
+      $('.showForLocal').css('display', 'table-row');
+      g.select('#states').html(null);
+      if(!counties) counties = JSON.parse(jetpack.read('app/data/geo/counties.json'));
+      g.select('#counties').selectAll('path')
+            .data(counties.features)
+          .enter().append('path')
+            .attr('d', path);
+    });
+
+    $('#lat, #lon').change(() => plotPoints());
+
+    $('#radius').on('input', e => g.selectAll('circle').attr('r', e.target.value));
+
+    $('#color').on('input', e => g.selectAll('circle').style('fill', e.target.value));
+
+    $('#jitter').on('input', e => {
+      g.selectAll('circle')
+        .attr('cx', d => projection([d[lonVar], d[latVar]])[0] + (Math.random()*2-1)*e.target.value)
+        .attr('cy', d => projection([d[lonVar], d[latVar]])[1] + (Math.random()*2-1)*e.target.value)
+    });
+
+    $('#nodeColorField').change(e => {
+      var circles = g.selectAll('circle');
+      var table = $('#groupKey').empty();
+      if(e.target.value == 'none'){
+        circles.style('fill', $('#color').val());
+        table.fadeOut();
+        return;
+      }
+      table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
+      var values = _.chain(window.nodes).map(e.target.value).uniq().sortBy().value();
+      var o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
+      circles.style('fill', d => o(d[e.target.value]));
+      values.forEach(value => {
+        var input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
+          .on('input', evt => {
+            circles
+              .filter(d => d[e.target.value] == value)
+              .style('fill', d => evt.target.value);
+          });
+        var cell = $('<td></td>').append(input);
+        var row = $('<tr><td>'+value+'</td></tr>').append(cell);
+        table.append(row);
+      });
+      table.fadeIn();
+    });
+
+    $('#opacity').on('input', e => svg.selectAll('circle').attr('opacity', e.target.value));
+
+    electron.ipcRenderer.send('get-nodes');
+
+  });
+
+  </script>
+  </body>
+</html>

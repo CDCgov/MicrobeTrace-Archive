@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title></title>
+  <link rel="icon" href="img/image32.ico" />
+  <link href="css/alertify.min.css" rel="stylesheet" type="text/css" />
+  <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+  <link href="stylesheets/main.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+  <div id="licenseAgreement" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">License Agreement</h4>
+        </div>
+        <div class="modal-body">
+          <p>THE MATERIAL EMBODIED IN THIS SOFTWARE IS PROVIDED TO YOU "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE.  IN NO EVENT SHALL THE CENTERS FOR DISEASE CONTROL AND PREVENTION (CDC) OR THE UNITED STATES (U.S.) GOVERNMENT BE LIABLE TO YOU OR ANYONE ELSE FOR ANY DIRECT, SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER, INCLUDING WITHOUT LIMITATION, LOSS OF PROFIT, LOSS OF USE, SAVINGS OR REVENUE, OR THE CLAIMS OF THIRD PARTIES, WHETHER OR NOT CDC OR THE U.S. GOVERNMENT HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH LOSS, HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE POSSESSION, USE OR PERFORMANCE OF THIS SOFTWARE.</p>
+          <p>Please Click 'Accept' to accept this agreement, or 'Reject' to close this application.</p>
+        </div>
+        <div class="modal-footer">
+          <button id="rejectAgreement" type="button" class="btn btn-danger" data-dismiss="modal">Reject</button>
+          <button id="acceptAgreement" type="button" class="btn btn-primary" data-dismiss="modal">Accept</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+  <div id="file_panel" style="display:none;">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Select Files</h3>
+      </div>
+      <div class="panel-body">
+        <p>Provide either a FASTA file OR an Edge CSV file:<p>
+        <p><input id="FastaOrEdgeFile" type="file" class="file-loading" /></p>
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="advancedHeader">
+            <a class="collapsed" role="button" data-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Advanced</a>
+          </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="advancedHeader">
+            <table class="table">
+              <tbody>
+                <tr class="showForFASTA">
+                  <td><a href="#" data-toggle="tooltip" title="If this file contains sequences that are already aligned, uncheck this box.">Align</a></td>
+                  <td><input type="checkbox" id="align" checked /></td>
+                </tr>
+                <tr class="showForFASTA showForAlign" style="display: none !important;">
+                  <td><a href="#" data-toggle="tooltip" title="This program uses a Smith-Waterman aligner. You can override the default gap penalties if you need to, but this is not recommended.">Gap Opening Penalty</a></td>
+                  <td><input type="number" class="form-control" aria-describedby="basic-addon1" id="gapOpenPenalty" value="-5" /></td>
+                </tr>
+                <tr class="showForFASTA showForAlign" style="display: none !important;">
+                  <td><a href="#" data-toggle="tooltip" title="This program uses a Smith-Waterman aligner. You can override the default gap penalties if you need to, but this is not recommended.">Gap Extension Penalty</a></td>
+                  <td><input type="number" class="form-control" aria-describedby="basic-addon2" id="gapExtensionPenalty" value="-1.7" /></td>
+                </tr>
+                <tr>
+                  <td><a href="#" data-toggle="tooltip" title="Optionally, provide a CSV file containing additional information about nodes.">Node Data</a></td>
+                  <td><input id="NodeCSVFile" type="file" class="file-loading"  disabled="disabled" title="Please select a Network CSV or FASTA File First" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer" style="text-align:right;">
+        <button type="submit" id="main-submit" class="btn btn-primary" disabled="disabled" title="Please select a Network CSV or FASTA File">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loadingInformationModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header"><h4 class="modal-title">Loading File</h4></div>
+        <div class="modal-body">
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <div class="panel-group" id="advancedLoadingAccordion" role="tablist" aria-multiselectable="false">
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="advancedLoadingHeading">
+                <a role="button" data-toggle="collapse" data-parent="#advancedLoadingAccordion" href="#advancedLoadingPanelWrapper" aria-expanded="false" aria-controls="advancedLoadingPanelWrapper">
+                  Details
+                </a>
+              </div>
+              <div id="advancedLoadingPanelWrapper" class="panel-collapse collapse" role="tabpanel" aria-labelledby="advancedLoadingHeading">
+                <div id="loadingInformation" class="panel-body"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+  <div id="sidebar-wrapper">
+    <ul class="sidebar-nav">
+      <li id="AppName" class="sidebar-brand"><a href="#">MicrobeTrace</a></li>
+      <li id="FileTab"><a href="#">Files</a></li>
+      <li id="SequencesTab" class="showForFASTA"><a href="#">Sequences</a></li>
+      <li id="TableTab"><a href="#">Table</a></li>
+      <li id="HistogramTab" class="showForFASTA"><a href="#">Histogram</a></li>
+      <li id="MapTab"><a href="#">Map</a></li>
+      <li id="HelpTab"><a href="#">Help</a></li>
+      <li id="AppVersion"><a href="#"></a></li>
+    </ul>
+  </div>
+
+  <div id="button-wrapper">
+    <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">&#9776;</a>
+    <a href="#settings" class="btn btn-default" id="NetworkTab">Settings</a>
+  </div>
+
+  <div id="main_panel" class="pane-container pane-horizontal">
+
+    <table id="groupKey">
+      <tbody id="nodeGroupKey"></tbody>
+      <tbody id="linkGroupKey"></tbody>
+    </table>
+
+    <table id="networkStatistics">
+      <tbody>
+        <tr>
+          <td id="numberOfNodes" class="text-right"></td>
+          <td>Nodes</td>
+        </tr>
+        <tr>
+          <td id="numberOfSelectedNodes" class="text-right"></td>
+          <td>Selected Nodes</td>
+        </tr>
+        <tr class="showForFASTA">
+          <td id="visibilityThreshold" class="text-right">0.015</td>
+          <td>Visibility Threshold</td>
+        </tr>
+        <tr>
+          <td id="numberOfVisibleLinks" class="text-right"></td>
+          <td>Visible Links</td>
+        </tr>
+        <tr>
+          <td id="numberOfPossibleLinks" class="text-right"></td>
+          <td>Possible Links</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <svg id="network" class="pane-pane"></svg>
+
+    <div id="tooltip"></div>
+
+    <table id="contextmenu">
+      <tr><td><a href="#" id="copyID">Copy ID</a></td></tr>
+      <tr class="showForFASTA"><td><a href="#" id="copySeq">Copy Sequence</a></td></tr>
+    </table>
+
+    <div id="physicsModal" class="modal fade" tabindex="-1" role="dialog" data-backdrop="false">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Network Configuration</h4>
+          </div>
+          <div class="modal-body">
+            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="NodeControls">
+                  <h4 class="panel-title">
+                    <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo2" aria-expanded="true" aria-controls="collapseTwo2">
+                      Nodes
+                    </a>
+                  </h4>
+                </div>
+                <div id="collapseTwo2" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="NodeControls">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Property</th>
+                        <th>Variable</th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="What node data should be displayed when you hover over a node?">Tooltip</a></td>
+                        <td><select id="nodeTooltipVariable" class="nodeVariables categorical"><option value="none">None</option></select></td>
+                        <td></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="What color should the nodes be?">Color</a></td>
+                        <td><select id="nodeColorVariable" class="nodeVariables categorical"><option value="none">None</option></select></td>
+                        <td><input type="color" id="default-node-color" value="#ff0000" /></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="How opaque should the nodes be?">Opacity</a></td>
+                        <td><select id="nodeOpacityVariable" class="nodeVariables numeric"><option value="none">None</option></select></td>
+                        <td><input type="range" id="default-node-opacity" min="0" max="1" value="1" step="0.01" /></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="How large should the nodes be?">Radius</a></td>
+                        <td><select id="nodeRadiusVariable" class="nodeVariables numeric"><option value="none">None</option></select></td>
+                        <td><input type="range" id="default-node-radius" min="0.3" value="6" step="0.3" max="60" /></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingTwofoo">
+                  <h4 class="panel-title">
+                    <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwofoo" aria-expanded="false" aria-controls="collapseTwofoo">
+                      Links
+                    </a>
+                  </h4>
+                </div>
+                <div id="collapseTwofoo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwofoo">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Property</th>
+                        <th>Variable</th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="What data should be displayed when you hover over a link?">Tooltip</a></td>
+                        <td><select id="linkTooltipVariable" class="linkVariables"><option value="none">None</option></select></td>
+                        <td></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="What color should the links be?">Color</a></td>
+                        <td><select id="linkColorVariable" class="linkVariables"><option value="none">None</option></select></td>
+                        <td><input type="color" id="default-link-color" value="#999999" /></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="How opaque should the links be?">Opacity</a></td>
+                        <td><select id="linkOpacityVariable" class="linkVariables"><option value="none">None</option></select></td>
+                        <td><input type="range" id="default-link-opacity" min="0" max="1" value="0.5" step="0.01" /></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="How wide should the links be?">Thickness</a></td>
+                        <td><select id="linkWidthVariable" class="linkVariables"><option value="none">None</option></select></td>
+                        <td><input type="range" id="default-link-width" min="0.3" max="30" step=".3" value="3" /></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="How long should links be?">Length</a></td>
+                        <td></td>
+                        <td><input type="range" id="default-link-length" min = "0" max="200" value="50" /></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="How important is it that the links be the length specified above?">Strength</a></td>
+                        <td></td>
+                        <td><input type="range" id="default-link-strength" min = "0" max="1" value="0.95" step="0.025" /></td>
+                      </tr>
+                      <tr class="showForFASTA">
+                        <td><a href="#" data-toggle="tooltip" title="Show only a Minimum Spanning Tree or all edges within the threshold?">Pruning</a></td>
+                        <td><select id="linkSortVariable" class="linkVariables"><option value="distance">Distance</option></select></td>
+                        <td>
+                          <div class="btn-group btn-group-xs" data-toggle="buttons">
+                            <label class="btn btn-default">
+                              <input type="radio" name="MSTOptions" id="showMSTLinks" autocomplete="off"> MST
+                            </label>
+                            <label class="btn btn-default active">
+                              <input type="radio" name="MSTOptions" id="showAllLinks" autocomplete="off" checked> All
+                            </label>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr class="showForFASTA">
+                        <td><a href="#" data-toggle="tooltip" title="What's the maximum genetic distance you're willing to call a link?">Threshold</a></td>
+                        <td class="text-right"><input type="number" id="thresholdTooltip" min="0" max="1" step="0.0005" value="0.015"></input></td>
+                        <td><input type="range" id="default-link-threshold" min="0.001" max="0.075" value="0.015" step="0.0005" /></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingThree">
+                  <h4 class="panel-title">
+                    <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                      Network
+                    </a>
+                  </h4>
+                </div>
+                <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Property</th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="Display a table of overview statistics for the network">Statistics</a></td>
+                        <td>
+                          <div class="btn-group btn-group-xs" data-toggle="buttons">
+                            <label class="btn btn-default active">
+                              <input type="radio" name="networkStatisticsOptions" id="showNetworkStatistics" autocomplete="off" checked> Show
+                            </label>
+                            <label class="btn btn-default">
+                              <input type="radio" name="networkStatisticsOptions" id="hideNetworkStatistics" autocomplete="off"> Hide
+                            </label>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="How quickly should moving nodes lose their momentum?">Friction</a></td>
+                        <td><input type="range" id="network-friction" min="0" max="1" value="0.4" step="0.025" /></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="How attractive is the mass of the graph?">Gravity</a></td>
+                        <td><input type="range" id="network-gravity" min="0.025" max="1" value="0.05" step="0.025" /></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="How strongly are the nodes repulsed by each other?">Charge</a></td>
+                        <td><input type="range" id="default-node-charge" min="0" max="400" value="200" /></td>
+                      </tr>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="What color should the background be?">Background</a></td>
+                        <td><input type="color" id="network-color" value="#ffffff" /></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="btn-group" data-toggle="buttons">
+              <button type="button" class="btn btn-primary" data-dismiss="modal">Done</button>
+            </div>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+  </div>
+
+  <script>require("./app.js");</script>
+</body>
+</html>

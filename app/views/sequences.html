@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title></title>
+  <link rel="icon" href="img/image32.ico" />
+  <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+  <link href="../stylesheets/main.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+  <div class="modal-body"></div>
+  <div id="main_panel"></div>
+  <script src="../vendor/msa.min.gz.js"></script>
+  <script>
+  const electron = require('electron');
+
+  window.jQuery = window.$ = require('jquery');
+  require('bootstrap');
+
+  $(function(){
+
+    electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
+      $('title').text(manifest.productName + ' v. ' + manifest.version);
+      $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
+      $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
+    });
+    electron.ipcRenderer.send('get-manifest');
+
+    $('#button').click(() => $('#options').modal('show'));
+
+    electron.ipcRenderer.on('deliver-nodes', (e, nodes) => {
+      $('#main_panel').show();
+      window.nodes = nodes;
+      var m = new msa.msa({
+        el: $('#main_panel')[0],
+        vis: {
+          conserv: false,
+          overviewbox: true,
+          seqlogo: true,
+          bootstrapMenu: true
+        },
+        zoomer: {
+          menuFontsize: "12px",
+          autoResize: true
+        },
+        seqs: window.nodes.map((node, i) => ({
+          'details': {'en': node.id},
+          'id': i,
+          'name': node.id,
+          'seq': node.seq
+        }))
+      });
+      var defMenu = new msa.menu.defaultmenu({
+        msa: m
+      });
+      m.addView("menu", defMenu);
+      m.render();
+    });
+    electron.ipcRenderer.send('get-nodes');
+  });
+
+  </script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+
+
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif !important;
+	
+	}
+
+a:link	{color: #0A29A5; text-decoration: none; }
+a:visited	{color: #0A29A5; text-decoration: none; }
+a:hover	{color: #0A29A5; text-decoration: underline; }
+a:active	{color: #0A29A5; text-decoration: underline; }
+
+}
+p, td, ol, li, th, h2, h3 
+  {
+      font-family:Verdana,Arial,Helvetica,sans-serif;
+      }
+p,li
+{
+font-size: 10pt;
+}
+
+.leafshell	{
+	border: 1px solid #084239;
+	}
+.leafhead	{
+	background-color: #084239;
+	vertical-align: middle;
+	text-align: left;
+	margin: 0px;
+	padding: 3px;
+	font: bold 13px/14px Trebuchet MS, Verdana, Arial, sans-serif;
+	color: #FFFFFF;
+	}
+	.leaflist {
+	background-color: #fff;
+	vertical-align: top;
+	text-align: left;
+	border-top: 1px solid #084239;
+	font:11px verdana, arial, helvetica, sans-serif;
+	color: #000;
+	}
+	.list {
+	background-color: #fff;
+	vertical-align: top;
+	text-align: left;
+	border-bottom: 1px solid #084239;
+	font:11px verdana, arial, helvetica, sans-serif;
+	color: #000;
+	}
+	
+.leaflist a:link	{color: #0A29A5; text-decoration: none; }
+.leaflist a:visited	{color: #0A29A5; text-decoration: none; }
+.leaflist a:hover	{color: #0A29A5; text-decoration: underline; }
+.leaflist a:active	{color: #0A29A5; text-decoration: underline; }
+
+H1	{
+	font: 12px/13px Trebuchet MS, Georgia, Times New Roman, Serif;
+	color: #084239;
+	letter-spacing: 3px;
+	margin-bottom: -14px;
+	}
+}
+
+H3	{
+	font: bold 22px/23px Trebuchet MS, sans-Serif;
+	color: #084239;
+	}
+
+H4	{
+	font: bold 24px/25px Georgia, Times New Roman, Serif;
+	color: #069;
+
+
+.al_no {
+	width: 390px;
+}
+
+
+.psmall {
+
+	font-family: Arial;
+	font-size: 11px;
+
+
+.brand
+            {
+               
+                background: url(../helpimages/bluebar.gif) repeat-x scroll 0;
+                position:relative;
+                height:30px;
+                }
+.CloseWindowStyle a:link {text-decoration: none ! important;}
+.CloseWindowStyle a:hover {text-decoration: underline important;}

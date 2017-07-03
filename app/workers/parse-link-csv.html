@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <script>
+  const electron = require('electron');
+  const Baby = require('babyparse');
+  const Lazy = require('lazy.js');
+
+  electron.ipcRenderer.on('deliver-instructions', (sender, instructions) => {
+    electron.ipcRenderer.send('message', 'Parsing Link CSV...');
+    var parsed = Baby.parseFiles(instructions.file, {
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true
+    });
+    var links = parsed.data;
+    links.forEach(link => link.visible = link.orig = true);
+    electron.ipcRenderer.send('message', ' - Parsed ' + links.length + ' Links.');
+
+    electron.ipcRenderer.send('message', 'Inferring Nodes...');
+    var llinks = Lazy(links);
+    var nodes  = Lazy(
+          llinks.pluck('source').union(
+          llinks.pluck('target'))
+        ).map((e, i) => ({
+          'id': e,
+          'index': i,
+          'seq': '',
+          'padding': 0,
+          'selected': false
+        })).toArray();
+    electron.ipcRenderer.send('message', ' - Inferred ' + nodes.length + ' distinct nodes.');
+
+    if(instructions.supplement !== ''){
+      electron.ipcRenderer.send('message', 'Parsing Node CSV...');
+      var parsed = Baby.parseFiles(instructions.supplement, {
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true
+      });
+      csvNodes = parsed.data;
+      electron.ipcRenderer.send('message', ' - Parsed ' + csvNodes.length + ' nodes from Supplement CSV.');
+
+      var k = 0;
+      electron.ipcRenderer.send('message', 'Matching to Inferred nodes...');
+      nodes.forEach(node => {
+        var match = csvNodes.find(n => n.id == node.id);
+        if(match){
+          Object.assign(node, match);
+          k++;
+        }
+      });
+      electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.');
+    }
+
+    electron.ipcRenderer.send('update-data', {
+      links: links,
+      nodes: nodes
+    });
+    electron.remote.getCurrentWindow().close();
+  });
+  </script>
+</head>
+</html>

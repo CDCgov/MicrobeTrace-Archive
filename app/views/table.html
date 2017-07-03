@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title></title>
+  <link rel="icon" href="img/image32.ico" />
+  <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+  <link href="../css/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+  <link href="../css/select.bootstrap.css" rel="stylesheet" type="text/css" />
+  <link href="../stylesheets/main.css" rel="stylesheet" type="text/css" />
+  <style>
+    body{
+      display:block;
+    }
+    #buttons {
+      position: absolute;
+      left: calc(50% - 66px);
+      top: 10px;
+      z-index: 1;
+    }
+    .dataTables_wrapper{
+      padding-top: 1em;
+    }
+    #links_wrapper {
+      display: none;
+    }
+    .dataTables_length{
+      display: none;
+    }
+    table{
+      width: 100% !important;
+      white-space: nowrap;
+      table-layout: fixed;
+    }
+    td {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #node-columns, #link-columns {
+      width: 100%;
+    }
+    .showForMST{
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="button-wrapper" class="btn-group" data-toggle="buttons">
+    <button id="table-options" class="btn btn-default">&#9776;</button>
+  </div>
+
+  <div id="table-options-modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Table Options</h4>
+        </div>
+        <div class="modal-body">
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="headingZero">
+                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseZero" aria-expanded="true" aria-controls="collapseZero">
+                  Table
+                </a>
+              </div>
+              <div id="collapseZero" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingZero">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>Text Size</td>
+                      <td><input type="range" id="font-size-slider" min="6" value="14" max="72" step="1" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="headingOne">
+                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                  Node
+                </a>
+              </div>
+              <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>Columns to Include</td>
+                      <td><select id="node-columns" multiple></select></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="headingTwo">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                  Link
+                </a>
+              </div>
+              <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>Columns to Include</td>
+                      <td><select id="link-columns" multiple></select></td>
+                    </tr>
+                    <tr class="showForMST">
+                      <td>Rows to Include</td>
+                      <td>
+                        <div class="btn-group btn-group-xs" data-toggle="buttons">
+                          <label class="btn btn-default active">
+                            <input type="radio" name="MSTAll" id="AllLinks" autocomplete="off" checked> All
+                          </label>
+                          <label class="btn btn-default">
+                            <input type="radio" name="MSTAll" id="VisLinks" autocomplete="off"> Visible
+                          </label>
+                          <label class="btn btn-default">
+                            <input type="radio" name="MSTAll" id="MSTLinks" autocomplete="off"> MST
+                          </label>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+  <div id="buttons" class="btn-group" data-toggle="buttons">
+    <label class="btn btn-default active">
+      <input type="radio" name="nodelink" id="nodebutton" autocomplete="off" checked="checked"> Nodes
+    </label>
+    <label class="btn btn-default">
+      <input type="radio" name="nodelink" id="linkbutton" autocomplete="off"> Links
+    </label>
+  </div>
+
+  <table id="nodes" class="display table" cellspacing="0"></table>
+  <table id="links" class="display table" cellspacing="0"></table>
+
+  <script type="text/javascript">
+  const electron = require('electron');
+  window.jQuery = window.$ = require('jquery');
+  require('bootstrap');
+  require('datatables.net')(window, $);
+  require('datatables.net-colreorder')(window, $);
+  require('datatables.net-select')(window, $);
+
+  const meta = ['seq', 'padding', 'selected'];
+
+  $(function(){
+
+    electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
+      $('title').text(manifest.productName + ' v. ' + manifest.version);
+      $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
+      $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
+    });
+    electron.ipcRenderer.send('get-manifest');
+
+    window.nodetable = window.linktable = {'destroy': () => {}};
+
+    electron.ipcRenderer.on('deliver-data', (e, data) => {
+      window.nodes = data.nodes;
+      window.links = data.links;
+      updateNodes(window.nodes);
+      updateLinks(window.links);
+      if('mst' in window.links[0]){
+        $('.showForMST').show().filter('tr').css('display', 'table-row');
+      }
+    });
+    electron.ipcRenderer.send('get-data');
+
+    electron.ipcRenderer.on('update-node-selection', (e, newNodes) => {
+      window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
+      window.nodetable.rows().deselect();
+      window.nodetable.rows(
+        window.nodes
+          .filter(n => n.selected)
+          .map(n => n.index)
+        ).select();
+    });
+
+    function updateNodes(nodes){
+      window.nodetable.destroy();
+      window.nodetable = $('#nodes').DataTable({
+        data: nodes,
+        columns: Object.keys(nodes[0])
+          .filter(k => !meta.includes(k))
+          .map(k => ({title:k, data:k}))
+          .slice(0, 10),
+        deferRender: true,
+        colReorder: true,
+        select: {
+          style: 'multi'
+        }
+      })
+      .on('user-select', (e, dt, type, cell) => {
+        window.nodes.forEach((n, i) => n.selected = n.selected ^ (cell.index().row == i));
+        electron.ipcRenderer.send('update-node-selection', window.nodes);
+      });
+      window.nodetable.rows(
+        window.nodes
+          .filter(n => n.selected)
+          .map(n => n.index)
+        ).select();
+      $('#node-columns').html(
+        Object.keys(nodes[0])
+          .filter(k => !meta.includes(k))
+          .map((d, i) => {
+            out = '<option value="' + i;
+            if(i < 10){
+              out += '" selected >';
+            } else {
+              out += '">';
+            }
+            out += d + '</option>';
+            return out;
+          })
+          .join('\n')
+      );
+    }
+
+    function updateLinks(links){
+      function doStuff(){
+        window.linktable.destroy();
+        window.linktable = $('#links').DataTable({
+          data: links,
+          columns: Object.keys(links[0])
+            .filter(k => !meta.includes(k))
+            .map(k => ({title:k, data:k}))
+            .slice(0, 10),
+          deferRender: true,
+          colReorder: true,
+          select: {
+            style: 'os'
+          }
+        })
+        .on('select', (e, dt, type, indices) => {
+          // window.links.forEach((link, i) => link.selected = (i in indices));
+          // electron.ipcRenderer.send('update-links', window.links);
+        });
+        if($('#linkbutton').is(':checked')){
+          $('#links_wrapper').fadeIn();
+        }
+      }
+      if($('#links_wrapper').length){
+        $('#links_wrapper').fadeOut(() => doStuff());
+      } else {
+        doStuff();
+      }
+      $('#link-columns').html(
+        Object.keys(links[0])
+          .filter(l => !meta.includes(l))
+          .map((d, i) => '<option value="' + i + '" selected >' + d + '</option>')
+          .join('\n')
+      );
+    }
+
+    $('#button-wrapper').show();
+
+    $('input[name=nodelink]').on('change', e => {
+      if(e.target.id === 'linkbutton'){
+        $('#nodes_wrapper').fadeOut(() => $('#links_wrapper').fadeIn());
+      } else {
+        $('#links_wrapper').fadeOut(() => $('#nodes_wrapper').fadeIn());
+      }
+    });
+
+    $('#node-columns').change(e => {
+      var colsToKeep = $('#node-columns').val().map(parseFloat);
+      var visibleColumns = 0;
+      Object
+        .keys(window.nodes[0])
+        .filter(k => !meta.includes(k))
+        .forEach((col, i) => window.nodetable.column(i).visible(colsToKeep.includes(i)));
+    });
+
+    $('#link-columns').change(e => {
+      var colsToKeep = $('#link-columns').val().map(parseFloat);
+      Object
+        .keys(window.links[0])
+        .filter(k => !meta.includes(k))
+        .forEach((col, i) => window.linktable.column(i).visible(colsToKeep.includes(i)));
+    });
+
+    $('#font-size-slider').on('input', e => $('#nodes, #links').css({
+      'font-size': e.target.value + 'px',
+      'line-height': e.target.value/10
+    }));
+
+    $('input[name=MSTAll]').on('change', e => {
+      if(e.target.id == 'MSTLinks'){
+        updateLinks(window.links.filter(l => l.mst));
+      } else if(e.target.id == 'VizLinks'){
+        updateLinks(window.links.filter(l => l.visible));
+      } else {
+        updateLinks(window.links);
+      }
+    });
+
+    $('#table-options').click(() => $('#table-options-modal').modal('show'));
+  });
+
+  $.fn.dataTable.ext.errMode = 'none';
+  </script>
+</body>
+</html>

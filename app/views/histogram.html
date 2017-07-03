@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title></title>
+  <link rel="icon" href="img/image32.ico" />
+  <link rel="stylesheet" href="../css/bootstrap.min.css" />
+  <link rel="stylesheet" href="../css/alertify.min.css" />
+  <link rel="stylesheet" href="../stylesheets/main.css" />
+  <script src="../vendor/plotly.min.js"></script>
+</head>
+<body>
+  <div id="button-wrapper">
+    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#myModal">&#9776;</button>
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Histogram Configuration</h4>
+        </div>
+        <table class="table">
+          <tr>
+            <td><a href="#" data-toggle="tooltip" title="Which dataset should the histogram be drawn from?">Dataset</a></td>
+            <td>
+              <div class="btn-group btn-group-xs" data-toggle="buttons">
+                <label class="btn btn-default active">
+                  <input type="radio" name="set" id="alllinks" autocomplete="off" checked> All Links
+                </label>
+                <label class="btn btn-default">
+                  <input type="radio" name="set" id="visiblelinks" autocomplete="off"> Visible Links
+                </label>
+                <label class="btn btn-default">
+                  <input type="radio" name="set" id="mstlinks" autocomplete="off"> MST Links
+                </label>
+                <!--label class="btn btn-default">
+                  <input type="radio" name="set" id="nodes" autocomplete="off"> Nodes
+                </label-->
+              </div>
+            </td>
+          </tr>
+          <!--tr>
+            <td><a href="#" data-toggle="tooltip" title="Which variable should the histogram be drawn from?">Variable</a></td>
+            <td>
+              <select id="variables">
+                <option val="distance">Distance</option>
+              </select>
+            </td>
+          </tr-->
+          <tr>
+            <td><a href="#" data-toggle="tooltip" title="Should the y-axis show a linear or logarithmic scale?">Scale</a></td>
+            <td>
+              <div class="btn-group btn-group-xs" data-toggle="buttons">
+                <label class="btn btn-default active">
+                  <input type="radio" name="scale" id="linearScale" autocomplete="off" checked> Linear
+                </label>
+                <label class="btn btn-default">
+                  <input type="radio" name="scale" id="logScale" autocomplete="off"> Log
+                </label>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><a href="#" data-toggle="tooltip" title="What color should the histogram be?">Color</a></td>
+            <td><input type="color" id="color" value="#ff0044" /></td>
+          </tr>
+        </table>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+  <div id="main_panel"></div>
+  <script>
+  const electron = require('electron');
+  window.jQuery = window.$ = require('jquery');
+  require('bootstrap');
+  const alertify = require('alertifyjs');
+
+  $(function(){
+    $('#main_panel').show();
+
+    electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
+      $('title').text(manifest.productName + ' v. ' + manifest.version);
+      $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
+      $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
+    });
+    electron.ipcRenderer.send('get-manifest');
+
+    function replot(){
+      var links;
+      if(window.links){
+        if($('#mstlinks').is(':checked')){
+          links = window.links.filter(l => l.mst);
+        } else if($('#visiblelinks').is(':checked')) {
+          links = window.links.filter(l => l.visible);
+        } else {
+          links = window.links;
+        }
+      } else {
+        return alertify.error('Error: links is not populated.');
+      }
+      if(window.plot) Plotly.purge('main_panel');
+
+      //var varName = $('#variable').val();
+      var varName = 'distance';
+
+      window.plot = Plotly.newPlot('main_panel', [{
+        x: links.map(l => Math.abs(l[varName])),
+        type: 'histogram',
+        marker: {
+          color: $('#color').val(),
+        }
+      }], {
+        yaxis: $('#logScale').is(':checked') ? {type: 'log'} : {}
+      }, {
+        displaylogo: false,
+        displayModeBar: true
+      });
+    }
+
+    electron.ipcRenderer.on('deliver-links', (e, links) => {
+      window.links = links;
+      replot();
+    });
+    electron.ipcRenderer.send('get-links');
+
+    $('#alllinks').parent().click(replot);
+    $('#mstlinks').parent().click(replot);
+
+    $('#logScale, #linearScale').parent().click(e => Plotly.relayout('main_panel', {yaxis: e.target.outerText === 'Log' ? {type: 'log'} : {}}));
+
+    $('#color').on('input', e => Plotly.update('main_panel', {marker : {color: e.target.value}}));
+
+    $(window).on('resize', replot);
+  });
+
+  </script>
+</body>
+</html>
