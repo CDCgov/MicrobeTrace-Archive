@@ -84,7 +84,7 @@
   const alertify = require('alertifyjs');
 
   $(function(){
-    $('#main_panel').show();
+    $('#main_panel, #button-wrapper').show();
 
     electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
       $('title').text(manifest.productName + ' v. ' + manifest.version);
