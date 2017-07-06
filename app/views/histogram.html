@@ -32,7 +32,7 @@
                   <input type="radio" name="set" id="alllinks" autocomplete="off" checked> All Links
                 </label>
                 <label class="btn btn-default">
-                  <input type="radio" name="set" id="visiblelinks" autocomplete="off"> Visible Links
+                  <input type="radio" name="set" id="vislinks" autocomplete="off"> Visible Links
                 </label>
                 <label class="btn btn-default">
                   <input type="radio" name="set" id="mstlinks" autocomplete="off"> MST Links
@@ -93,19 +93,20 @@
     });
     electron.ipcRenderer.send('get-manifest');
 
-    function replot(){
-      var links;
-      if(window.links){
-        if($('#mstlinks').is(':checked')){
-          links = window.links.filter(l => l.mst);
-        } else if($('#visiblelinks').is(':checked')) {
-          links = window.links.filter(l => l.visible);
-        } else {
-          links = window.links;
+    
+
+    var lastLinks = window.links;
+
+    function replot(links){
+      if(!links){
+        if(!window.links){
+          return alertify.error('No links are populated.')
         }
+        links = lastLinks;
       } else {
-        return alertify.error('Error: links is not populated.');
+        lastLinks = links;
       }
+
       if(window.plot) Plotly.purge('main_panel');
 
       //var varName = $('#variable').val();
@@ -127,18 +128,19 @@
 
     electron.ipcRenderer.on('deliver-links', (e, links) => {
       window.links = links;
-      replot();
+      replot(window.links);
     });
     electron.ipcRenderer.send('get-links');
 
-    $('#alllinks').parent().click(replot);
-    $('#mstlinks').parent().click(replot);
+    $('#alllinks').parent().click(e => replot(window.links));
+    $('#vislinks').parent().click(e => replot(window.links.filter(l => l.visible)));
+    $('#mstlinks').parent().click(e => replot(window.links.filter(l => l.mst)));
 
     $('#logScale, #linearScale').parent().click(e => Plotly.relayout('main_panel', {yaxis: e.target.outerText === 'Log' ? {type: 'log'} : {}}));
 
     $('#color').on('input', e => Plotly.update('main_panel', {marker : {color: e.target.value}}));
 
-    $(window).on('resize', replot);
+    $(window).on('resize', e => replot(lastLinks));
   });
 
   </script>

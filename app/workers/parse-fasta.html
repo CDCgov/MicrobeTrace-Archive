@@ -96,17 +96,18 @@
         lastTick = 0;
     for(var i = 0; i < data.nodes.length; i++){
       for(var j = 0; j < i; j++){
+        var dist = tn93(
+          data.nodes[j]['seq'],
+          data.nodes[i]['seq'],
+          'AVERAGE'
+        );
         data.links.push({
           source: data.nodes[j].id,
           target: data.nodes[i].id,
           mst: false,
-          visible: false,
+          visible: (dist < 0.015),
           selected: false,
-          distance: tn93(
-            data.nodes[j]['seq'],
-            data.nodes[i]['seq'],
-            'AVERAGE'
-          )
+          distance: dist
         });
         if(k++ / z * 100 > lastTick + 1){
           electron.ipcRenderer.send('tick', ++lastTick);
