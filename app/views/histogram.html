@@ -93,7 +93,13 @@
     });
     electron.ipcRenderer.send('get-manifest');
 
-    
+    electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
+      console.log('Got New Links.');
+      window.links.forEach(d => d.visible = newLinks.find(e => e.id == d.id).visible);
+      if($('#vislinks').is(':checked')){
+        replot(window.links.filter(l => l.visible));
+      }
+    });
 
     var lastLinks = window.links;
 

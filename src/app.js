@@ -204,6 +204,7 @@ $(function(){
         link.visible = false;
       }
     });
+    ipcRenderer.send('update-link-visibility', window.links);
   }
 
   function renderNetwork(){

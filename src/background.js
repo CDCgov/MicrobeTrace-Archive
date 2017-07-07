@@ -87,8 +87,13 @@ ipcMain.on('update-nodes', (event, newNodes) => {
 });
 
 ipcMain.on('update-node-selection', (event, newNodes) => {
-  data.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
+  data.nodes.forEach(d => d.selected = newNodes.find(nn => nn.id == d.id).selected);
   distribute('update-node-selection', data.nodes, event.sender.id);
+});
+
+ipcMain.on('update-link-visibility', (event, newLinks) => {
+  data.links.forEach(l => l.visible = newLinks.find(nl => nl.id == l.id).visible);
+  distribute('update-link-visibility', data.links, event.sender.id);
 });
 
 ipcMain.on('get-data',     e => e.sender.send('deliver-data',     data));
