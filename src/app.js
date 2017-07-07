@@ -10,6 +10,13 @@ require('bootstrap');
 
 $(function(){
 
+  ipcRenderer.on('deliver-manifest', (e, manifest) => {
+    $('title').text(manifest.productName + ' v. ' + manifest.version);
+    $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
+    $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
+  });
+  ipcRenderer.send('get-manifest');
+
   // We're going to use this function in a variety of contexts. It's purpose is
   // to restore the app to the state it was in when launched.
   // The argument indicates whether the contents of the file inputs should be
@@ -362,14 +369,10 @@ $(function(){
   }
 
   $('#menu-toggle').click(e => $('#sidebar-wrapper').addClass('toggled'));
-  $('#AppName, #AppVersion, #HideSidebar, #main_panel').click(e => $('#sidebar-wrapper').removeClass('toggled'));
+  $('#AppName, #main_panel').click(e => $('#sidebar-wrapper').removeClass('toggled'));
 
-  ipcRenderer.on('deliver-manifest', (e, manifest) => {
-    $('title').text(manifest.productName + ' v. ' + manifest.version);
-    $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
-    $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
-  });
-  ipcRenderer.send('get-manifest');
+  $('#menu-toggle').click(e => $('#sidebar-wrapper').addClass('toggled'));
+  $('#AppName, #AppVersion, #HideSidebar, #main_panel').click(e => $('#sidebar-wrapper').removeClass('toggled'));
 
   $('#FileTab').click(() => reset());
 
@@ -377,9 +380,6 @@ $(function(){
     $('#sidebar-wrapper').removeClass('toggled');
     $('#physicsModal').modal('show');
   });
-
-  $('#menu-toggle').click(e => $('#sidebar-wrapper').addClass('toggled'));
-  $('#AppName, #main_panel').click(e => $('#sidebar-wrapper').removeClass('toggled'));
 
   $('#FileTab').click(() => reset());
 
