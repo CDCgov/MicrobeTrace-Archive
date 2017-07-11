@@ -159,6 +159,7 @@ $(function(){
   function updateStatistics(){
     $('#numberOfNodes').text(window.nodes.length.toLocaleString());
     $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
+    $('#visibilityThreshold').text(math.toPrecision(computeThreshold(), 3));
     $('#numberOfVisibleLinks').text(window.links.filter(link => link.visible).length.toLocaleString());
     $('#numberOfPossibleLinks').text((window.nodes.length * (window.nodes.length - 1) / 2).toLocaleString());
   }
@@ -196,12 +197,20 @@ $(function(){
     $('#nodeTooltipVariable').val('id');
   }
 
+  function computeThreshold(){
+    var minMetric  = parseFloat($('#minThreshold').val()),
+        maxMetric  = parseFloat($('#maxThreshold').val()),
+        proportion = parseFloat($('#default-link-threshold').val());
+    return((maxMetric - minMetric) * proportion + minMetric);
+  }
+
   function setLinkVisibility(){
     if(window.links[0].orig){ return; }
     var metric = $('#linkSortVariable').val(),
         showMST = $('#showMSTLinks').is(':checked');
     window.links.forEach(link => {
       if(link[metric] <= $('#thresholdTooltip').val()){
+      if(link[metric] <= computeThreshold()){
         if(showMST){
           link.visible = link.mst;
         } else {
@@ -554,10 +563,10 @@ $(function(){
   $('#default-link-width').on('input', e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
   $('#linkWidthVariable').change(e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
 
-  var oldThreshold = $('#thresholdTooltip').val();
+  var oldThreshold = computeThreshold();
 
   function refreshLinks(){
-    var newThreshold = $('#thresholdTooltip').val();
+    var newThreshold = computeThreshold();
     var links = Lazy(window.links);
     if($('#showMSTLinks').is(':checked')){
       links = links.filter(link => link.mst);
@@ -600,16 +609,7 @@ $(function(){
     refreshLinks();
   });
 
-  $('#thresholdTooltip').on('input', e => {
-    $('#default-link-threshold').val(e.target.value);
-    $('#visibilityThreshold').text((e.target.value + "").slice(0, 5));
-    setLinkVisibility();
-    refreshLinks();
-  });
-
   $('#default-link-threshold').on('input', e => {
-    $('#thresholdTooltip').val(e.target.value);
-    $('#visibilityThreshold').text((e.target.value + "").slice(0, 5));
     setLinkVisibility();
     refreshLinks();
   });

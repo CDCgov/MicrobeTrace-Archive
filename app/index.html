@@ -255,11 +255,11 @@
                         <td></td>
                         <td><input type="range" id="default-link-strength" min = "0" max="1" value="0.95" step="0.025" /></td>
                       </tr>
-                      <tr class="showForFASTA">
+                      <tr>
                         <td><a href="#" data-toggle="tooltip" title="Show only a Minimum Spanning Tree or all edges within the threshold?">Pruning</a></td>
                         <td><select id="linkSortVariable" class="linkVariables"><option value="distance">Distance</option></select></td>
                         <td>
-                          <div class="btn-group btn-group-xs" data-toggle="buttons">
+                          <div class="btn-group btn-group-xs showForFASTA" data-toggle="buttons">
                             <label class="btn btn-default">
                               <input type="radio" name="MSTOptions" id="showMSTLinks" autocomplete="off"> MST
                             </label>
@@ -269,10 +269,13 @@
                           </div>
                         </td>
                       </tr>
-                      <tr class="showForFASTA">
-                        <td><a href="#" data-toggle="tooltip" title="What's the maximum genetic distance you're willing to call a link?">Threshold</a></td>
-                        <td class="text-right"><input type="number" id="thresholdTooltip" min="0" max="1" step="0.0005" value="0.015"></input></td>
-                        <td><input type="range" id="default-link-threshold" min="0.001" max="0.075" value="0.015" step="0.0005" /></td>
+                      <tr>
+                        <td><a href="#" data-toggle="tooltip" title="What's the maximum genetic distance you're willing to call a link?">Thresholds</a></td>
+                        <td colspan="2">
+                          <input type="number" id="minThreshold" step="0.001" value="0.000"></input>
+                          <input type="range" id="default-link-threshold" min="0.000" max="1.000" value="0.015" step="0.001" />
+                          <input type="number" id="maxThreshold" step="0.001" value="0.075"></input>
+                        </td>
                       </tr>
                     </tbody>
                   </table>
