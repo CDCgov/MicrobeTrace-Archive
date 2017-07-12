@@ -171,6 +171,13 @@ $(function(){
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
+    $('.linkVariables.numeric').html(
+      '<option value="none">None</option>\n' +
+      Object.keys(window.links[0])
+        .filter(key => math.isNumber(window.nodes[0][key]) && !meta.includes(key))
+        .map(key => '<option value="' + key + '">' + key + '</option>')
+        .join('\n')
+    );
     $('#linkSortVariable').val('distance');
   }
 
