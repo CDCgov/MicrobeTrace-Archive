@@ -206,7 +206,6 @@ $(function(){
     var metric = $('#linkSortVariable').val(),
         showMST = $('#showMSTLinks').is(':checked');
     window.links.forEach(link => {
-      if(link[metric] <= $('#thresholdTooltip').val()){
       if(link[metric] <= computeThreshold()){
         if(showMST){
           link.visible = link.mst;
