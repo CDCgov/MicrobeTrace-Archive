@@ -210,7 +210,7 @@ $(function(){
 
   function setLinkVisibility(){
     if(window.links[0].orig){ return; }
-    var metric = $('#linkSortVariable').val(),
+    var metric  = $('#linkSortVariable').val(),
         showMST = $('#showMSTLinks').is(':checked');
     window.links.forEach(link => {
       if(link[metric] <= computeThreshold()){
@@ -460,8 +460,7 @@ $(function(){
   $('#default-node-color').on('input', e => window.network.svg.selectAll('circle').attr('fill', e.target.value));
   $('#nodeColorVariable').change(e => {
     $('#default-node-color').fadeOut();
-    var circles = window.network.svg.selectAll('circle')
-      .data(window.nodes);
+    var circles = window.network.svg.selectAll('circle').data(window.nodes);
     var table = $('#nodeGroupKey').empty();
     if(e.target.value == 'none'){
       circles.attr('fill', $('#default-node-color').val());
