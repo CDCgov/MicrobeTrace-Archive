@@ -204,22 +204,28 @@ td {
   .modal-dialog, .modal-content {
     background-color: rgba(255, 255, 255, .5);
   }
+  #accordion {
+    .panel {
+      background-color: transparent;
+
+      #minThreshold, #maxThreshold {
+        width: 4em;
+        display: inline;
+        border: none;
+      }
+
+      #maxThreshold {
+        margin-left: 1em;
+      }
+
+      #default-link-threshold {
+        width: ~"calc(95% - 9em)";
+        display: inline;
+      }
+    }
+  }
 }
 
-#minThreshold, #maxThreshold {
-  width: 4em;
-  display: inline;
-  border: none;
-}
-
-#maxThreshold {
-  margin-left: 1em;
-}
-
-#default-link-threshold {
-  width: calc(95% - 9em);
-  display: inline;
-}
 
 #networkStatistics, #groupKey {
   position: absolute;
