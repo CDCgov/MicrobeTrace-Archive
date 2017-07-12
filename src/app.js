@@ -410,6 +410,7 @@ $(function(){
     window.network.svg.select('.nodes').selectAll('circle')
       .data(window.nodes)
       .classed('selected', d => d.selected);
+    $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
   });
 
   $('#HistogramTab').click(() => {
