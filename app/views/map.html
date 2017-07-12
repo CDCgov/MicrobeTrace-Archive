@@ -200,7 +200,7 @@
   <div id="main_panel"></div>
   <script>
   const electron = require('electron');
-  const _ = require('lodash');
+  const Lazy = require('lazy.js');
   const d3 = require('d3');
   const jetpack = require('fs-jetpack');
 
@@ -380,7 +380,7 @@
         return;
       }
       table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
-      var values = _.chain(window.nodes).map(e.target.value).uniq().sortBy().value();
+      var values = Lazy(window.nodes).pluck(e.target.value).uniq().sort().toArray();
       var o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
       circles.style('fill', d => o(d[e.target.value]));
       values.forEach(value => {

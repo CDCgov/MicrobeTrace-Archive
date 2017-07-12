@@ -1,9 +1,9 @@
 import { clipboard, remote, ipcRenderer } from 'electron';
-import _ from 'lodash';
 import * as d3 from 'd3';
 import { forceAttract } from 'd3-force-attract';
 import * as alertify from 'alertifyjs';
 import Lazy from 'lazy.js';
+import math from 'bettermath';
 
 window.jQuery = window.$ = require('jquery');
 require('bootstrap');
@@ -61,7 +61,7 @@ $(function(){
   reset();
 
   // Before anything else gets done, ask the user to accept the legal agreement
-  if(_.isNull(localStorage.getItem('licenseAccepted'))){
+  if(!localStorage.getItem('licenseAccepted')){
     $('#acceptAgreement').click(function(){
       // Set that agreement in localStorage
       localStorage.setItem('licenseAccepted', new Date());
@@ -188,9 +188,8 @@ $(function(){
     );
     $('.nodeVariables.numeric').html(
       '<option value="none">None</option>\n' +
-      Lazy(window.nodes[0])
-        .keys()
-        .filter(key => _.isNumber(window.nodes[0][key]) && !meta.includes(key))
+      Object.keys(window.nodes[0])
+        .filter(key => math.isNumber(window.nodes[0][key]) && !meta.includes(key))
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
