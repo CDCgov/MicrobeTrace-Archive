@@ -167,8 +167,7 @@ $(function(){
   function updateLinkVariables(){
     $('.linkVariables').html(
       '<option value="none">None</option>\n' +
-      Lazy(window.links[0])
-        .keys()
+      Object.keys(window.links[0])
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
@@ -180,8 +179,7 @@ $(function(){
   function updateNodeVariables(){
     $('.nodeVariables.categorical').html(
       '<option value="none">None</option>\n' +
-      Lazy(window.nodes[0])
-        .keys()
+      Object.keys(window.nodes[0])
         .filter(key => !meta.includes(key))
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
