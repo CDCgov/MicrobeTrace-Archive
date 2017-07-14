@@ -196,8 +196,7 @@
         data: nodes,
         columns: Object.keys(nodes[0])
           .filter(k => !meta.includes(k))
-          .map(k => ({title:k, data:k}))
-          .slice(0, 10),
+          .map(k => ({title:k, data:k})),
         deferRender: true,
         colReorder: true,
         select: {
@@ -220,11 +219,12 @@
             out = '<option value="' + i;
             if(i < 10){
               out += '" selected >';
+              window.nodetable.column(i).visible(true);
             } else {
               out += '">';
+              window.nodetable.column(i).visible(false);
             }
-            out += d + '</option>';
-            return out;
+            return out + d + '</option>';
           })
           .join('\n')
       );
@@ -237,8 +237,7 @@
           data: links,
           columns: Object.keys(links[0])
             .filter(k => !meta.includes(k))
-            .map(k => ({title:k, data:k}))
-            .slice(0, 10),
+            .map(k => ({title:k, data:k})),
           deferRender: true,
           colReorder: true,
           select: {
@@ -261,7 +260,17 @@
       $('#link-columns').html(
         Object.keys(links[0])
           .filter(l => !meta.includes(l))
-          .map((d, i) => '<option value="' + i + '" selected >' + d + '</option>')
+          .map((d, i) => {
+            var out = '<option value="' + i;
+            if(i < 10){
+              out += '" selected >';
+              window.linktable.column(i).visible(true);
+            } else {
+              out += '">';
+              window.linktable.column(i).visible(false);
+            }
+            return out + d +'</option>';
+          })
           .join('\n')
       );
     }
@@ -278,7 +287,6 @@
 
     $('#node-columns').change(e => {
       var colsToKeep = $('#node-columns').val().map(parseFloat);
-      var visibleColumns = 0;
       Object
         .keys(window.nodes[0])
         .filter(k => !meta.includes(k))
