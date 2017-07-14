@@ -149,8 +149,8 @@ $(function(){
   ipcRenderer.on('deliver-data', (e, data) => {
     window.nodes = data.nodes;
     window.links = data.links;
-    updateLinkVariables();
     updateNodeVariables();
+    updateLinkVariables();
     renderNetwork();
     updateStatistics();
     $('#loadingInformationModal').modal('hide');
@@ -164,42 +164,47 @@ $(function(){
     $('#numberOfPossibleLinks').text((window.nodes.length * (window.nodes.length - 1) / 2).toLocaleString());
   }
 
-  function updateLinkVariables(){
-    $('.linkVariables').html(
-      '<option value="none">None</option>\n' +
-      Object.keys(window.links[0])
-        .map(key => '<option value="' + key + '">' + key + '</option>')
-        .join('\n')
-    );
-    $('.linkVariables.numeric').html(
-      '<option value="none">None</option>\n' +
-      Object.keys(window.links[0])
-        .filter(key => math.isNumber(window.nodes[0][key]) && !meta.includes(key))
-        .map(key => '<option value="' + key + '">' + key + '</option>')
-        .join('\n')
-    );
-    $('#linkSortVariable').val('distance');
-  }
-
   const meta = ['seq', 'padding', 'selected'];
 
   function updateNodeVariables(){
+    var keys = Object.keys(window.nodes[0]);
     $('.nodeVariables.categorical').html(
       '<option value="none">None</option>\n' +
-      Object.keys(window.nodes[0])
+      keys
         .filter(key => !meta.includes(key))
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
     $('.nodeVariables.numeric').html(
       '<option value="none">None</option>\n' +
-      Object.keys(window.nodes[0])
+      keys
         .filter(key => math.isNumber(window.nodes[0][key]) && !meta.includes(key))
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
     $('#nodeTooltipVariable').val('id');
   }
+
+  function updateLinkVariables(){
+    var keys = Object.keys(window.links[0]);
+    $('.linkVariables').html(
+      '<option value="none">None</option>\n' +
+      keys
+        .map(key => '<option value="' + key + '">' + key + '</option>')
+        .join('\n')
+    );
+    $('.linkVariables.numeric').html(
+      '<option value="none">None</option>\n' +
+      keys
+        .filter(key => math.isNumber(window.links[0][key]))
+        .map(key => '<option value="' + key + '">' + key + '</option>')
+        .join('\n')
+    );
+    if(keys.includes('distance')){
+      $('#linkSortVariable').val('distance');
+    }
+  }
+
 
   function computeThreshold(){
     var minMetric  = parseFloat($('#minThreshold').val()),
