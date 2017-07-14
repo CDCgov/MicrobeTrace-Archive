@@ -617,7 +617,7 @@ $(function(){
     refreshLinks();
   });
 
-  $('#default-link-threshold').on('input', e => {
+  $('#minThreshold, #default-link-threshold, #maxThreshold').on('input', e => {
     setLinkVisibility();
     refreshLinks();
   });
