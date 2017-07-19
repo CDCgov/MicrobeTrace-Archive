@@ -12,8 +12,8 @@ $(function(){
 
   ipcRenderer.on('deliver-manifest', (e, manifest) => {
     $('title').text(manifest.productName + ' v. ' + manifest.version);
-    $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
-    $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
+    $('.title').text(manifest.productName);
+    $('.version').text(' v. ' + manifest.version);
   });
   ipcRenderer.send('get-manifest');
 
@@ -28,21 +28,19 @@ $(function(){
       $('#loadingInformation').empty();
       $('#network').empty();
       $('#groupKey').find('tbody').empty();
-      $('#file_panel').fadeIn();
       $('.showForFASTA, .showForEdgeCSV').hide();
       $('#sidebar-wrapper').removeClass('toggled');
       $('#collapseTwo').collapse('hide');
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
+      $('#file_panel').fadeIn();
     }
     if(soft){
       resetDom();
     } else {
       $('#FastaOrEdgeFile').val('');
       $('#NodeCSVFile').val('');
-      $('#button-wrapper, #main_panel').fadeOut(() => {
-        resetDom();
-        $('#file_panel').fadeIn();
-      });
+      $('#TableTab, #SequencesTab, #HistogramTab, #MapTab, #NetworkTab').addClass('disabled');
+      $('#button-wrapper, #main_panel').fadeOut(() => resetDom());
     }
     //Trust me, this is necessary. Don't ask why.
     if(window.network){
@@ -56,6 +54,54 @@ $(function(){
     ipcRenderer.send('reset');
   }
 
+  $('#FileTab').click(() => reset());
+
+  $('#ExitTab').click(() => remote.getCurrentWindow().close());
+
+  $('#NetworkTab').click(function(){
+    if(!$(this).hasClass('disabled')){
+      $('#physicsModal').modal('show');
+    } else {
+      alertify.warning('Please load some data first!');
+    }
+  });
+
+  $('#TableTab').click(function(){
+    if(!$(this).hasClass('disabled')){
+      ipcRenderer.send('launch-thing', 'views/table.html');
+    } else {
+      alertify.warning('Please load some data first!');
+    }
+  });
+
+  $('#SequencesTab').click(function(){
+    if(!$(this).hasClass('disabled')){
+      ipcRenderer.send('launch-thing', 'views/sequences.html');
+    } else {
+      alertify.warning('Please load some data first!');
+    }
+  });
+
+  $('#HistogramTab').click(function(){
+    if(!$(this).hasClass('disabled')){
+      ipcRenderer.send('launch-thing', 'views/histogram.html');
+    } else {
+      alertify.warning('Please load some data first!');
+    }
+  });
+
+  $('#MapTab').click(function(){
+    if(!$(this).hasClass('disabled')){
+      ipcRenderer.send('launch-thing', 'views/map.html');
+    } else {
+      alertify.warning('Please load some data first!');
+    }
+  });
+
+  $('#HelpTab').click(() => {
+    ipcRenderer.send('launch-thing', 'help/index.html');
+  });
+
   // Make sure we're in a clean environment to start. Probably not strictly
   // necessary, but why not?
   reset();
@@ -68,7 +114,6 @@ $(function(){
     });
     $('#rejectAgreement').click(function(){
       // If you don't agree, no app for you!
-      remote.app.quit();
       remote.getCurrentWindow().close();
     });
     // No hacking around the agreement.
@@ -126,6 +171,7 @@ $(function(){
         $('#gapExtensionPenalty').val()
       ]
     });
+
     $('#file_panel').fadeOut(() => {
       $('#button-wrapper, #main_panel').fadeIn(() => {
         if(!window.network){
@@ -136,6 +182,7 @@ $(function(){
         }
       });
     });
+    $('.disabled').removeClass('disabled');
   });
 
   ipcRenderer.on('tick', (event, msg) => $('.progress-bar').css('width', msg+'%').attr('aria-valuenow', msg));
@@ -204,7 +251,6 @@ $(function(){
       $('#linkSortVariable').val('distance');
     }
   }
-
 
   function computeThreshold(){
     var minMetric  = parseFloat($('#minThreshold').val()),
@@ -385,52 +431,12 @@ $(function(){
       .on('end', () => tooltip.style('left', '0px').style('top', '0px'));
   }
 
-  $('#menu-toggle').click(e => $('#sidebar-wrapper').addClass('toggled'));
-  $('#AppName, #main_panel').click(e => $('#sidebar-wrapper').removeClass('toggled'));
-
-  $('#menu-toggle').click(e => $('#sidebar-wrapper').addClass('toggled'));
-  $('#AppName, #AppVersion, #HideSidebar, #main_panel').click(e => $('#sidebar-wrapper').removeClass('toggled'));
-
-  $('#FileTab').click(() => reset());
-
-  $('#NetworkTab').click(() => {
-    $('#sidebar-wrapper').removeClass('toggled');
-    $('#physicsModal').modal('show');
-  });
-
-  $('#FileTab').click(() => reset());
-
-  $('#SequencesTab').click(() => {
-    ipcRenderer.send('launch-thing', 'views/sequences.html');
-    $('#sidebar-wrapper').removeClass('toggled');
-  });
-
-  $('#TableTab').click(() => {
-    ipcRenderer.send('launch-thing', 'views/table.html');
-    $('#sidebar-wrapper').removeClass('toggled');
-  });
-
   ipcRenderer.on('update-node-selection', (e, newNodes) => {
     window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
     window.network.svg.select('.nodes').selectAll('circle')
       .data(window.nodes)
       .classed('selected', d => d.selected);
     $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
-  });
-
-  $('#HistogramTab').click(() => {
-    ipcRenderer.send('launch-thing', 'views/histogram.html');
-    $('#sidebar-wrapper').removeClass('toggled');
-  });
-
-  $('#MapTab').click(() => {
-    ipcRenderer.send('launch-thing', 'views/map.html');
-    $('#sidebar-wrapper').removeClass('toggled');
-  });
-
-  $('#HelpTab').click(() => {
-    ipcRenderer.send('launch-thing', 'help/index.html');
-    $('#sidebar-wrapper').removeClass('toggled');
   });
 
   function scaleNodeThing(scalar, variable, attribute, floor, reanimate){
@@ -443,7 +449,7 @@ $(function(){
       .pluck(variable)
       .uniq()
       .without(undefined)
-      .sortBy()
+      .sort()
       .toArray();
     var min = Math.min(...values);
     var max = Math.max(...values);
@@ -552,7 +558,7 @@ $(function(){
       .pluck(variable)
       .uniq()
       .without(undefined)
-      .sortBy()
+      .sort()
       .toArray();
     var min = Math.min(...values);
     var max = Math.max(...values);

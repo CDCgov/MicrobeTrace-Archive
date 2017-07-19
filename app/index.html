@@ -12,6 +12,55 @@
 </head>
 <body>
 
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed navbar-left" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">File</a>
+            <ul class="dropdown-menu">
+              <li id="FileTab"><a href="#settings">New</a></li>
+              <li id="ExitTab"><a href="#">Exit</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Edit</a>
+            <ul class="dropdown-menu">
+              <li id="NetworkTab" class="disabled"><a href="#">Settings</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">View</a>
+            <ul class="dropdown-menu">
+              <li id="TableTab" class="disabled"><a href="#">Table</a></li>
+              <li id="SequencesTab" class="disabled"><a href="#">Sequences</a></li>
+              <li id="HistogramTab" class="disabled showForFASTA"><a href="#">Histogram</a></li>
+              <li id="MapTab" class="disabled"><a href="#">Map</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Help</a>
+            <ul class="dropdown-menu">
+              <li id="HelpTab"><a href="#">Help</a></li>
+              <li role="separator" class="divider"></li>
+              <li id="AboutTab"><a href="#" data-toggle="modal" data-target="#aboutModal">About</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
+
   <div id="licenseAgreement" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -96,24 +145,6 @@
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
-
-  <div id="sidebar-wrapper">
-    <ul class="sidebar-nav">
-      <li id="AppName" class="sidebar-brand"><a href="#">MicrobeTrace</a></li>
-      <li id="FileTab"><a href="#">Files</a></li>
-      <li id="SequencesTab"><a href="#">Sequences</a></li>
-      <li id="TableTab"><a href="#">Table</a></li>
-      <li id="HistogramTab" class="showForFASTA"><a href="#">Histogram</a></li>
-      <li id="MapTab"><a href="#">Map</a></li>
-      <li id="HelpTab"><a href="#">Help</a></li>
-      <li id="AppVersion"><a href="#"></a></li>
-    </ul>
-  </div>
-
-  <div id="button-wrapper">
-    <a href="#menu-toggle" class="btn btn-default" id="menu-toggle">&#9776;</a>
-    <a href="#settings" class="btn btn-default" id="NetworkTab">Settings</a>
-  </div>
 
   <div id="main_panel" class="pane-container pane-horizontal">
 
@@ -341,7 +372,24 @@
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
+  </div>
 
+  <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="aboutModalLabel">About <span class="title"></span></h4>
+        </div>
+        <div class="modal-body">
+          <h2 class="title"></h2>
+          <h3 class="version"></h3>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>require("./app.js");</script>

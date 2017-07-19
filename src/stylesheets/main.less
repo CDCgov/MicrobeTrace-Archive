@@ -10,6 +10,16 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding-top: 50px;
+}
+
+.navbar {
+  margin-bottom: 0;
+}
+
+.navbar-toggle {
+  float: left;
+  margin-left: 15px
 }
 
 a {
@@ -103,76 +113,6 @@ td {
 
 .btn-default {
   background-color: #f5f5f5;
-}
-
-#sidebar-wrapper {
-  z-index: 10000;
-  position: absolute;
-  left: 0px;
-  top: 0px;
-  width: 0px;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webmain_panelnsition: all 0.5s ease;
-  -moz-transition: all 0.5s ease;
-  -o-transition: all 0.5s ease;
-  transition: all 0.5s ease;
-  color: #333;
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-}
-
-.toggled {
-  width: 150px !important;
-}
-
-.sidebar-nav {
-  position: absolute;
-  top: 0;
-  width: 150px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  height: 100%;
-}
-
-.sidebar-nav li {
-  text-indent: 20px;
-  line-height: 40px;
-}
-
-.sidebar-nav li:hover {
-  background: #fff;
-}
-
-.sidebar-nav li a {
-  display: block;
-  text-decoration: none;
-  color: #333;
-}
-
-.sidebar-nav li a:hover {
-  text-decoration: none;
-}
-
-.sidebar-nav li a:active,
-.sidebar-nav li a:focus {
-  text-decoration: none;
-}
-
-.sidebar-nav > .sidebar-brand {
-  height: 65px;
-  font-size: 18px;
-  line-height: 60px;
-  text-align: center;
-  text-indent: 0;
-}
-
-#AppVersion {
-  position: absolute;
-  bottom: 10px;
-  width: 100%;
 }
 
 #tooltip, #contextmenu {
