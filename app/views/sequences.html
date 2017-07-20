@@ -12,6 +12,9 @@
     html, body{
       overflow: auto;
     }
+    body {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -32,6 +35,9 @@
       $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
     });
     electron.ipcRenderer.send('get-manifest');
+
+    electron.ipcRenderer.once('deliver-component', (e, c) => $('body').prepend(c));
+    electron.ipcRenderer.send('get-component', 'nav');
 
     $('#button').click(() => $('#options').modal('show'));
 
