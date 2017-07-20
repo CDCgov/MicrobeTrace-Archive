@@ -665,5 +665,4 @@ alertify.defaults.theme.cancel = 'btn btn-danger';
 alertify.defaults.theme.input = 'form-control';
 
 // Small helpers you might want to keep
-import './helpers/external_links.js';
 import './helpers/window.js';
