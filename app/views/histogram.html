@@ -12,11 +12,7 @@
   <script src="../vendor/plotly.min.js"></script>
 </head>
 <body>
-  <div id="button-wrapper">
-    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#myModal">&#9776;</button>
-  </div>
-
-  <div class="modal fade" id="myModal" tabindex="-1" role="dialog">
+  <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -84,7 +80,7 @@
   const alertify = require('alertifyjs');
 
   $(function(){
-    $('#main_panel, #button-wrapper').show();
+    $('#main_panel').show();
 
     electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
       $('title').text(manifest.productName + ' v. ' + manifest.version);
@@ -92,6 +88,9 @@
       $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
     });
     electron.ipcRenderer.send('get-manifest');
+
+    electron.ipcRenderer.once('deliver-component', (e, c) => $('body').prepend(c));
+    electron.ipcRenderer.send('get-component', 'nav');
 
     electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
       console.log('Got New Links.');

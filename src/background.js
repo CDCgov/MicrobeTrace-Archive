@@ -96,19 +96,22 @@ ipcMain.on('update-link-visibility', (event, newLinks) => {
   distribute('update-link-visibility', data.links, event.sender.id);
 });
 
-ipcMain.on('get-data',     e => e.sender.send('deliver-data',     data));
-ipcMain.on('get-nodes',    e => e.sender.send('deliver-nodes',    data.nodes));
-ipcMain.on('get-links',    e => e.sender.send('deliver-links',    data.links));
-ipcMain.on('get-manifest', e => e.sender.send('deliver-manifest', manifest));
+ipcMain.on('get-data',      e => e.sender.send('deliver-data',     data));
+ipcMain.on('get-nodes',     e => e.sender.send('deliver-nodes',    data.nodes));
+ipcMain.on('get-links',     e => e.sender.send('deliver-links',    data.links));
+ipcMain.on('get-manifest',  e => e.sender.send('deliver-manifest', manifest));
+ipcMain.on('get-component', (e, component) => {
+  e.sender.send('deliver-component', jetpack.cwd(app.getAppPath()).read('app/components/'+component+'.html', 'utf8'));
+});
 
-ipcMain.on('launch-thing', (event, thing) => {
-  const thingWindow = createWindow(thing, {
+ipcMain.on('launch-view', (event, view) => {
+  const thingWindow = createWindow(view, {
     width: 800,
     height: 600,
     show: true
   });
   thingWindow.loadURL(url.format({
-    pathname: path.join(__dirname, thing),
+    pathname: path.join(__dirname, view),
     protocol: 'file:',
     slashes: true
   }));

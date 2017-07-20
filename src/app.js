@@ -1,11 +1,10 @@
 import { clipboard, remote, ipcRenderer } from 'electron';
-import * as d3 from 'd3';
+import d3 from 'd3';
 import { forceAttract } from 'd3-force-attract';
-import * as alertify from 'alertifyjs';
 import Lazy from 'lazy.js';
 import math from 'bettermath';
 
-window.jQuery = window.$ = require('jquery');
+window.jquery = window.jQuery = window.$ = require('jquery');
 require('bootstrap');
 
 $(function(){
@@ -39,7 +38,7 @@ $(function(){
     } else {
       $('#FastaOrEdgeFile').val('');
       $('#NodeCSVFile').val('');
-      $('#TableTab, #SequencesTab, #HistogramTab, #MapTab, #NetworkTab').addClass('disabled');
+      $('#TableTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('disabled');
       $('#button-wrapper, #main_panel').fadeOut(() => resetDom());
     }
     //Trust me, this is necessary. Don't ask why.
@@ -54,53 +53,11 @@ $(function(){
     ipcRenderer.send('reset');
   }
 
-  $('#FileTab').click(() => reset());
-
-  $('#ExitTab').click(() => remote.getCurrentWindow().close());
-
-  $('#NetworkTab').click(function(){
-    if(!$(this).hasClass('disabled')){
-      $('#physicsModal').modal('show');
-    } else {
-      alertify.warning('Please load some data first!');
-    }
+  ipcRenderer.once('deliver-component', (e, c) => {
+    $('body').prepend(c);
+    $('#FileTab').click(() => reset());
   });
-
-  $('#TableTab').click(function(){
-    if(!$(this).hasClass('disabled')){
-      ipcRenderer.send('launch-thing', 'views/table.html');
-    } else {
-      alertify.warning('Please load some data first!');
-    }
-  });
-
-  $('#SequencesTab').click(function(){
-    if(!$(this).hasClass('disabled')){
-      ipcRenderer.send('launch-thing', 'views/sequences.html');
-    } else {
-      alertify.warning('Please load some data first!');
-    }
-  });
-
-  $('#HistogramTab').click(function(){
-    if(!$(this).hasClass('disabled')){
-      ipcRenderer.send('launch-thing', 'views/histogram.html');
-    } else {
-      alertify.warning('Please load some data first!');
-    }
-  });
-
-  $('#MapTab').click(function(){
-    if(!$(this).hasClass('disabled')){
-      ipcRenderer.send('launch-thing', 'views/map.html');
-    } else {
-      alertify.warning('Please load some data first!');
-    }
-  });
-
-  $('#HelpTab').click(() => {
-    ipcRenderer.send('launch-thing', 'help/index.html');
-  });
+  ipcRenderer.send('get-component', 'nav');
 
   // Make sure we're in a clean environment to start. Probably not strictly
   // necessary, but why not?
@@ -657,12 +614,6 @@ $(function(){
     }
   });
 });
-
-//override alertify defaults
-alertify.defaults.transition = 'slide';
-alertify.defaults.theme.ok = 'btn btn-primary';
-alertify.defaults.theme.cancel = 'btn btn-danger';
-alertify.defaults.theme.input = 'form-control';
 
 // Small helpers you might want to keep
 import './helpers/window.js';

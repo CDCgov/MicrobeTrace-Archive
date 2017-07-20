@@ -6,8 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title></title>
   <link rel="icon" href="img/image32.ico" />
-  <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-  <link href="../stylesheets/main.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="../css/alertify.min.css" />
+  <link rel="stylesheet" type="text/css" href="../stylesheets/main.css" />
   <style>
     .showForNational, .showForLocal{
       display: none;
@@ -28,12 +29,9 @@
   </style>
 </head>
 <body>
-  <div id="button-wrapper" class="btn-group" data-toggle="buttons">
-    <button id="button" class="btn btn-default">&#9776;</button>
-  </div>
   <table id="groupKey"></table>
   <div id="tooltip"></div>
-  <div class="modal fade" id="options" tabindex="-1" role="dialog">
+  <div class="modal fade" id="settings" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -218,7 +216,8 @@
     });
     electron.ipcRenderer.send('get-manifest');
 
-    $('#button-wrapper').fadeIn();
+    electron.ipcRenderer.once('deliver-component', (e, c) => $('body').prepend(c));
+    electron.ipcRenderer.send('get-component', 'nav');
 
     electron.ipcRenderer.on('deliver-nodes', (e, nodes)=>{
       window.nodes = nodes;
