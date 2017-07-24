@@ -124,8 +124,8 @@ $(function(){
       supplement: $('#NodeCSVFile')[0].files.length > 0 ? $('#NodeCSVFile')[0].files[0].path : '',
       align: $('#align').is(':checked'),
       penalties: [
-        $('#gapOpenPenalty').val(),
-        $('#gapExtensionPenalty').val()
+        -5, //$('#gapOpenPenalty').val(),
+        -1.7 //$('#gapExtensionPenalty').val()
       ]
     });
 
