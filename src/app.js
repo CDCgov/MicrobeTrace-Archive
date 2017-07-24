@@ -258,6 +258,7 @@ $(function(){
       .data(links).enter()
       .append('line')
         .attr('stroke-width', $('#default-link-width').val())
+        .attr('opacity', $('#default-link-opacity').val())
         .on('mouseenter', showLinkToolTip)
         .on('mouseout', hideTooltip);
 
