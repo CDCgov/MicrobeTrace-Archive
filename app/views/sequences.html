@@ -56,7 +56,6 @@
     electron.ipcRenderer.send('get-component', 'nav');
 
     electron.ipcRenderer.on('deliver-nodes', (e, nodes) => {
-      $('#main_panel').show();
       window.nodes = nodes;
       var m = new msa.msa({
         el: $('#main_panel')[0],
