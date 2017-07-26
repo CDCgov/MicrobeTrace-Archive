@@ -1,0 +1,3 @@
+[submodule "app/help"]
+	path = app/help
+	url = https://github.com/CDCgov/MicrobeTRACE.wiki.git
