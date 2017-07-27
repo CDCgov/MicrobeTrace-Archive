@@ -7,13 +7,9 @@
   <title></title>
   <link rel="icon" href="img/image32.ico" />
   <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-  <link href="../stylesheets/main.css" rel="stylesheet" type="text/css" />
   <style>
-    html, body{
-      overflow: auto;
-    }
     body {
-      margin-top: 10px;
+      margin-top: 60px;
     }
   </style>
 </head>
@@ -25,9 +21,7 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title">Sequences Configuration</h4>
         </div>
-        <div class="modal-body">
-          There are no options available to this view.
-        </div>
+        <div class="modal-body"></div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
         </div>
@@ -56,7 +50,6 @@
     electron.ipcRenderer.send('get-component', 'nav');
 
     electron.ipcRenderer.on('deliver-nodes', (e, nodes) => {
-      $('#main_panel').show();
       window.nodes = nodes;
       var m = new msa.msa({
         el: $('#main_panel')[0],
@@ -82,8 +75,10 @@
       });
       m.addView("menu", defMenu);
       m.render();
+      $('.smenubar').detach().appendTo('.modal-body');
     });
     electron.ipcRenderer.send('get-nodes');
+
   });
 
   </script>

@@ -59,10 +59,6 @@ $(function(){
   });
   ipcRenderer.send('get-component', 'nav');
 
-  // Make sure we're in a clean environment to start. Probably not strictly
-  // necessary, but why not?
-  reset();
-
   // Before anything else gets done, ask the user to accept the legal agreement
   if(!localStorage.getItem('licenseAccepted')){
     $('#acceptAgreement').click(function(){

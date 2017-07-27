@@ -139,8 +139,10 @@
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
 
-  <table id="nodes" class="display table" cellspacing="0"></table>
-  <table id="links" class="display table" cellspacing="0"></table>
+  <div id="main_panel">
+    <table id="nodes" class="display table" cellspacing="0"></table>
+    <table id="links" class="display table" cellspacing="0"></table>    
+  </div>
 
   <script type="text/javascript">
   const electron = require('electron');
@@ -271,8 +273,6 @@
           .join('\n')
       );
     }
-
-    $('#button-wrapper').show();
 
     $('input[name=nodelink]').on('change', e => {
       if(e.target.id === 'linkbutton'){
