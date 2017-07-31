@@ -12,16 +12,11 @@
   <link href="../stylesheets/main.css" rel="stylesheet" type="text/css" />
   <style>
     body{
+      overflow:auto;
       display:block;
     }
     .dataTables_wrapper{
       padding-top: 1em;
-    }
-    #links_wrapper {
-      display: none;
-    }
-    .dataTables_length{
-      display: none;
     }
     table{
       width: 100% !important;
@@ -140,19 +135,20 @@
   </div><!-- /.modal -->
 
   <div id="main_panel">
-    <table id="nodes" class="display table" cellspacing="0"></table>
-    <table id="links" class="display table" cellspacing="0"></table>    
+    <table id="table" class="display table" cellspacing="0"></table>
   </div>
 
   <script type="text/javascript">
   const electron = require('electron');
+  var jetpack = require('fs-jetpack');
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
   require('datatables.net')(window, $);
   require('datatables.net-colreorder')(window, $);
   require('datatables.net-select')(window, $);
+  const Baby = require('babyparse');
 
-  const meta = ['seq', 'padding', 'selected'];
+  const meta = ['seq', 'padding', 'selected', 'orig', 'mst', 'visible', 'index'];
 
   $(function(){
 
@@ -163,155 +159,164 @@
     });
     electron.ipcRenderer.send('get-manifest');
 
-    electron.ipcRenderer.once('deliver-component', (e, c) => $('body').prepend(c));
+    electron.ipcRenderer.once('deliver-component', (e, c) => {
+      $('body').prepend(c);
+      $('#FileTab').after(
+        $('<li id="ExportTab"><a href="#">Export</a></li>').click(() => {
+          electron.remote.dialog.showSaveDialog((fileName) => {
+            if (fileName === undefined){
+              return alertify.error('File not exported!');
+            }
+            jetpack.write(fileName, Baby.unparse(window.data));
+          });
+        })
+      );
+    });
     electron.ipcRenderer.send('get-component', 'nav');
 
-    window.nodetable = window.linktable = {'destroy': () => {}};
-
-    electron.ipcRenderer.on('deliver-data', (e, data) => {
-      window.nodes = data.nodes;
-      window.links = data.links;
-      updateNodes(window.nodes);
-      updateLinks(window.links);
-      if('mst' in window.links[0]){
-        $('.showForMST').show().filter('tr').css('display', 'table-row');
-      }
-    });
-    electron.ipcRenderer.send('get-data');
+    window.table = {destroy: () => {}};
 
     electron.ipcRenderer.on('update-node-selection', (e, newNodes) => {
       window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
-      window.nodetable.rows().deselect();
-      window.nodetable.rows(
+      window.table.rows().deselect();
+      window.table.rows(
         window.nodes
           .filter(n => n.selected)
           .map(n => n.index)
         ).select();
     });
 
-    function updateNodes(nodes){
-      window.nodetable.destroy();
-      window.nodetable = $('#nodes').DataTable({
-        data: nodes,
-        columns: Object.keys(nodes[0])
-          .filter(k => !meta.includes(k))
-          .map(k => ({title:k, data:k})),
+    function updateData(){
+      if($('input[name=nodelink]:checked')[0].id === 'linkbutton'){
+        var linksubset = $('input[name=MSTAll]:checked')[0].id;
+        if(linksubset === 'MSTLinks'){
+          window.data = window.links.slice().filter(l => l.mst);
+        } else if(linksubset === 'VizLinks') {
+          window.data = window.links.slice().filter(l => l.visible);
+        } else {
+          window.data = window.links.slice();
+        }
+      } else {
+        window.data = window.nodes;
+      }
+      window.columns = Object.keys(window.data[0])
+        .filter(k => !meta.includes(k))
+        .map(k => ({title:k, data:k, mData:k, sTitle:k}));
+    }
+
+    function resetTextsize(){
+      var s = $('#font-size-slider').val();
+      $('#table').css({
+        'font-size': s + 'px',
+        'line-height': s/10
+      });
+    }
+
+    function updateTable(){
+      updateData();
+
+      window.table.destroy();
+      window.table = $('#table').empty().DataTable({
+        data: window.data,
+        columns: window.columns,
         deferRender: true,
         colReorder: true,
         select: {
           style: 'multi'
         }
-      })
-      .on('user-select', (e, dt, type, cell) => {
-        window.nodes.forEach((n, i) => n.selected = n.selected ^ (cell.index().row == i));
-        electron.ipcRenderer.send('update-node-selection', window.nodes);
       });
-      window.nodetable.rows(
-        window.nodes
+
+      if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
+        window.table.on('user-select', (e, dt, type, cell) => {
+          window.nodes.forEach((n, i) => n.selected = n.selected ^ (cell.index().row == i));
+          electron.ipcRenderer.send('update-node-selection', window.nodes);
+        });
+        window.table.rows(
+          window.nodes
           .filter(n => n.selected)
           .map(n => n.index)
         ).select();
+      }
+
+      resetTextsize();
+    }
+
+    electron.ipcRenderer.on('deliver-data', (e, data) => {
+      window.nodes = data.nodes;
+      window.links = data.links;
+
       $('#node-columns').html(
-        Object.keys(nodes[0])
-          .filter(k => !meta.includes(k))
-          .map((d, i) => {
-            out = '<option value="' + i;
-            if(i < 10){
-              out += '" selected >';
-              window.nodetable.column(i).visible(true);
-            } else {
-              out += '">';
-              window.nodetable.column(i).visible(false);
-            }
-            return out + d + '</option>';
-          })
-          .join('\n')
-      );
-    }
-
-    function updateLinks(links){
-      function doStuff(){
-        window.linktable.destroy();
-        window.linktable = $('#links').DataTable({
-          data: links,
-          columns: Object.keys(links[0])
-            .filter(k => !meta.includes(k))
-            .map(k => ({title:k, data:k})),
-          deferRender: true,
-          colReorder: true,
-          select: {
-            style: 'os'
+        Object.keys(window.nodes[0])
+        .filter(k => !meta.includes(k))
+        .map((d, i) => {
+          out = '<option value="' + i;
+          if(i < 10){
+            out += '" selected >';
+          } else {
+            out += '">';
           }
+          return out + d + '</option>';
         })
-        .on('select', (e, dt, type, indices) => {
-          // window.links.forEach((link, i) => link.selected = (i in indices));
-          // electron.ipcRenderer.send('update-links', window.links);
-        });
-        if($('#linkbutton').is(':checked')){
-          $('#links_wrapper').fadeIn();
-        }
-      }
-      if($('#links_wrapper').length){
-        $('#links_wrapper').fadeOut(() => doStuff());
-      } else {
-        doStuff();
-      }
-      $('#link-columns').html(
-        Object.keys(links[0])
-          .filter(l => !meta.includes(l))
-          .map((d, i) => {
-            var out = '<option value="' + i;
-            if(i < 10){
-              out += '" selected >';
-              window.linktable.column(i).visible(true);
-            } else {
-              out += '">';
-              window.linktable.column(i).visible(false);
-            }
-            return out + d +'</option>';
-          })
-          .join('\n')
+        .join('\n')
       );
-    }
 
-    $('input[name=nodelink]').on('change', e => {
-      if(e.target.id === 'linkbutton'){
-        $('#nodes_wrapper').fadeOut(() => $('#links_wrapper').fadeIn());
-      } else {
-        $('#links_wrapper').fadeOut(() => $('#nodes_wrapper').fadeIn());
+      $('#link-columns').html(
+        Object.keys(window.links[0])
+        .filter(k => !meta.includes(k))
+        .map((d, i) => {
+          out = '<option value="' + i;
+          if(i < 10){
+            out += '" selected >';
+          } else {
+            out += '">';
+          }
+          return out + d + '</option>';
+        })
+        .join('\n')
+      );
+
+      updateTable();
+
+      if('mst' in window.links[0]){
+        $('.showForMST').show().filter('tr').css('display', 'table-row');
+      }
+    });
+
+    electron.ipcRenderer.send('get-data');
+
+    $('#font-size-slider').on('input', resetTextsize);
+
+    $('#link-columns').change(e => {
+      if($('input[name=nodelink]:checked')[0].id === 'linkbutton'){
+        var colsToKeep = $('#link-columns').val().map(parseFloat);
+        Object
+          .keys(window.links[0])
+          .filter(k => !meta.includes(k))
+          .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
       }
     });
 
     $('#node-columns').change(e => {
-      var colsToKeep = $('#node-columns').val().map(parseFloat);
-      Object
-        .keys(window.nodes[0])
-        .filter(k => !meta.includes(k))
-        .forEach((col, i) => window.nodetable.column(i).visible(colsToKeep.includes(i)));
+      if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
+        var colsToKeep = $('#node-columns').val().map(parseFloat);
+        Object
+          .keys(window.nodes[0])
+          .filter(k => !meta.includes(k))
+          .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
+      }
     });
-
-    $('#link-columns').change(e => {
-      var colsToKeep = $('#link-columns').val().map(parseFloat);
-      Object
-        .keys(window.links[0])
-        .filter(k => !meta.includes(k))
-        .forEach((col, i) => window.linktable.column(i).visible(colsToKeep.includes(i)));
-    });
-
-    $('#font-size-slider').on('input', e => $('#nodes, #links').css({
-      'font-size': e.target.value + 'px',
-      'line-height': e.target.value/10
-    }));
 
     $('input[name=MSTAll]').on('change', e => {
       if(e.target.id == 'MSTLinks'){
-        updateLinks(window.links.filter(l => l.mst));
+        updateLinks();
       } else if(e.target.id == 'VizLinks'){
         updateLinks(window.links.filter(l => l.visible));
       } else {
         updateLinks(window.links);
       }
     });
+
+    $('input[name=nodelink]').on('change', updateTable);
   });
 
   $.fn.dataTable.ext.errMode = 'none';
