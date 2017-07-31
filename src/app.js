@@ -164,7 +164,7 @@ $(function(){
     $('#numberOfPossibleLinks').text((window.nodes.length * (window.nodes.length - 1) / 2).toLocaleString());
   }
 
-  const meta = ['seq', 'padding', 'selected'];
+  const meta = ['seq', 'padding', 'selected', 'orig', 'mst', 'visible', 'index'];
 
   function updateNodeVariables(){
     var keys = Object.keys(window.nodes[0]);
