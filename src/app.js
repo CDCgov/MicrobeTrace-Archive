@@ -382,7 +382,7 @@ $(function(){
     tooltip
       .transition().duration(400)
       .style('opacity', 0)
-      .on('end', () => tooltip.style('left', '0px').style('top', '0px'));
+      .on('end', () => tooltip.style('left', '-40px').style('top', '-40px'));
   }
 
   ipcRenderer.on('update-node-selection', (e, newNodes) => {
@@ -577,9 +577,31 @@ $(function(){
     refreshLinks();
   });
 
-  $('#minThreshold, #default-link-threshold, #maxThreshold').on('input', e => {
+  $('#minThreshold, #maxThreshold').on('input', e => {
     setLinkVisibility();
     refreshLinks();
+  });
+
+  $('#default-link-threshold').on('mousedown', function(e){
+    $(this).on('mousemove', function(ee){
+      $('#tooltip').html(computeThreshold())
+        .css({
+          'left': (ee.clientX + 8) + 'px',
+          'top': (ee.clientY - 28) + 'px',
+          'opacity': 1
+        });
+      setLinkVisibility();
+      refreshLinks();
+    });
+  }).on('mouseup', function(e){
+    $(this).off('mousemove');
+    $('#tooltip').fadeOut(function(ee){
+      $(this).css({
+        'right': '0px',
+        'top': '-40px',
+        'display': 'inline'
+      });
+    });
   });
 
   $('#hideNetworkStatistics').parent().click(() => $('#networkStatistics').fadeOut());
