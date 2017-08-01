@@ -75,7 +75,9 @@
     alertify.defaults.theme.input = 'form-control';
   }
 
-  $('#ExitTab').click(() => electron.remote.getCurrentWindow().close());
+  $('#CloseTab').click(() => electron.remote.getCurrentWindow().close());
+
+  $('#ExitTab').click(() => electron.remote.app.quit());
 
   $('#NetworkTab').click(function(){
     if(!$(this).hasClass('disabled')){
