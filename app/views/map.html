@@ -196,7 +196,6 @@
   const electron = require('electron');
   const Lazy = require('lazy.js');
   const d3 = require('d3');
-  const jetpack = require('fs-jetpack');
 
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
@@ -251,7 +250,7 @@
       .attr('width', width)
       .attr('height', height);
 
-    countries = JSON.parse(jetpack.read('app/data/geo/countries.json'));
+    countries = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'countries.json'));
 
     function showRegionToolTip(d){
       if($('#nodeTooltipVariable').val() == 'none') return;
@@ -336,7 +335,7 @@
       $('.showForGlobal, .showForLocal').hide();
       $('.showForNational').css('display', 'table-row');
       g.select('#counties').html(null);
-      if(!states) states = JSON.parse(jetpack.read('app/data/geo/states.json'));
+      if(!states) states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
       g.select('#states').selectAll('path')
             .data(states.features)
           .enter().append('path')
@@ -347,7 +346,7 @@
       $('.showForGlobal, .showForNational').hide();
       $('.showForLocal').css('display', 'table-row');
       g.select('#states').html(null);
-      if(!counties) counties = JSON.parse(jetpack.read('app/data/geo/counties.json'));
+      if(!counties) counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
       g.select('#counties').selectAll('path')
             .data(counties.features)
           .enter().append('path')
