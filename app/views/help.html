@@ -101,7 +101,7 @@
     electron.ipcRenderer.send('get-manifest');
 
     electron.ipcRenderer.once('deliver-component', (e, c) => $('body').prepend(c));
-    electron.ipcRenderer.send('get-component', 'nav');
+    electron.ipcRenderer.send('get-component', 'nav.html');
 
     function clickedLink(e){
       e.preventDefault();

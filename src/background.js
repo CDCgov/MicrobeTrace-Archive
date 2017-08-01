@@ -101,7 +101,8 @@ ipcMain.on('get-nodes',     e => e.sender.send('deliver-nodes',    data.nodes));
 ipcMain.on('get-links',     e => e.sender.send('deliver-links',    data.links));
 ipcMain.on('get-manifest',  e => e.sender.send('deliver-manifest', manifest));
 ipcMain.on('get-component', (e, component) => {
-  e.sender.send('deliver-component', jetpack.cwd(app.getAppPath()).read('app/components/'+component+'.html', 'utf8'));
+  e.returnValue = jetpack.cwd(app.getAppPath()).read('app/components/'+component, 'utf8');
+  e.sender.send('deliver-component', e.returnValue);
 });
 
 ipcMain.on('launch-view', (event, view) => {

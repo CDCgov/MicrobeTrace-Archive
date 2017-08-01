@@ -57,7 +57,7 @@ $(function(){
     $('body').prepend(c);
     $('#FileTab').click(() => reset());
   });
-  ipcRenderer.send('get-component', 'nav');
+  ipcRenderer.send('get-component', 'nav.html');
 
   // Before anything else gets done, ask the user to accept the legal agreement
   if(!localStorage.getItem('licenseAccepted')){

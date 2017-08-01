@@ -47,7 +47,7 @@
     electron.ipcRenderer.send('get-manifest');
 
     electron.ipcRenderer.once('deliver-component', (e, c) => $('body').prepend(c));
-    electron.ipcRenderer.send('get-component', 'nav');
+    electron.ipcRenderer.send('get-component', 'nav.html');
 
     electron.ipcRenderer.on('deliver-nodes', (e, nodes) => {
       window.nodes = nodes;
