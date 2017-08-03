@@ -88,8 +88,7 @@
     });
     electron.ipcRenderer.send('get-manifest');
 
-    electron.ipcRenderer.once('deliver-component', (e, c) => $('body').prepend(c));
-    electron.ipcRenderer.send('get-component', 'nav.html');
+    $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
 
     electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
       console.log('Got New Links.');

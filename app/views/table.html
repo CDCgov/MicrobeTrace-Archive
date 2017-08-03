@@ -159,20 +159,17 @@
     });
     electron.ipcRenderer.send('get-manifest');
 
-    electron.ipcRenderer.once('deliver-component', (e, c) => {
-      $('body').prepend(c);
-      $('#FileTab').after(
-        $('<li id="ExportTab"><a href="#">Export</a></li>').click(() => {
-          electron.remote.dialog.showSaveDialog((fileName) => {
-            if (fileName === undefined){
-              return alertify.error('File not exported!');
-            }
-            jetpack.write(fileName, Baby.unparse(window.data));
-          });
-        })
-      );
-    });
-    electron.ipcRenderer.send('get-component', 'nav.html');
+    $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
+    $('#FileTab').after(
+      $('<li id="ExportTab"><a href="#">Export</a></li>').click(() => {
+        electron.remote.dialog.showSaveDialog((fileName) => {
+          if (fileName === undefined){
+            return alertify.error('File not exported!');
+          }
+          jetpack.write(fileName, Baby.unparse(window.data));
+        });
+      })
+    );
 
     window.table = {destroy: () => {}};
 

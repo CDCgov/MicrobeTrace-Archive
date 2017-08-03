@@ -53,11 +53,8 @@ $(function(){
     ipcRenderer.send('reset');
   }
 
-  ipcRenderer.once('deliver-component', (e, c) => {
-    $('body').prepend(c);
-    $('#FileTab').click(() => reset());
-  });
-  ipcRenderer.send('get-component', 'nav.html');
+  $('body').prepend(ipcRenderer.sendSync('get-component', 'nav.html'));
+  $('#FileTab').click(() => reset());
 
   // Before anything else gets done, ask the user to accept the legal agreement
   if(!localStorage.getItem('licenseAccepted')){
