@@ -514,9 +514,13 @@ $(function(){
     var min = Math.min(...values);
     var max = Math.max(...values);
     var rng = max - min;
+    var recip = $('#reciprocal-link-width').is(':checked');
     links.attr(attribute, d => {
       var v = d[variable];
       if(typeof v === 'undefined') v = rng / 2 + min;
+      if(recip && attribute == 'stroke-width'){
+        return scalar * (1 - (v - min) / rng) + floor;
+      }
       return scalar * (v - min) / rng + floor;
     });
     if(reanimate) window.network.force.alpha(0.3).alphaTarget(0).restart();
@@ -526,7 +530,7 @@ $(function(){
   $('#linkOpacityVariable').change(e => scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1));
 
   $('#default-link-width').on('input', e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
-  $('#linkWidthVariable').change(e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
+  $('#linkWidthVariable, #reciprocal-link-width').change(e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
 
   var oldThreshold = computeThreshold();
 
