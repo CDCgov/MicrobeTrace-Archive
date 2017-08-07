@@ -1,0 +1,29 @@
+<script type="text/javascript">
+if(!electron){
+  const electron = require('electron');
+}
+const jetpack = require('fs-jetpack');
+const alertify = require('alertifyjs');
+
+$('#FileTab').after(
+  $('<li id="ScreenshotTab" class="disabled"><a href="#">Export Image</a></li>').click(() => {
+    electron.remote.dialog.showSaveDialog({
+      filters: [
+        {name: 'PNG Image', extensions: ['png']}
+      ]
+    }, (fileName) => {
+      if (fileName === undefined){
+        return alertify.error('File not exported!');
+      }
+      electron.remote.getCurrentWindow().capturePage({
+        x: 0,
+        y: 50,
+        width: $(window).width(),
+        height: $(window).height()
+      }, (img) => {
+        jetpack.write(fileName, img.toPNG());
+      });
+    });
+  })
+);
+</script>

@@ -55,6 +55,7 @@ $(function(){
 
   $('body').prepend(ipcRenderer.sendSync('get-component', 'nav.html'));
   $('#FileTab').click(() => reset());
+  $('body').append(ipcRenderer.sendSync('get-component', 'exportImage.html'));
 
   // Before anything else gets done, ask the user to accept the legal agreement
   if(!localStorage.getItem('licenseAccepted')){
