@@ -1,9 +1,13 @@
 <script type="text/javascript">
-if(!electron){
-  const electron = require('electron');
+if(typeof electron === 'undefined'){
+  electron = require('electron');
 }
-const jetpack = require('fs-jetpack');
-const alertify = require('alertifyjs');
+if(typeof jetpack === 'undefined'){
+  jetpack = require('fs-jetpack');
+}
+if(typeof alertify === 'undefined'){
+  alertify = require('alertifyjs');
+}
 
 $('#FileTab').after(
   $('<li id="ScreenshotTab" class="disabled"><a href="#">Export Image</a></li>').click(() => {
@@ -22,6 +26,7 @@ $('#FileTab').after(
         height: $(window).height()
       }, (img) => {
         jetpack.write(fileName, img.toPNG());
+        alertify.success('File Saved!')
       });
     });
   })
