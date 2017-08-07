@@ -211,8 +211,9 @@
     });
     electron.ipcRenderer.send('get-manifest');
 
-    electron.ipcRenderer.once('deliver-component', (e, c) => $('body').prepend(c));
-    electron.ipcRenderer.send('get-component', 'nav.html');
+    $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
+
+    $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportImage.html'));
 
     electron.ipcRenderer.on('deliver-nodes', (e, nodes)=>{
       window.nodes = nodes;
