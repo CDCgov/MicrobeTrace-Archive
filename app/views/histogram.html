@@ -90,6 +90,8 @@
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
 
+    $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportImage.html'));
+
     electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
       console.log('Got New Links.');
       window.links.forEach(d => d.visible = newLinks.find(e => e.id == d.id).visible);
@@ -125,7 +127,7 @@
         yaxis: $('#logScale').is(':checked') ? {type: 'log'} : {}
       }, {
         displaylogo: false,
-        displayModeBar: true
+        displayModeBar: false
       });
     }
 
