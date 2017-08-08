@@ -160,6 +160,10 @@ $(function(){
     $('#visibilityThreshold').text(math.toPrecision(computeThreshold(), 3));
     $('#numberOfVisibleLinks').text(window.links.filter(link => link.visible).length.toLocaleString());
     $('#numberOfPossibleLinks').text((window.nodes.length * (window.nodes.length - 1) / 2).toLocaleString());
+    var llinks = Lazy(window.links).filter(e => e.visible);
+    var singletons = window.nodes.length - Lazy(llinks.pluck('source').union(llinks.pluck('target'))).uniq().size();
+    $('#numberOfSingletonNodes').text(singletons.toLocaleString());
+    $('#numberOfDisjointComponents').text((countComponents() - singletons).toLocaleString());
   }
 
   const meta = ['seq', 'padding', 'selected', 'orig', 'mst', 'visible', 'index'];
@@ -210,21 +214,47 @@ $(function(){
     return((maxMetric - minMetric) * proportion + minMetric);
   }
 
-  function setLinkVisibility(){
-    if(window.links[0].orig){ return; }
-    var metric  = $('#linkSortVariable').val(),
-        showMST = $('#showMSTLinks').is(':checked');
-    window.links.forEach(link => {
-      if(link[metric] <= computeThreshold()){
-        if(showMST){
-          link.visible = link.mst;
-        } else {
-          link.visible = true;
-        }
-      } else {
-        link.visible = false;
+  function DFS(v){
+    v.discovered = true;
+    window.links
+      .filter(l => l.visible && (l.source.id == v.id || l.target.id == v.id))
+      .forEach(l => {
+        if(!l.source.discovered) DFS(l.source);
+        if(!l.target.discovered) DFS(l.target);
+      });
+  }
+
+  function countComponents(){
+    var components = 0;
+    window.nodes.forEach(node => {
+      if(!node.discovered){
+        DFS(node);
+        components++;
       }
     });
+    window.nodes.forEach(node => delete node.discovered);
+    return components;
+  }
+
+  function setLinkVisibility(){
+    var metric  = $('#linkSortVariable').val(),
+        showMST = $('#showMSTLinks').is(':checked'),
+        threshold = computeThreshold();
+    if(metric == 'none' && window.links[0].orig){
+      window.links.forEach(link => link.visible = true);
+    } else {
+      window.links.forEach(link => {
+        if(link[metric] <= threshold){
+          if(showMST){
+            link.visible = link.mst;
+          } else {
+            link.visible = true;
+          }
+        } else {
+          link.visible = false;
+        }
+      });
+    }
     ipcRenderer.send('update-link-visibility', window.links);
   }
 
