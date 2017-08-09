@@ -30,6 +30,7 @@
             <ul class="dropdown-menu">
               <li id="TableTab"><a href="#">Table</a></li>
               <li id="SequencesTab"><a href="#">Sequences</a></li>
+              <li id="DistanceMatrixTab"><a href="#">Distance Matrix</a></li>
               <li id="HistogramTab"><a href="#">Histogram</a></li>
               <li id="MapTab"><a href="#">Map</a></li>
             </ul>
@@ -90,6 +91,14 @@
   $('#TableTab').click(function(){
     if(!$(this).hasClass('disabled')){
       electron.ipcRenderer.send('launch-view', 'views/table.html');
+    } else {
+      alertify.warning('Please load some data first!');
+    }
+  });
+
+  $('#DistanceMatrixTab').click(function(){
+    if(!$(this).hasClass('disabled')){
+      electron.ipcRenderer.send('launch-view', 'views/distanceMatrix.html');
     } else {
       alertify.warning('Please load some data first!');
     }

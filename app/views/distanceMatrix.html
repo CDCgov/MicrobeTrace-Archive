@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title></title>
+  <link rel="icon" href="img/image32.ico" />
+  <link rel="stylesheet" href="../css/bootstrap.min.css" />
+  <link rel="stylesheet" href="../css/alertify.min.css" />
+  <link rel="stylesheet" href="../stylesheets/main.css" />
+  <script src="../vendor/plotly.min.js"></script>
+</head>
+<body>
+  <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Distance Matrix Configuration</h4>
+        </div>
+        <div class="modal-body">
+          No options to configure.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+  <div id="main_panel"></div>
+  <script>
+  const electron = require('electron');
+  window.jQuery = window.$ = require('jquery');
+  require('bootstrap');
+  const alertify = require('alertifyjs');
+
+  $(function(){
+
+    electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
+      $('title').text(manifest.productName + ' v. ' + manifest.version);
+      $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
+      $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
+    });
+    electron.ipcRenderer.send('get-manifest');
+
+    $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
+
+    $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportImage.html'));
+
+    function replot(){
+      if(!window.links){
+        return alertify.error('No links are populated.')
+      }
+
+      if(window.plot) Plotly.purge('main_panel');
+
+      var varName = 'distance';
+      var distances = [];
+      var labels = [];
+
+      window.nodes.forEach(i => {
+        var current = [];
+        labels.push(i);
+        window.nodes.forEach(j => {
+          var dist = window.links.find(l => {
+            return (l.source == i.id && l.target == j.id) ||
+            (l.source == j.id && l.target == i.id)
+          });
+          if(typeof dist === 'undefined'){
+            current.push(0);
+          } else {
+            current.push(dist[varName]);
+          }
+        });
+        distances.push(current);
+      });
+
+      window.plot = Plotly.newPlot('main_panel', [{
+        x: labels,
+        y: labels,
+        z: distances,
+        type: 'heatmap',
+      }], {}, {
+        displaylogo: false,
+        displayModeBar: false
+      });
+    }
+
+    electron.ipcRenderer.on('deliver-data', (e, data) => {
+      Object.assign(window, data);
+      replot();
+    });
+    electron.ipcRenderer.send('get-data');
+
+    $(window).on('resize', replot);
+  });
+
+  </script>
+</body>
+</html>
