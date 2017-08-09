@@ -62,13 +62,15 @@
 
       window.nodes.forEach(i => {
         var current = [];
-        labels.push(i);
+        labels.push(i.id);
         window.nodes.forEach(j => {
           var dist = window.links.find(l => {
             return (l.source == i.id && l.target == j.id) ||
             (l.source == j.id && l.target == i.id)
           });
           if(typeof dist === 'undefined'){
+            //In general, this should only occur when the pairing is reflexive,
+            //so, assuming this is true, the distance is zero.
             current.push(0);
           } else {
             current.push(dist[varName]);
