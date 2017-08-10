@@ -575,50 +575,41 @@ $(function(){
   $('#default-link-width').on('input', e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
   $('#linkWidthVariable, #reciprocal-link-width').change(e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
 
-  var oldThreshold = computeThreshold();
-
   function refreshLinks(){
-    var newThreshold = computeThreshold();
-    var links = Lazy(window.links);
-    if($('#showMSTLinks').is(':checked')){
-      links = links.filter(link => link.mst);
-    }
-    var sortVar = $('#linkSortVariable').val();
-    links = links
-      .filter(link => link[sortVar] <= newThreshold)
-      .toArray();
+    setLinkVisibility();
+    var vlinks = links.filter(l => l.visible);
     var selection = window.network.svg
       .select('.links')
       .selectAll('line')
-      .data(links);
-    if(newThreshold > oldThreshold){
-      selection.enter().append('line').merge(selection)
-        .on('mouseenter', showLinkToolTip)
-        .on('mouseout', hideTooltip);
-      scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width')
-      window.network.force.nodes(window.nodes).on('tick', () => {
-        selection
-          .attr('x1', d => d.source.x)
-          .attr('y1', d => d.source.y)
-          .attr('x2', d => d.target.x)
-          .attr('y2', d => d.target.y);
-        window.network.svg.select('.nodes').selectAll('circle')
-          .attr('cx', d => d.x)
-          .attr('cy', d => d.y)
+      .data(vlinks);
+    selection.enter().append('line').merge(selection)
+      .on('mouseenter', showLinkToolTip)
+      .on('mouseout', hideTooltip);
+    scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),   'stroke-width');
+    scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
+    window.network.force.nodes(window.nodes).on('tick', e => {
+      selection
+        .attr('x1', d => d.source.x)
+        .attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x)
+        .attr('y2', d => d.target.y);
+        window.network.svg.select('.nodes').selectAll('g')
+          .attr('transform', d => 'translate(' + d.x + ', ' + d.y + ')')
           .classed('selected', d => d.selected);
-      });
-    } else {
-      selection.exit().remove();
-    }
-    window.network.force.force('link').links(links);
+    });
+    selection.exit().remove();
+    window.network.force.force('link').links(vlinks);
     window.network.force.alpha(0.3).alphaTarget(0).restart();
     updateStatistics();
-    oldThreshold = newThreshold;
   }
 
   ipcRenderer.on('update-links-mst', (event, newLinks) => {
     window.links.forEach(ol => {
-      ol.mst = newLinks.find(nl => nl.source == ol.source.id && nl.target == ol.target.id).mst;
+      ol.mst = false;
+      var newlink = newLinks.find(nl => nl.source == ol.source.id && nl.target == ol.target.id);
+      if(typeof newlink !== "undefined"){
+        ol.mst = newlink.mst;
+      }
     });
     $('.showForNotMST').hide();
     $('.showForMST').show().filter('tr').css('display', 'table-row');
