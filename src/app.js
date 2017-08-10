@@ -290,9 +290,7 @@ $(function(){
       .attr('class', 'nodes')
       .selectAll('circle')
       .data(window.nodes)
-      .enter().append('circle')
-        .attr('r', $('#default-node-radius').val())
-        .attr('fill', $('#default-node-color').val())
+      .enter().append('g')
         .call(d3.drag()
           .on('start', dragstarted)
           .on('drag', dragged)
@@ -311,6 +309,12 @@ $(function(){
           window.network.svg.select('.nodes').selectAll('circle').data(nodes).classed('selected', d => d.selected);
           $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
         });
+
+    node.append('circle')
+      .attr('r', $('#default-node-radius').val())
+      .attr('fill', $('#default-node-color').val());
+
+    node.append('text').text(d => d.id).attr('dy', 5).attr('dx', 5);
 
     window.network.force = d3.forceSimulation()
       .force('link', d3.forceLink()
@@ -333,8 +337,7 @@ $(function(){
           .attr('x2', d => d.target.x)
           .attr('y2', d => d.target.y);
         node
-          .attr('cx', d => d.x)
-          .attr('cy', d => d.y);
+          .attr('transform', d => 'translate(' + d.x + ', ' + d.y + ')');
       });
 
     window.network.force.force('link').links(links);
@@ -443,6 +446,14 @@ $(function(){
     });
     if(reanimate) window.network.force.alpha(0.3).alphaTarget(0).restart();
   }
+
+  $('#staticLabels').on('change', e => {
+    if(e.target.checked){
+      $('.nodes text').fadeIn();
+    } else {
+      $('.nodes text').fadeOut();
+    }
+  });
 
   $('#default-node-radius').on('input', e => scaleNodeThing($('#default-node-radius').val(), $('#nodeRadiusVariable').val(), 'r', true));
   $('#nodeRadiusVariable').change(e => scaleNodeThing($('#default-node-radius').val(), $('#nodeRadiusVariable').val(), 'r', true));
