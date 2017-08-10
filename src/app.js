@@ -27,7 +27,8 @@ $(function(){
       $('#loadingInformation').empty();
       $('#network').empty();
       $('#groupKey').find('tbody').empty();
-      $('.showForFASTA, .showForEdgeCSV').hide();
+      $('.showForFASTA, .showForEdgeCSV, .showForMST').hide();
+      $('.showForNotMST').show().filter('tr').css('display', 'table-row');
       $('#sidebar-wrapper').removeClass('toggled');
       $('#collapseTwo').collapse('hide');
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
@@ -614,6 +615,19 @@ $(function(){
     updateStatistics();
     oldThreshold = newThreshold;
   }
+
+  ipcRenderer.on('update-links-mst', (event, newLinks) => {
+    window.links.forEach(ol => {
+      ol.mst = newLinks.find(nl => nl.source == ol.source.id && nl.target == ol.target.id).mst;
+    });
+    $('.showForNotMST').hide();
+    $('.showForMST').show().filter('tr').css('display', 'table-row');
+    alertify.success('MST successfully computed.', 0);
+  });
+
+  $('#computeMST').click(e => {
+    ipcRenderer.send('compute-mst');
+  });
 
   $('#showMSTLinks, #showAllLinks').parent().click(e => {
     setLinkVisibility();

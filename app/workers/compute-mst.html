@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+  <script>
+  const electron = require('electron');
+  const math     = require('bettermath');
+
+  electron.ipcRenderer.on('deliver-data', (event, data) => {
+    var links = data.links.slice()
+    links.forEach(l => l.mst = false);
+    links.sort((a, b) => a.distance - b.distance);
+    links[0].mst = true;
+    var nodes_in_tree = [links[0].source, links[0].target],
+        n = links.length;
+    for(var i = 0; i < n; i++){
+      for(var j = 0; j < n; j++){
+        if(nodes_in_tree.includes(links[j].source) && !nodes_in_tree.includes(links[j].target)){
+          nodes_in_tree.push(links[j].target);
+          links[j].mst = true;
+          break;
+        }
+        if(nodes_in_tree.includes(links[j].target) && !nodes_in_tree.includes(links[j].source)){
+          nodes_in_tree.push(links[j].source);
+          links[j].mst = true;
+          break;
+        }
+      }
+      if(nodes_in_tree.length === data.nodes.length){ break; }
+    }
+    electron.ipcRenderer.send('update-links-mst', links);
+    electron.remote.getCurrentWindow().close();
+  });
+  </script>
+</head>
+</html>

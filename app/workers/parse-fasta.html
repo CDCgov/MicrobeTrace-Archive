@@ -18,6 +18,13 @@
     links: []
   };
 
+  var defaultNode = {
+    padding: 0,
+    seq: "",
+    selected: false,
+    index: -1
+  }
+
   var instructions = {
     align: true,
     penalties: [-1.7, -5]
@@ -80,11 +87,13 @@
 
     var k = 0;
     electron.ipcRenderer.send('message', 'Matching to Inferred nodes...');
-    data.nodes.forEach(node => {
-      var match = csvNodes.find(n => n.id == node.id);
+    csvNodes.forEach(node => {
+      var match = data.nodes.find(n => n.id == node.id);
       if(match){
-        Object.assign(node, match);
+        Object.assign(match, node);
         k++;
+      } else {
+        data.nodes.push(Object.assign(node, defaultNode));
       }
     });
     electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.');
@@ -105,7 +114,6 @@
         data.links.push({
           source: data.nodes[j].id,
           target: data.nodes[i].id,
-          mst: false,
           visible: (dist < 0.015),
           selected: false,
           distance: dist
@@ -116,34 +124,10 @@
       }
     }
     electron.ipcRenderer.send('message', ' - ' + z + ' links computed.');
-    computeMST();
-  }
-
-  function computeMST(){
-    electron.ipcRenderer.send('message', 'Computing Minimum Spanning Tree...');
-    data.links.sort((a, b) => a.distance - b.distance);
-    data.links[0].mst = true;
-    var nodes_in_tree = [data.links[0].source, data.links[0].target],
-        n = data.links.length;
-    for(var i = 0; i < n; i++){
-      for(var j = 0; j < n; j++){
-        if(nodes_in_tree.includes(data.links[j].source) && !nodes_in_tree.includes(data.links[j].target)){
-          nodes_in_tree.push(data.links[j].target);
-          data.links[j].mst = true;
-          break;
-        } else if(!nodes_in_tree.includes(data.links[j].source) && nodes_in_tree.includes(data.links[j].target)){
-          nodes_in_tree.push(data.links[j].source);
-          data.links[j].mst = true;
-          break;
-        }
-      }
-      electron.ipcRenderer.send('tick', 100 * nodes_in_tree.length / data.nodes.length);
-      if(nodes_in_tree.length === data.nodes.length){ break; }
-    }
-    electron.ipcRenderer.send('message', ' - MST Computation Completed.');
     electron.ipcRenderer.send('update-data', data);
     electron.remote.getCurrentWindow().close();
   }
+
   </script>
 </head>
 </html>

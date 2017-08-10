@@ -242,10 +242,10 @@
                       <td><input type="range" id="default-link-strength" min = "0" max="1" value="0.95" step="0.025" /></td>
                     </tr>
                     <tr>
-                      <td><a href="#" data-toggle="tooltip" title="Show only a Minimum Spanning Tree or all edges within the threshold?">Pruning</a></td>
+                      <td><a href="#" data-toggle="tooltip" title="By what variable would you like to prune edges from the network?">Pruning</a></td>
                       <td><select id="linkSortVariable" class="linkVariables numeric"><option value="distance">Distance</option></select></td>
                       <td>
-                        <div class="btn-group btn-group-xs showForFASTA" data-toggle="buttons">
+                        <div class="btn-group btn-group-xs showForFASTA showForMST" data-toggle="buttons">
                           <label class="btn btn-default">
                             <input type="radio" name="MSTOptions" id="showMSTLinks" autocomplete="off"> MST
                           </label>
@@ -253,6 +253,7 @@
                             <input type="radio" name="MSTOptions" id="showAllLinks" autocomplete="off" checked> All
                           </label>
                         </div>
+                        <button id="computeMST" class="btn btn-default btn-xs showForNotMST">Compute MST</button>
                       </td>
                     </tr>
                     <tr>

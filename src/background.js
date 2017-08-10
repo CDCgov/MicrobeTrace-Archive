@@ -68,6 +68,18 @@ ipcMain.on('parse-file', (event, instructions) => {
   });
 });
 
+ipcMain.on('compute-mst', (event, titles) => {
+  const computeWindow = createWindow('MST Computer', {show: false});
+  computeWindow.loadURL(url.format({
+    pathname: path.join(__dirname, 'workers/compute-mst.html'),
+    protocol: 'file:',
+    slashes: true
+  }));
+  computeWindow.on('ready-to-show', e => {
+    computeWindow.send('deliver-data', data);
+  });
+});
+
 function distribute(type, sdata, except){
   BrowserWindow.getAllWindows().forEach(openWindow => {
     if(openWindow.id !== except){
@@ -94,6 +106,11 @@ ipcMain.on('update-node-selection', (event, newNodes) => {
 ipcMain.on('update-link-visibility', (event, newLinks) => {
   data.links.forEach(l => l.visible = newLinks.find(nl => nl.id == l.id).visible);
   distribute('update-link-visibility', data.links, event.sender.id);
+});
+
+ipcMain.on('update-links-mst', (event, newLinks) => {
+  data.links = newLinks;
+  distribute('update-links-mst', data.links);
 });
 
 ipcMain.on('get-data',      e => e.sender.send('deliver-data',     data));
