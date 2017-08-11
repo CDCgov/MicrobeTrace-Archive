@@ -289,7 +289,7 @@ $(function(){
 
     var node = window.network.svg.append('g')
       .attr('class', 'nodes')
-      .selectAll('circle')
+      .selectAll('g')
       .data(window.nodes)
       .enter().append('g')
         .call(d3.drag()
