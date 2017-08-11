@@ -387,6 +387,7 @@ $(function(){
 
     function showNodeToolTip(d){
       if($('#nodeTooltipVariable').val() == "none") return;
+      if($('#staticLabels').is(':checked')) return;
       d3.select('#tooltip')
         .html(d[$('#nodeTooltipVariable').val()])
         .style('left', (d3.event.pageX + 8) + 'px')
@@ -448,12 +449,18 @@ $(function(){
     if(reanimate) window.network.force.alpha(0.3).alphaTarget(0).restart();
   }
 
-  $('#staticLabels').on('change', e => {
-    if(e.target.checked){
-      $('.nodes text').fadeIn();
-    } else {
-      $('.nodes text').fadeOut();
-    }
+  $('#nodeTooltipVariable').change(e => {
+    window.network.svg.select('.nodes')
+      .selectAll('text')
+      .text(d => d[e.target.val]);
+  });
+
+  $('#staticLabels').parent().click(e => {
+    $('.nodes text').fadeIn();
+  });
+
+  $('#tooltips').parent().click(e => {
+    $('.nodes text').fadeOut();
   });
 
   $('#default-node-radius').on('input', e => scaleNodeThing($('#default-node-radius').val(), $('#nodeRadiusVariable').val(), 'r', true));
