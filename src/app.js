@@ -335,14 +335,20 @@ $(function(){
       .force('center', d3.forceCenter(width / 2, height / 2));
 
     window.network.force.nodes(nodes).on('tick', () => {
-        link
-          .attr('x1', d => d.source.x)
-          .attr('y1', d => d.source.y)
-          .attr('x2', d => d.target.x)
-          .attr('y2', d => d.target.y);
-        node
-          .attr('transform', d => 'translate(' + d.x + ', ' + d.y + ')');
-      });
+      link
+        .attr('x1', d => d.source.x)
+        .attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x)
+        .attr('y2', d => d.target.y);
+      node.
+        attr('transform', d => {
+          if(d.fixed){
+            return 'translate(' + d.fx + ', ' + d.fy + ')';
+          } else {
+            return 'translate(' + d.x + ', ' + d.y + ')';
+          }
+        });
+    });
 
     window.network.force.force('link').links(links);
 
@@ -359,17 +365,15 @@ $(function(){
 
     function dragended(d) {
       if (!d3.event.active) window.network.force.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
+      if(!d.fixed){
+        d.fx = null;
+        d.fy = null;
+      }
     }
 
     function showContextMenu(d){
       d3.event.preventDefault();
       hideTooltip();
-      d3.select('#contextmenu')
-        .style('left', (d3.event.pageX) + 'px')
-        .style('top', (d3.event.pageY) + 'px')
-        .style('opacity', 1);
       d3.select('#copyID').on('click', e => {
         clipboard.writeText(d.id);
         hideContextMenu();
@@ -378,6 +382,26 @@ $(function(){
         clipboard.writeText(d.seq);
         hideContextMenu();
       });
+      if(d.fixed){
+        $('#pinNode').text('Unpin Node').click(e => {
+          d.fx = null;
+          d.fy = null;
+          d.fixed = false;
+          window.network.force.alpha(0.3).alphaTarget(0).restart();
+          hideContextMenu();
+        });
+      } else {
+        $('#pinNode').text('Pin Node').click(e => {
+          d.fx = d.x;
+          d.fy = d.y;
+          d.fixed = true;
+          hideContextMenu();
+        });
+      }
+      d3.select('#contextmenu')
+        .style('left', (d3.event.pageX) + 'px')
+        .style('top', (d3.event.pageY) + 'px')
+        .style('opacity', 1);
     }
 
     function hideContextMenu(){
@@ -606,8 +630,13 @@ $(function(){
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y);
       window.network.svg.select('.nodes').selectAll('g')
-        .attr('transform', d => 'translate(' + d.x + ', ' + d.y + ')')
-        .classed('selected', d => d.selected);
+        .attr('transform', d => {
+          if(d.fixed){
+            return 'translate(' + d.fx + ', ' + d.fy + ')';
+          } else {
+            return 'translate(' + d.x + ', ' + d.y + ')';
+          }
+        });
     });
     window.network.force.force('link').links(vlinks);
   }
