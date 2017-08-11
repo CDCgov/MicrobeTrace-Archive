@@ -622,13 +622,13 @@ $(function(){
         ol.mst = newlink.mst;
       }
     });
-    $('.showForNotMST').hide();
-    $('.showForMST').show().filter('tr').css('display', 'table-row');
+    $('.showForMST').fadeIn().filter('tr').css('display', 'table-row');
     alertify.success('MST successfully computed.', 0);
   });
 
   $('#computeMST').click(e => {
     ipcRenderer.send('compute-mst');
+    $('.showForNotMST').fadeOut();
   });
 
   $('#showMSTLinks, #showAllLinks').parent().click(e => {
