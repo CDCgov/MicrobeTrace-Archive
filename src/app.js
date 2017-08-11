@@ -3,6 +3,7 @@ import d3 from 'd3';
 import { forceAttract } from 'd3-force-attract';
 import Lazy from 'lazy.js';
 import math from 'bettermath';
+import './helpers/window.js';
 
 window.jquery = window.jQuery = window.$ = require('jquery');
 require('bootstrap');
@@ -315,7 +316,9 @@ $(function(){
       .attr('r', $('#default-node-radius').val())
       .attr('fill', $('#default-node-color').val());
 
-    node.append('text').text(d => d.id).attr('dy', 5).attr('dx', 5);
+    node.append('text')
+      .attr('dy', 5)
+      .attr('dx', 5);
 
     window.network.force = d3.forceSimulation()
       .force('link', d3.forceLink()
@@ -386,8 +389,7 @@ $(function(){
     }
 
     function showNodeToolTip(d){
-      if($('#nodeTooltipVariable').val() == "none") return;
-      if($('#staticLabels').is(':checked')) return;
+      if($('#nodeTooltipVariable').val() === 'none') return;
       d3.select('#tooltip')
         .html(d[$('#nodeTooltipVariable').val()])
         .style('left', (d3.event.pageX + 8) + 'px')
@@ -449,18 +451,14 @@ $(function(){
     if(reanimate) window.network.force.alpha(0.3).alphaTarget(0).restart();
   }
 
-  $('#nodeTooltipVariable').change(e => {
-    window.network.svg.select('.nodes')
-      .selectAll('text')
-      .text(d => d[e.target.val]);
-  });
-
-  $('#staticLabels').parent().click(e => {
-    $('.nodes text').fadeIn();
-  });
-
-  $('#tooltips').parent().click(e => {
-    $('.nodes text').fadeOut();
+  $('#nodeLabelVariable').change(e => {
+    if(e.target.value === 'none'){
+      $('text').text('');
+    } else {
+      window.network.svg.select('.nodes')
+      .selectAll('text').data(window.nodes)
+      .text(d => d[e.target.value]);
+    }
   });
 
   $('#default-node-radius').on('input', e => scaleNodeThing($('#default-node-radius').val(), $('#nodeRadiusVariable').val(), 'r', true));
@@ -692,6 +690,3 @@ $(function(){
     }
   });
 });
-
-// Small helpers you might want to keep
-import './helpers/window.js';
