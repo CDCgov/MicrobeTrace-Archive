@@ -582,6 +582,8 @@ $(function(){
   $('#default-link-width').on('input', e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
   $('#linkWidthVariable, #reciprocal-link-width').change(e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
 
+  var oldThreshold = computeThreshold();
+
   function refreshLinks(){
     setLinkVisibility();
     var vlinks = links.filter(l => l.visible);
@@ -589,9 +591,15 @@ $(function(){
       .select('.links')
       .selectAll('line')
       .data(vlinks);
-    selection.enter().append('line').merge(selection)
+    var newThreshold = computeThreshold();
+    if(newThreshold > oldThreshold){
+      selection.enter().append('line').merge(selection)
       .on('mouseenter', showLinkToolTip)
       .on('mouseout', hideTooltip);
+    } else {
+      selection.exit().remove();
+    }
+    oldThreshold = newThreshold;
     scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),   'stroke-width');
     scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
     window.network.force.nodes(window.nodes).on('tick', e => {
@@ -600,14 +608,11 @@ $(function(){
         .attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y);
-        window.network.svg.select('.nodes').selectAll('g')
-          .attr('transform', d => 'translate(' + d.x + ', ' + d.y + ')')
-          .classed('selected', d => d.selected);
+      window.network.svg.select('.nodes').selectAll('g')
+        .attr('transform', d => 'translate(' + d.x + ', ' + d.y + ')')
+        .classed('selected', d => d.selected);
     });
-    selection.exit().remove();
     window.network.force.force('link').links(vlinks);
-    window.network.force.alpha(0.3).alphaTarget(0).restart();
-    updateStatistics();
   }
 
   ipcRenderer.on('update-links-mst', (event, newLinks) => {
@@ -628,16 +633,15 @@ $(function(){
   });
 
   $('#showMSTLinks, #showAllLinks').parent().click(e => {
-    setLinkVisibility();
     refreshLinks();
+    window.network.force.alpha(0.3).alphaTarget(0).restart();
+  });
+  $('#minThreshold, #maxThreshold').on('change', e => {
+    refreshLinks();
+    window.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
-  $('#minThreshold, #maxThreshold').on('input', e => {
-    setLinkVisibility();
-    refreshLinks();
-  });
-
-  $('#default-link-threshold').on('mousedown', function(e){
+  $('#default-link-threshold').on('input', function(e){
     $(this).on('mousemove', function(ee){
       $('#tooltip').html(computeThreshold())
         .css({
@@ -645,10 +649,9 @@ $(function(){
           'top': (ee.clientY - 28) + 'px',
           'opacity': 1
         });
-      setLinkVisibility();
       refreshLinks();
     });
-  }).on('mouseup', function(e){
+  }).on('change', function(e){
     $(this).off('mousemove');
     $('#tooltip').fadeOut(function(ee){
       $(this).css({
@@ -657,6 +660,8 @@ $(function(){
         'display': 'inline'
       });
     });
+    updateStatistics();
+    window.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#hideNetworkStatistics').parent().click(() => $('#networkStatistics').fadeOut());
