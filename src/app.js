@@ -434,12 +434,12 @@ $(function(){
     if(!floor){floor = 1;}
     var values = Lazy(window.nodes)
       .pluck(variable)
-      .uniq()
       .without(undefined)
       .sort()
+      .uniq()
       .toArray();
-    var min = Math.min(...values);
-    var max = Math.max(...values);
+    var min = math.min(values);
+    var max = math.max(values);
     var rng = max - min;
     circles.attr(attribute, d => {
       var v = d[variable];
@@ -549,7 +549,7 @@ $(function(){
     table.fadeIn();
   });
 
-  function scaleLinkThing(scalar, variable, attribute, floor, reanimate){
+  function scaleLinkThing(scalar, variable, attribute, floor){
     var links = window.network.svg.selectAll('line');
     if(variable === 'none'){
       return links.attr(attribute, scalar);
@@ -557,12 +557,12 @@ $(function(){
     if(!floor){floor = 1;}
     var values = Lazy(window.links)
       .pluck(variable)
-      .uniq()
       .without(undefined)
       .sort()
+      .uniq()
       .toArray();
-    var min = Math.min(...values);
-    var max = Math.max(...values);
+    var min = math.min(values);
+    var max = math.max(values);
     var rng = max - min;
     var recip = $('#reciprocal-link-width').is(':checked');
     links.attr(attribute, d => {
@@ -573,7 +573,6 @@ $(function(){
       }
       return scalar * (v - min) / rng + floor;
     });
-    if(reanimate) window.network.force.alpha(0.3).alphaTarget(0).restart();
   }
 
   $('#default-link-opacity').on('input', e => scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1));
