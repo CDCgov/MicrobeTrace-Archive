@@ -28,7 +28,7 @@ $(function(){
       $('#loadingInformation').empty();
       $('#network').empty();
       $('#groupKey').find('tbody').empty();
-      $('.showForFASTA, .showForEdgeCSV, .showForMST').hide();
+      $('.showForSequence, .showForMST').hide();
       $('.showForNotMST').show().filter('tr').css('display', 'table-row');
       $('#sidebar-wrapper').removeClass('toggled');
       $('#collapseTwo').collapse('hide');
@@ -88,11 +88,9 @@ $(function(){
     }
 
     if(e.target.files[0].name.slice(-3) == 'csv'){
-      $('.showForFASTA').hide();
-      $('.showForEdgeCSV').show().filter('tr').css('display', 'table-row');
+      $('.showForSequence').hide();
     } else {
-      $('.showForEdgeCSV').hide();
-      $('.showForFASTA').show().filter('tr').css('display', 'table-row');
+      $('.showForSequence').show().filter('tr').css('display', 'table-row');
     }
 
     $('#main-submit').prop({
