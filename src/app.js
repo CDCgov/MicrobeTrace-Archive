@@ -380,7 +380,7 @@ $(function(){
     function hideContextMenu(){
       var menu = d3.select('#contextmenu');
       menu
-        .transition().duration(400)
+        .transition().duration(100)
         .style('opacity', 0)
         .on('end', () =>  menu.style('left', '0px').style('top', '0px'));
     }
@@ -392,7 +392,7 @@ $(function(){
         .html(d[$('#nodeTooltipVariable').val()])
         .style('left', (d3.event.pageX + 8) + 'px')
         .style('top', (d3.event.pageY - 28) + 'px')
-        .transition().duration(400)
+        .transition().duration(100)
         .style('opacity', 1);
     }
 
@@ -406,14 +406,14 @@ $(function(){
       .html((v === 'source' || v === 'target') ? d[v].id : d[v])
       .style('left', (d3.event.pageX + 8) + 'px')
       .style('top', (d3.event.pageY - 28) + 'px')
-      .transition().duration(400)
+      .transition().duration(100)
       .style('opacity', 1);
   }
 
   function hideTooltip(){
     var tooltip = d3.select('#tooltip');
     tooltip
-      .transition().duration(400)
+      .transition().duration(100)
       .style('opacity', 0)
       .on('end', () => tooltip.style('left', '-40px').style('top', '-40px'));
   }
