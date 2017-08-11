@@ -644,8 +644,8 @@ $(function(){
     $(this).on('mousemove', function(ee){
       $('#tooltip').html(computeThreshold())
         .css({
-          'left': (ee.clientX + 8) + 'px',
-          'top': (ee.clientY - 28) + 'px',
+          'left': (ee.clientX - 20) + 'px',
+          'top': (ee.clientY + 20) + 'px',
           'opacity': 1
         });
       refreshLinks();
