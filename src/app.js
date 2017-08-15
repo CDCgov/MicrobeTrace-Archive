@@ -1,5 +1,6 @@
 import { clipboard, remote, ipcRenderer } from 'electron';
 import d3 from 'd3';
+Object.assign(d3, require('d3-symbol-extra'));
 import { forceAttract } from 'd3-force-attract';
 import Lazy from 'lazy.js';
 import math from 'bettermath';
@@ -306,17 +307,20 @@ $(function(){
           }
           n.selected = !n.selected;
           ipcRenderer.send('update-node-selection', window.nodes);
-          window.network.svg.select('.nodes').selectAll('circle').data(nodes).classed('selected', d => d.selected);
+          window.network.svg.select('.nodes').selectAll('path').data(nodes).classed('selected', d => d.selected);
           $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
         });
 
-    node.append('circle')
-      .attr('r', $('#default-node-radius').val())
+    node.append('path')
+      .attr('d', d3.symbol()
+        .size(100 * $('#default-node-radius').val())
+        .type(d3['symbol'+$('#default-node-symbol').val()])
+      )
       .attr('fill', $('#default-node-color').val());
 
     node.append('text')
       .attr('dy', 5)
-      .attr('dx', 5);
+      .attr('dx', $('#default-node-radius').val());
 
     window.network.force = d3.forceSimulation()
       .force('link', d3.forceLink()
@@ -444,14 +448,21 @@ $(function(){
 
   ipcRenderer.on('update-node-selection', (e, newNodes) => {
     window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
-    window.network.svg.select('.nodes').selectAll('circle')
+    window.network.svg.select('.nodes').selectAll('path')
       .data(window.nodes)
       .classed('selected', d => d.selected);
     $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
   });
 
-  function scaleNodeThing(scalar, variable, attribute, floor, reanimate){
-    var circles = window.network.svg.selectAll('circle');
+  function redrawNodes(){
+    window.network.svg.selectAll('path').attr('d', d3.symbol()
+      .size(100 * $('#default-node-radius').val())
+      .type(d3['symbol'+$('#default-node-symbol').val()])
+    );
+  }
+
+  function scaleNodeThing(scalar, variable, attribute, floor){
+    var circles = window.network.svg.selectAll('path');
     if(variable === 'none'){
       return circles.attr(attribute, scalar);
     }
@@ -470,7 +481,6 @@ $(function(){
       if(typeof v === 'undefined') v = rng / 2 + min;
       return scalar * (v - min) / rng + floor;
     });
-    if(reanimate) window.network.force.alpha(0.3).alphaTarget(0).restart();
   }
 
   $('#nodeLabelVariable').change(e => {
@@ -483,16 +493,70 @@ $(function(){
     }
   });
 
-  $('#default-node-radius').on('input', e => scaleNodeThing($('#default-node-radius').val(), $('#nodeRadiusVariable').val(), 'r', true));
-  $('#nodeRadiusVariable').change(e => scaleNodeThing($('#default-node-radius').val(), $('#nodeRadiusVariable').val(), 'r', true));
+  $('#default-node-symbol').on('input', redrawNodes);
+  $('#nodeSymbolVariable').change(e => {
+    $('#default-node-symbol').fadeOut();
+    var table = $('#nodeGroupKey').append('tbody#nodeShapes');
+    if(e.target.value == 'none'){
+      redrawNodes();
+      $('#default-node-symbol').fadeIn();
+      table.fadeOut();
+      return;
+    }
+    var circles = window.network.svg.selectAll('path').data(window.nodes);
+    table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
+    var values = Lazy(window.nodes).pluck(e.target.value).uniq().sortBy().toArray();
+    //TODO: Map from values to d3.symbol*
+    var o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
+    circles.attr('d', d => d[e.target.value]);
+    values.forEach(value => {
+      var input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
+        .on('input', evt => {
+          circles
+            .filter(d => d[e.target.value] == value)
+            .attr('fill', d => evt.target.value);
+        });
+      var cell = $('<td></td>').append(input);
+      var row = $('<tr><td>'+value+'</td></tr>').append(cell);
+      table.append(row);
+    });
+    table.fadeIn();
+  });
+
+  $('#default-node-radius').on('input', redrawNodes);
+  $('#nodeRadiusVariable').change(e => {
+    var variable = $('#nodeRadiusVariable').val();
+    if(variable === 'none'){
+      return redrawNodes();
+    }
+    var symbols = window.network.svg.selectAll('path').data(window.nodes);
+    var values = Lazy(window.nodes)
+      .pluck()
+      .without(undefined)
+      .sort()
+      .uniq()
+      .toArray();
+    var min = math.min(values);
+    var max = math.max(values);
+    var rng = max - min;
+    var med = rng / 2 + min;
+    symbols.attr('d', d => {
+      var v = d[variable];
+      var r = med;
+      if(typeof v !== 'undefined') r = (v - min) / rng + 1;
+      return d3.symbol()
+        .size(r * 100)
+        .type(d3['symbol' + $('#default-node-symbol').val()]);
+    });
+  });
 
   $('#default-node-opacity').on('input', e => scaleNodeThing($('#default-node-opacity').val(), $('#nodeOpacityVariable').val(), 'opacity', .1));
   $('#nodeOpacityVariable').change(e => scaleNodeThing($('#default-node-opacity').val(), $('#nodeOpacityVariable').val(), 'opacity', .1));
 
-  $('#default-node-color').on('input', e => window.network.svg.selectAll('circle').attr('fill', e.target.value));
+  $('#default-node-color').on('input', e => window.network.svg.selectAll('path').attr('fill', e.target.value));
   $('#nodeColorVariable').change(e => {
     $('#default-node-color').fadeOut();
-    var circles = window.network.svg.selectAll('circle').data(window.nodes);
+    var circles = window.network.svg.selectAll('path').data(window.nodes);
     var table = $('#nodeGroupKey').empty();
     if(e.target.value == 'none'){
       circles.attr('fill', $('#default-node-color').val());
@@ -525,7 +589,7 @@ $(function(){
 
   ipcRenderer.on('deliver-nodes', (e, nodes) => {
     window.nodes = nodes;
-    window.network.svg.select('.nodes').selectAll('circle')
+    window.network.svg.select('.nodes').selectAll('path')
       .data(window.nodes)
       .classed('selected', d => d.selected);
   });
