@@ -148,7 +148,7 @@
   require('datatables.net-select')(window, $);
   const Baby = require('babyparse');
 
-  const meta = ['seq', 'padding', 'selected', 'orig', 'mst', 'visible', 'index'];
+  const meta = ['seq', 'padding', 'orig', 'mst', 'visible', 'index', 'selected', 'padding'];
 
   $(function(){
 
@@ -173,14 +173,19 @@
 
     window.table = {destroy: () => {}};
 
+    function reorder(){
+      var order = window.table.order();
+      if(window.table.init().orderFixed){
+        order = [[window.columns.findIndex(d => d.data == 'selected'), 'desc']].concat(order);
+      }
+      window.table.order(order).draw(false);
+    }
+
     electron.ipcRenderer.on('update-node-selection', (e, newNodes) => {
-      window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
       window.table.rows().deselect();
-      window.table.rows(
-        window.nodes
-          .filter(n => n.selected)
-          .map(n => n.index)
-        ).select();
+      window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
+      window.table.rows(window.nodes.filter(n => n.selected).map(n => n.index)).select();
+      reorder();
     });
 
     function updateData(){
@@ -197,7 +202,6 @@
         window.data = window.nodes;
       }
       window.columns = Object.keys(window.data[0])
-        .filter(k => !meta.includes(k))
         .map(k => ({title:k, data:k, mData:k, sTitle:k}));
     }
 
@@ -211,9 +215,8 @@
 
     function updateTable(){
       updateData();
-
       window.table.destroy();
-      window.table = $('#table').empty().DataTable({
+      var options = {
         data: window.data,
         columns: window.columns,
         deferRender: true,
@@ -221,20 +224,34 @@
         select: {
           style: 'multi'
         }
+      };
+      var selectedColumnIndex = window.columns.findIndex(d => d.data == 'selected');
+      if($('input[name=nodelink]:checked')[0].id === 'nodebutton' && selectedColumnIndex >= 0){
+        options.orderFixed = [selectedColumnIndex, 'desc'];
+      }
+      window.table = $('#table').empty().DataTable(options);
+      var colsToKeep = $('#node-columns').val().map(parseFloat);
+      Object.keys(window.nodes[0]).forEach((col, i) => {
+        window.table.column(i).visible(colsToKeep.includes(i));
       });
-
       if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
         window.table.on('user-select', (e, dt, type, cell) => {
-          window.nodes.forEach((n, i) => n.selected = n.selected ^ (cell.index().row == i));
+          window.nodes[cell.index().row].selected = 1;
+          reorder();
           electron.ipcRenderer.send('update-node-selection', window.nodes);
         });
+        // window.table.on('deselect', (e, dt, type, indices) => {
+        //   window.nodes[indices[0]].selected = 0;
+        //   reorder();
+        //   electron.ipcRenderer.send('update-node-selection', window.nodes);
+        // });
         window.table.rows(
           window.nodes
           .filter(n => n.selected)
           .map(n => n.index)
         ).select();
       }
-
+      reorder();
       resetTextsize();
     }
 
@@ -288,7 +305,6 @@
         var colsToKeep = $('#link-columns').val().map(parseFloat);
         Object
           .keys(window.links[0])
-          .filter(k => !meta.includes(k))
           .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
       }
     });
@@ -298,21 +314,11 @@
         var colsToKeep = $('#node-columns').val().map(parseFloat);
         Object
           .keys(window.nodes[0])
-          .filter(k => !meta.includes(k))
           .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
       }
     });
 
-    $('input[name=MSTAll]').on('change', e => {
-      if(e.target.id == 'MSTLinks'){
-        updateLinks();
-      } else if(e.target.id == 'VizLinks'){
-        updateLinks(window.links.filter(l => l.visible));
-      } else {
-        updateLinks(window.links);
-      }
-    });
-
+    $('input[name=MSTAll]').on('change', updateTable);
     $('input[name=nodelink]').on('change', updateTable);
   });
 

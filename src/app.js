@@ -306,9 +306,9 @@ $(function(){
           if(!d3.event.shiftKey){
             window.nodes
               .filter(node => node !== n)
-              .forEach(node => Object.assign(node, {selected: false}));
+              .forEach(node => Object.assign(node, {selected: 0}));
           }
-          n.selected = !n.selected;
+          n.selected = math.abs(n.selected-1);
           ipcRenderer.send('update-node-selection', window.nodes);
           window.network.svg.select('.nodes').selectAll('path').data(nodes).classed('selected', d => d.selected);
           $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
@@ -654,12 +654,7 @@ $(function(){
       return links.attr(attribute, scalar);
     }
     if(!floor){floor = 1;}
-    var values = Lazy(window.links)
-      .pluck(variable)
-      .without(undefined)
-      .sort()
-      .uniq()
-      .toArray();
+    var values = Lazy(window.links).pluck(variable).without(undefined).sort().uniq().toArray();
     var min = math.min(values);
     var max = math.max(values);
     var rng = max - min;
@@ -740,6 +735,7 @@ $(function(){
     refreshLinks();
     window.network.force.alpha(0.3).alphaTarget(0).restart();
   });
+
   $('#minThreshold, #maxThreshold').on('change', e => {
     refreshLinks();
     window.network.force.alpha(0.3).alphaTarget(0).restart();
