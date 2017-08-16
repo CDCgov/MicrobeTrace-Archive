@@ -690,11 +690,12 @@ $(function(){
       .selectAll('line')
       .data(vlinks);
     var newThreshold = computeThreshold();
-    if(newThreshold > oldThreshold){
+    if(newThreshold >= oldThreshold){
       selection.enter().append('line').merge(selection)
-      .on('mouseenter', showLinkToolTip)
-      .on('mouseout', hideTooltip);
-    } else {
+        .on('mouseenter', showLinkToolTip)
+        .on('mouseout', hideTooltip);
+    }
+    if(oldThreshold <= newThreshold){
       selection.exit().remove();
     }
     oldThreshold = newThreshold;
