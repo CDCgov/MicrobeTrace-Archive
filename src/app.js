@@ -1,10 +1,13 @@
 import { clipboard, remote, ipcRenderer } from 'electron';
-import d3 from 'd3';
-Object.assign(d3, require('d3-symbol-extra'));
-import { forceAttract } from 'd3-force-attract';
 import Lazy from 'lazy.js';
 import math from 'bettermath';
 import './helpers/window.js';
+
+import d3 from 'd3';
+const extraSymbols = require('d3-symbol-extra');
+Object.assign(d3, extraSymbols);
+d3.symbols.concat(Object.values(extraSymbols));
+import { forceAttract } from 'd3-force-attract';
 
 window.jquery = window.jQuery = window.$ = require('jquery');
 require('bootstrap');
@@ -313,14 +316,14 @@ $(function(){
 
     node.append('path')
       .attr('d', d3.symbol()
-        .size(100 * $('#default-node-radius').val())
-        .type(d3['symbol'+$('#default-node-symbol').val()])
+        .size(1000 * $('#default-node-radius').val())
+        .type(d3[$('#default-node-symbol').val()])
       )
       .attr('fill', $('#default-node-color').val());
 
     node.append('text')
       .attr('dy', 5)
-      .attr('dx', $('#default-node-radius').val());
+      .attr('dx', 5);
 
     window.network.force = d3.forceSimulation()
       .force('link', d3.forceLink()
@@ -454,32 +457,45 @@ $(function(){
     $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
   });
 
-  function redrawNodes(){
-    window.network.svg.selectAll('path').attr('d', d3.symbol()
-      .size(100 * $('#default-node-radius').val())
-      .type(d3['symbol'+$('#default-node-symbol').val()])
-    );
+  var symbolKeys = ['symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye'].concat(Object.keys(extraSymbols));
+
+  function getSymbolMapper(){
+    var circles = window.network.svg.selectAll('path').data(window.nodes);
+    var values = Lazy(window.nodes).pluck($('#nodeSymbolVariable').val()).uniq().sort().toArray();
+    return d3.scaleOrdinal(symbolKeys).domain(values);
   }
 
-  function scaleNodeThing(scalar, variable, attribute, floor){
-    var circles = window.network.svg.selectAll('path');
-    if(variable === 'none'){
-      return circles.attr(attribute, scalar);
+  function redrawNodes(){
+    var type = d3[$('#default-node-symbol').val()];
+    var symbolVariable = $('#nodeSymbolVariable').val();
+    var o = function(){};
+    if(symbolVariable !== 'none'){
+      o = getSymbolMapper();
     }
-    if(!floor){floor = 1;}
-    var values = Lazy(window.nodes)
-      .pluck(variable)
-      .without(undefined)
-      .sort()
-      .uniq()
-      .toArray();
-    var min = math.min(values);
-    var max = math.max(values);
-    var rng = max - min;
-    circles.attr(attribute, d => {
-      var v = d[variable];
-      if(typeof v === 'undefined') v = rng / 2 + min;
-      return scalar * (v - min) / rng + floor;
+    var defaultSize = $('#default-node-radius').val();
+    var size = 1;
+    var sizeVariable = $('#nodeRadiusVariable').val();
+    if(sizeVariable !== 'none'){
+      var values = Lazy(window.nodes).pluck(sizeVariable).without(undefined).uniq().sort().toArray();
+      var min = math.min(values);
+      var max = math.max(values);
+      var rng = max - min;
+      var med = rng / 2;
+    }
+    window.network.svg.selectAll('path').data(window.nodes).each(function(d){
+      if(symbolVariable !== 'none'){
+        type = d3[o(d[$('#nodeSymbolVariable').val()])];
+      }
+      if(sizeVariable !== 'none'){
+        size = med;
+        if(typeof d[sizeVariable] !== 'undefined'){
+          size = d[sizeVariable];
+        }
+        size = (size - min) / rng;
+      }
+      d3.select(this).attr('d', d3.symbol()
+        .size(size * 1000 * defaultSize)
+        .type(type));
     });
   }
 
@@ -496,62 +512,61 @@ $(function(){
   $('#default-node-symbol').on('input', redrawNodes);
   $('#nodeSymbolVariable').change(e => {
     $('#default-node-symbol').fadeOut();
-    var table = $('#nodeGroupKey').append('tbody#nodeShapes');
+    $('#nodeShapes').remove();
+    $('#groupKey').append('<tbody id="nodeShapes"></tbody>');
+    var table = $('#nodeShapes');
     if(e.target.value == 'none'){
       redrawNodes();
       $('#default-node-symbol').fadeIn();
-      table.fadeOut();
+      table.remove();
       return;
     }
     var circles = window.network.svg.selectAll('path').data(window.nodes);
-    table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
-    var values = Lazy(window.nodes).pluck(e.target.value).uniq().sortBy().toArray();
-    //TODO: Map from values to d3.symbol*
-    var o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
-    circles.attr('d', d => d[e.target.value]);
-    values.forEach(value => {
-      var input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
-        .on('input', evt => {
-          circles
-            .filter(d => d[e.target.value] == value)
-            .attr('fill', d => evt.target.value);
+    table.append('<tr><th>'+e.target.value+'</th><th>Shape</th><tr>');
+    var values = Lazy(window.nodes).pluck(e.target.value).uniq().sort().toArray();
+    var o = getSymbolMapper();
+    var options = $('#default-node-symbol').html();
+    values.forEach(v => {
+      var subset = circles.filter(d => d[e.target.value] === v);
+      var selector = $('<select></select>').append(options).val(o(v)).change(e2 => {
+        subset.each(function(d, i, nodes){
+          d3.select(this).attr('d', d3.symbol()
+            .size(1000 * $('#default-node-radius').val())
+            .type(d3[e2.target.value]));
         });
-      var cell = $('<td></td>').append(input);
-      var row = $('<tr><td>'+value+'</td></tr>').append(cell);
+      });
+      var cell = $('<td></td>').append(selector);
+      var row = $('<tr><td>' + v + '</td></tr>').append(cell);
       table.append(row);
     });
+    redrawNodes();
     table.fadeIn();
   });
 
   $('#default-node-radius').on('input', redrawNodes);
-  $('#nodeRadiusVariable').change(e => {
-    var variable = $('#nodeRadiusVariable').val();
+  $('#nodeRadiusVariable').change(redrawNodes);
+
+  function scaleNodeOpacity(){
+    var scalar = $('#default-node-opacity').val();
+    var variable = $('#nodeOpacityVariable').val();
+    var circles = window.network.svg.selectAll('path');
     if(variable === 'none'){
-      return redrawNodes();
+      return circles.attr('opacity', scalar);
     }
-    var symbols = window.network.svg.selectAll('path').data(window.nodes);
-    var values = Lazy(window.nodes)
-      .pluck()
-      .without(undefined)
-      .sort()
-      .uniq()
-      .toArray();
+    var values = Lazy(window.nodes).pluck(variable).without(undefined).sort().uniq().toArray();
     var min = math.min(values);
     var max = math.max(values);
     var rng = max - min;
     var med = rng / 2 + min;
-    symbols.attr('d', d => {
+    circles.attr(attribute, d => {
       var v = d[variable];
-      var r = med;
-      if(typeof v !== 'undefined') r = (v - min) / rng + 1;
-      return d3.symbol()
-        .size(r * 100)
-        .type(d3['symbol' + $('#default-node-symbol').val()]);
+      if(typeof v === 'undefined') v = med;
+      return scalar * (v - min) / rng + 0.1;
     });
-  });
+  }
 
-  $('#default-node-opacity').on('input', e => scaleNodeThing($('#default-node-opacity').val(), $('#nodeOpacityVariable').val(), 'opacity', .1));
-  $('#nodeOpacityVariable').change(e => scaleNodeThing($('#default-node-opacity').val(), $('#nodeOpacityVariable').val(), 'opacity', .1));
+  $('#default-node-opacity').on('input', scaleNodeOpacity);
+  $('#nodeOpacityVariable').change(scaleNodeOpacity);
 
   $('#default-node-color').on('input', e => window.network.svg.selectAll('path').attr('fill', e.target.value));
   $('#nodeColorVariable').change(e => {
