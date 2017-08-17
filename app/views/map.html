@@ -213,7 +213,7 @@
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
 
-    $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportImage.html'));
+    $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
     electron.ipcRenderer.on('deliver-nodes', (e, nodes)=>{
       window.nodes = nodes;

@@ -10,10 +10,12 @@ if(typeof alertify === 'undefined'){
 }
 
 $('#FileTab').after(
-  $('<li id="ScreenshotTab" class="disabled"><a href="#">Export Image</a></li>').click(() => {
+  $('<li id="ScreenshotTab" class="disabled"><a href="#">Save Image</a></li>').click(() => {
     electron.remote.dialog.showSaveDialog({
       filters: [
-        {name: 'PNG Image', extensions: ['png']}
+        {name: 'PNG', extensions: ['png']},
+        {name: 'JPEG', extensions: ['jpg']}//,
+        //{name: 'Bitmap', extensions: ['bmp']}
       ]
     }, (fileName) => {
       if (fileName === undefined){
@@ -25,8 +27,15 @@ $('#FileTab').after(
         width: $(window).width(),
         height: $(window).height()
       }, (img) => {
-        jetpack.write(fileName, img.toPNG());
-        alertify.success('File Saved!')
+        var extension = fileName.slice(-3);
+        if(extension === 'png'){
+          jetpack.write(fileName, img.toPNG());
+        } else { //if(extension === 'jpg') {
+          jetpack.write(fileName, img.toJPEG(100));
+        } //else {
+        //  jetpack.write(fileName, 'data:image/bmp;base64,' + img.toBitmap().toString('base64'));
+        //}
+        alertify.success('File Saved!');
       });
     });
   })

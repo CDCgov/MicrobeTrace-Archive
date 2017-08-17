@@ -47,7 +47,7 @@
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
 
-    $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportImage.html'));
+    $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
     function replot(){
       if(!window.links){
