@@ -15,9 +15,8 @@ require('bootstrap');
 $(function(){
 
   ipcRenderer.on('deliver-manifest', (e, manifest) => {
-    $('title').text(manifest.productName + ' v. ' + manifest.version);
+    $('title').text(manifest.productName + ' v' + manifest.version);
     $('.title').text(manifest.productName);
-    $('.version').text(' v' + manifest.version);
   });
   ipcRenderer.send('get-manifest');
 

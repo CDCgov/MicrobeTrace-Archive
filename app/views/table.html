@@ -105,7 +105,7 @@
                       <td>Columns to Include</td>
                       <td><select id="link-columns" multiple></select></td>
                     </tr>
-                    <tr class="showForMST">
+                    <tr>
                       <td>Rows to Include</td>
                       <td>
                         <div class="btn-group btn-group-xs" data-toggle="buttons">
@@ -115,7 +115,7 @@
                           <label class="btn btn-default">
                             <input type="radio" name="MSTAll" id="VisLinks" autocomplete="off"> Visible
                           </label>
-                          <label class="btn btn-default">
+                          <label class="btn btn-default showForMST">
                             <input type="radio" name="MSTAll" id="MSTLinks" autocomplete="off"> MST
                           </label>
                         </div>
@@ -153,16 +153,18 @@
   $(function(){
 
     electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
-      $('title').text(manifest.productName + ' v. ' + manifest.version);
-      $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
-      $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
+      $('title').text(manifest.productName + ' v' + manifest.version);
     });
     electron.ipcRenderer.send('get-manifest');
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('#FileTab').after(
-      $('<li id="ExportTab"><a href="#">Export</a></li>').click(() => {
-        electron.remote.dialog.showSaveDialog((fileName) => {
+      $('<li id="ExportTab"><a href="#">Save As</a></li>').click(() => {
+        electron.remote.dialog.showSaveDialog({
+          filters: [
+            {name: 'CSV', extensions: ['csv']}
+          ]
+        }, (fileName) => {
           if (fileName === undefined){
             return alertify.error('File not exported!');
           }
@@ -175,8 +177,9 @@
 
     function reorder(){
       var order = window.table.order();
-      if(window.table.init().orderFixed){
-        order = [[window.columns.findIndex(d => d.data == 'selected'), 'desc']].concat(order);
+      var selectedColumn = window.columns.findIndex(d => d.data == 'selected');
+      if(selectedColumn >= 0){
+        order = [[selectedColumn, 'desc']].concat(order);
       }
       window.table.order(order).draw(false);
     }
@@ -225,10 +228,6 @@
           style: 'multi'
         }
       };
-      var selectedColumnIndex = window.columns.findIndex(d => d.data == 'selected');
-      if($('input[name=nodelink]:checked')[0].id === 'nodebutton' && selectedColumnIndex >= 0){
-        options.orderFixed = [selectedColumnIndex, 'desc'];
-      }
       window.table = $('#table').empty().DataTable(options);
       var colsToKeep = $('#node-columns').val().map(parseFloat);
       Object.keys(window.nodes[0]).forEach((col, i) => {
@@ -237,14 +236,9 @@
       if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
         window.table.on('user-select', (e, dt, type, cell) => {
           window.nodes[cell.index().row].selected = 1;
-          reorder();
           electron.ipcRenderer.send('update-node-selection', window.nodes);
+          reorder();
         });
-        // window.table.on('deselect', (e, dt, type, indices) => {
-        //   window.nodes[indices[0]].selected = 0;
-        //   reorder();
-        //   electron.ipcRenderer.send('update-node-selection', window.nodes);
-        // });
         window.table.rows(
           window.nodes
           .filter(n => n.selected)
@@ -260,34 +254,50 @@
       window.links = data.links;
 
       $('#node-columns').html(
-        Object.keys(window.nodes[0])
-        .filter(k => !meta.includes(k))
-        .map((d, i) => {
-          out = '<option value="' + i;
-          if(i < 10){
-            out += '" selected >';
-          } else {
-            out += '">';
-          }
-          return out + d + '</option>';
-        })
-        .join('\n')
-      );
+        Object
+          .keys(window.nodes[0])
+          .filter(k => !meta.includes(k))
+          .map((d, i) => {
+            out = '<option value="' + i;
+            if(i < 10){
+              out += '" selected >';
+            } else {
+              out += '">';
+            }
+            return out + d + '</option>';
+          })
+          .join('\n')
+      ).change(e => {
+        if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
+          var colsToKeep = $('#node-columns').val().map(parseFloat);
+          Object
+            .keys(window.nodes[0])
+            .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
+        }
+      });
 
       $('#link-columns').html(
-        Object.keys(window.links[0])
-        .filter(k => !meta.includes(k))
-        .map((d, i) => {
-          out = '<option value="' + i;
-          if(i < 10){
-            out += '" selected >';
-          } else {
-            out += '">';
-          }
-          return out + d + '</option>';
-        })
-        .join('\n')
-      );
+        Object
+          .keys(window.links[0])
+          .filter(k => !meta.includes(k))
+          .map((d, i) => {
+            out = '<option value="' + i;
+            if(i < 10){
+              out += '" selected >';
+            } else {
+              out += '">';
+            }
+            return out + d + '</option>';
+          })
+          .join('\n')
+      ).change(e => {
+        if($('input[name=nodelink]:checked')[0].id === 'linkbutton'){
+          var colsToKeep = $('#link-columns').val().map(parseFloat);
+          Object
+            .keys(window.links[0])
+            .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
+        }
+      });
 
       updateTable();
 
@@ -300,26 +310,9 @@
 
     $('#font-size-slider').on('input', resetTextsize);
 
-    $('#link-columns').change(e => {
-      if($('input[name=nodelink]:checked')[0].id === 'linkbutton'){
-        var colsToKeep = $('#link-columns').val().map(parseFloat);
-        Object
-          .keys(window.links[0])
-          .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
-      }
-    });
-
-    $('#node-columns').change(e => {
-      if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
-        var colsToKeep = $('#node-columns').val().map(parseFloat);
-        Object
-          .keys(window.nodes[0])
-          .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
-      }
-    });
+    $('input[name=nodelink]').on('change', updateTable);
 
     $('input[name=MSTAll]').on('change', updateTable);
-    $('input[name=nodelink]').on('change', updateTable);
   });
 
   $.fn.dataTable.ext.errMode = 'none';
