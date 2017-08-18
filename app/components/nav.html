@@ -32,6 +32,7 @@
               <li id="SequencesTab"><a href="#">Sequences</a></li>
               <li id="DistanceMatrixTab"><a href="#">Distance Matrix</a></li>
               <li id="HistogramTab"><a href="#">Histogram</a></li>
+              <li id="TreeTab" class="showForSequence"><a href="#">Phylogenetic Tree</a></li>
               <li id="MapTab"><a href="#">Map</a></li>
             </ul>
           </li>
@@ -115,6 +116,14 @@
   $('#HistogramTab').click(function(){
     if(!$(this).hasClass('disabled')){
       electron.ipcRenderer.send('launch-view', 'views/histogram.html');
+    } else {
+      alertify.warning('Please load some data first!');
+    }
+  });
+
+  $('#TreeTab').click(function(){
+    if(!$(this).hasClass('disabled')){
+      electron.ipcRenderer.send('launch-view', 'views/phylogeneticTree.html');
     } else {
       alertify.warning('Please load some data first!');
     }
