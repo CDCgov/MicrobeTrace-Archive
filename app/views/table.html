@@ -175,14 +175,9 @@
 
     window.table = {destroy: () => {}};
 
-    function reorder(){
-      var order = window.table.order();
-      var selectedColumn = window.columns.findIndex(d => d.data == 'selected');
-      if(selectedColumn >= 0){
-        order = [[selectedColumn, 'desc']].concat(order);
-      }
-      window.table.order(order).draw(false);
-    }
+    reorder = function(){
+      window.table.draw(false);
+    };
 
     electron.ipcRenderer.on('update-node-selection', (e, newNodes) => {
       window.table.rows().deselect();
@@ -228,14 +223,25 @@
           style: 'multi'
         }
       };
+      var selectedColumn = window.columns.findIndex(d => d.data == 'selected');
+      if(selectedColumn >= 0){
+        options.orderFixed = [selectedColumn, 'desc'];
+      }
       window.table = $('#table').empty().DataTable(options);
-      var colsToKeep = $('#node-columns').val().map(parseFloat);
+      var colsToKeep = [];
+      if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
+        colsToKeep = $('#node-columns').val().map(parseFloat);
+      } else {
+        colsToKeep = $('#link-columns').val().map(parseFloat);
+      }
       Object.keys(window.nodes[0]).forEach((col, i) => {
         window.table.column(i).visible(colsToKeep.includes(i));
       });
       if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
         window.table.on('user-select', (e, dt, type, cell) => {
-          window.nodes[cell.index().row].selected = 1;
+          var index = cell.index().row;
+          window.nodes[index].selected = 1;
+          window.table.row(index).data(window.nodes[index]);
           electron.ipcRenderer.send('update-node-selection', window.nodes);
           reorder();
         });
