@@ -19,9 +19,12 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title">Distance Matrix Configuration</h4>
         </div>
-        <div class="modal-body">
-          No options to configure.
-        </div>
+        <table class='table'>
+          <tr>
+            <td>Show axis labels?</td>
+            <td><input type="checkbox" id="showAxisLabels" /></td>
+          </tr>
+        </table>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
         </div>
@@ -59,13 +62,23 @@
       var varName = 'distance';
       var labels = window.nodes.map(d => d.id);
 
+      var config = {
+        autotick: false,
+        showticklabels: $('#showAxisLabels').is(':checked')
+      };
+      if(!$('#showAxisLabels').is(':checked')){
+        config.ticks = '';
+      }
 
       window.plot = Plotly.newPlot('main_panel', [{
         x: labels,
         y: labels,
         z: window.distance_matrix,
         type: 'heatmap',
-      }], {}, {
+      }], {
+        xaxis: config,
+        yaxis: config
+      }, {
         displaylogo: false,
         displayModeBar: false
       });
@@ -76,6 +89,8 @@
       replot();
     });
     electron.ipcRenderer.send('get-data');
+
+    $('#showAxisLabels').change(replot);
 
     $(window).on('resize', replot);
   });
