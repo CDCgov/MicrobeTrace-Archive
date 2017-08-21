@@ -22,7 +22,8 @@ function reset(){
   data = {
     metric: 'distance',
     nodes: [],
-    links: []
+    links: [],
+    distance_matrix: []
   };
 };
 
@@ -98,6 +99,10 @@ ipcMain.on('update-nodes', (event, newNodes) => {
   distribute('deliver-nodes', data.nodes, event.sender.id);
 });
 
+ipcMain.on('update-distance-matrix', (event, distance_matrix) => {
+  data.distance_matrix = distance_matrix;
+});
+
 ipcMain.on('update-node-selection', (event, newNodes) => {
   data.nodes.forEach(d => d.selected = newNodes.find(nn => nn.id == d.id).selected);
   distribute('update-node-selection', data.nodes, event.sender.id);
@@ -113,10 +118,11 @@ ipcMain.on('update-links-mst', (event, newLinks) => {
   distribute('update-links-mst', data.links);
 });
 
-ipcMain.on('get-data',      e => e.sender.send('deliver-data',     data));
-ipcMain.on('get-nodes',     e => e.sender.send('deliver-nodes',    data.nodes));
-ipcMain.on('get-links',     e => e.sender.send('deliver-links',    data.links));
-ipcMain.on('get-manifest',  e => e.sender.send('deliver-manifest', manifest));
+ipcMain.on('get-data',            e => e.sender.send('deliver-data',            data));
+ipcMain.on('get-nodes',           e => e.sender.send('deliver-nodes',           data.nodes));
+ipcMain.on('get-links',           e => e.sender.send('deliver-links',           data.links));
+ipcMain.on('get-distance-matrix', e => e.sender.send('deliver-distance-matrix', data.distance_matrix));
+ipcMain.on('get-manifest',        e => e.sender.send('deliver-manifest',        manifest));
 ipcMain.on('get-component', (e, component) => {
   e.returnValue = jetpack.cwd(app.getAppPath()).read('app/components/'+component, 'utf8');
   e.sender.send('deliver-component', e.returnValue);
