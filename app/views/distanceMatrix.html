@@ -53,13 +53,12 @@
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
     function replot(){
-      if(!window.links){
-        return alertify.error('No links are populated.')
+      if(!window.distance_matrix){
+        return alertify.error('No distance matrix could be found!');
       }
 
       if(window.plot) Plotly.purge('main_panel');
 
-      var varName = 'distance';
       var labels = window.nodes.map(d => d.id);
 
       var config = {
