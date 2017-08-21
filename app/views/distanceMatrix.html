@@ -59,7 +59,7 @@
 
       if(window.plot) Plotly.purge('main_panel');
 
-      var labels = window.nodes.map(d => d.id);
+      var labels = window.nodes.map(d => 'N' + d.id);
 
       var config = {
         autotick: false,
