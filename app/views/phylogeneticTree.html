@@ -43,7 +43,7 @@ html, body{
                 <i class="fa fa-arrows-v"></i>
             </button>
              <button type="button" class="btn btn-default btn-sm" data-direction="vertical" data-amount="-1" title="Compress vertical spacing">
-                <i class="fa  fa-compress fa-rotate-135"></i>
+                <i class="fa fa-compress fa-rotate-135"></i>
             </button>
             <button type="button" class="btn btn-default btn-sm" data-direction="horizontal" data-amount="1" title="Expand horizonal spacing">
                 <i class="fa fa-arrows-h"></i>
@@ -145,8 +145,6 @@ html, body{
       tree.branch_name(null);
       tree.node_span('equal');
       tree.options({'draw-size-bubbles' : false}, false);
-      tree.style_nodes(node_colorizer);
-      tree.style_edges(edge_colorizer);
       tree.selection_label(current_selection_name);
     });
 
@@ -164,34 +162,6 @@ html, body{
     var svg = d3.select('#main_panel').append('svg')
       .attr('width', width)
       .attr('height', height);
-
-    function node_colorizer(element, data){
-      try{
-        var count_class = 0;
-        selection_set.forEach((d,i) => { if(data[d]){count_class ++; element.style('fill', color_scheme(i), i == current_selection_id ?  'important' : null);}});
-        if(count_class <= 1){
-          if(count_class == 0){
-            element.style('fill', null);
-          }
-        }
-      }
-      catch(e){}
-    }
-
-    function edge_colorizer(element, data){
-      try {
-        var count_class = 0;
-        selection_set.forEach((d,i) => { if(data[d]){count_class ++; element.style('stroke', color_scheme(i), i == current_selection_id ?  'important' : null);}});
-        if(count_class > 1){
-          element.classed('branch-multiple', true);
-        } else if(count_class == 0){
-          element
-            .style('stroke', null)
-            .classed('branch-multiple', false);
-        }
-      }
-      catch(e){}
-    }
 
     function update_selection_names(id, skip_rebuild){
       skip_rebuild = skip_rebuild || false;
