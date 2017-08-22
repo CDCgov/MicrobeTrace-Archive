@@ -116,6 +116,7 @@
           'AVERAGE'
         );
         data.links.push({
+          index: k++,
           source: data.nodes[j].id,
           target: data.nodes[i].id,
           visible: (dist < 0.015),
@@ -123,7 +124,7 @@
           distance: dist
         });
         matrix[i][j] = matrix[j][i] = dist;
-        if(k++ / z * 100 > lastTick + 1){
+        if(k / z * 100 > lastTick + 1){
           electron.ipcRenderer.send('tick', ++lastTick);
         }
       }

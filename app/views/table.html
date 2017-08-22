@@ -59,10 +59,10 @@
                       <td>
                         <div class="btn-group btn-group-xs" data-toggle="buttons">
                           <label class="btn btn-default active">
-                            <input type="radio" name="nodelink" id="nodebutton" autocomplete="off" checked="checked"> Nodes
+                            <input type="radio" name="nodelink" id="node" autocomplete="off" checked="checked"> Nodes
                           </label>
                           <label class="btn btn-default">
-                            <input type="radio" name="nodelink" id="linkbutton" autocomplete="off"> Links
+                            <input type="radio" name="nodelink" id="link" autocomplete="off"> Links
                           </label>
                         </div>
                       </td>
@@ -104,22 +104,6 @@
                     <tr>
                       <td>Columns to Include</td>
                       <td><select id="link-columns" multiple></select></td>
-                    </tr>
-                    <tr>
-                      <td>Rows to Include</td>
-                      <td>
-                        <div class="btn-group btn-group-xs" data-toggle="buttons">
-                          <label class="btn btn-default active">
-                            <input type="radio" name="MSTAll" id="AllLinks" autocomplete="off" checked> All
-                          </label>
-                          <label class="btn btn-default">
-                            <input type="radio" name="MSTAll" id="VisLinks" autocomplete="off"> Visible
-                          </label>
-                          <label class="btn btn-default showForMST">
-                            <input type="radio" name="MSTAll" id="MSTLinks" autocomplete="off"> MST
-                          </label>
-                        </div>
-                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -173,11 +157,9 @@
       })
     );
 
-    window.table = {destroy: () => {}};
+    window.table = { destroy: () => {} };
 
-    reorder = function(){
-      window.table.draw(false);
-    };
+    function reorder(){ window.table.draw(false); }
 
     electron.ipcRenderer.on('update-node-selection', (e, newNodes) => {
       window.table.rows().deselect();
@@ -187,19 +169,9 @@
     });
 
     function updateData(){
-      if($('input[name=nodelink]:checked')[0].id === 'linkbutton'){
-        var linksubset = $('input[name=MSTAll]:checked')[0].id;
-        if(linksubset === 'MSTLinks'){
-          window.data = window.links.slice().filter(l => l.mst);
-        } else if(linksubset === 'VizLinks') {
-          window.data = window.links.slice().filter(l => l.visible);
-        } else {
-          window.data = window.links.slice();
-        }
-      } else {
-        window.data = window.nodes;
-      }
-      window.columns = Object.keys(window.data[0])
+      window.data = window[$('input[name=nodelink]:checked')[0].id + 's'].slice();
+      window.columns = Object
+        .keys(window.data[0])
         .map(k => ({title:k, data:k, mData:k, sTitle:k}));
     }
 
@@ -218,107 +190,73 @@
         data: window.data,
         columns: window.columns,
         deferRender: true,
-        colReorder: true,
+        colReorder: false,
         select: {
           style: 'multi'
         }
       };
-      var selectedColumn = window.columns.findIndex(d => d.data == 'selected');
+      var selectedColumn = window.columns.findIndex(d => d.data === 'selected');
       if(selectedColumn >= 0){
         options.orderFixed = [selectedColumn, 'desc'];
       }
       window.table = $('#table').empty().DataTable(options);
       var colsToKeep = [];
-      if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
-        colsToKeep = $('#node-columns').val().map(parseFloat);
-      } else {
-        colsToKeep = $('#link-columns').val().map(parseFloat);
-      }
-      Object.keys(window.nodes[0]).forEach((col, i) => {
+      var nodelink = $('input[name=nodelink]:checked')[0].id;
+      colsToKeep = $('#'+nodelink+'-columns').val().map(parseFloat);
+      Object.keys(window.data[0]).forEach((col, i) => {
         window.table.column(i).visible(colsToKeep.includes(i));
       });
-      if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
-        window.table.on('user-select', (e, dt, type, cell) => {
-          var index = cell.index().row;
-          window.nodes[index].selected = 1;
-          window.table.row(index).data(window.nodes[index]);
-          electron.ipcRenderer.send('update-node-selection', window.nodes);
-          reorder();
-        });
-        window.table.rows(
-          window.nodes
+      window.table.on('user-select', (e, dt, type, cell) => {
+        var index = cell.index().row;
+        window.data[index].selected = !window.data[index].selected;
+        window.table.row(index).data(window.data[index]);
+        if(nodelink === 'node'){
+          electron.ipcRenderer.send('update-node-selection', window.data);
+        }
+        reorder();
+      });
+      window.table.rows(
+        window.data
           .filter(n => n.selected)
           .map(n => n.index)
-        ).select();
-      }
+      ).select();
       reorder();
       resetTextsize();
     }
 
     electron.ipcRenderer.on('deliver-data', (e, data) => {
-      window.nodes = data.nodes;
-      window.links = data.links;
-
-      $('#node-columns').html(
-        Object
-          .keys(window.nodes[0])
-          .filter(k => !meta.includes(k))
-          .map((d, i) => {
-            out = '<option value="' + i;
-            if(i < 10){
-              out += '" selected >';
-            } else {
-              out += '">';
-            }
-            return out + d + '</option>';
-          })
-          .join('\n')
-      ).change(e => {
-        if($('input[name=nodelink]:checked')[0].id === 'nodebutton'){
-          var colsToKeep = $('#node-columns').val().map(parseFloat);
+      Object.assign(window, data);
+      ['node', 'link'].forEach(thing => {
+        $('#'+thing+'-columns').html(
           Object
-            .keys(window.nodes[0])
-            .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
-        }
+            .keys(window[thing+'s'][0])
+            .map((d, i) => {
+              if(meta.includes(d)) return;
+              out = '<option value="' + i;
+              if(i < 10){
+                out += '" selected >';
+              } else {
+                out += '">';
+              }
+              return out + d + '</option>';
+            })
+            .join('\n')
+        ).change(e => {
+          if($('input[name=nodelink]:checked')[0].id === thing){
+            var colsToKeep = $('#'+thing+'-columns').val().map(parseFloat);
+            Object
+              .keys(window[thing+'s'][0])
+              .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
+          }
+        });
       });
-
-      $('#link-columns').html(
-        Object
-          .keys(window.links[0])
-          .filter(k => !meta.includes(k))
-          .map((d, i) => {
-            out = '<option value="' + i;
-            if(i < 10){
-              out += '" selected >';
-            } else {
-              out += '">';
-            }
-            return out + d + '</option>';
-          })
-          .join('\n')
-      ).change(e => {
-        if($('input[name=nodelink]:checked')[0].id === 'linkbutton'){
-          var colsToKeep = $('#link-columns').val().map(parseFloat);
-          Object
-            .keys(window.links[0])
-            .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
-        }
-      });
-
       updateTable();
-
-      if('mst' in window.links[0]){
-        $('.showForMST').show().filter('tr').css('display', 'table-row');
-      }
     });
 
     electron.ipcRenderer.send('get-data');
 
     $('#font-size-slider').on('input', resetTextsize);
-
     $('input[name=nodelink]').on('change', updateTable);
-
-    $('input[name=MSTAll]').on('change', updateTable);
   });
 
   $.fn.dataTable.ext.errMode = 'none';
