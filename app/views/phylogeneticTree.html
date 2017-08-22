@@ -115,6 +115,21 @@ html, body{
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append( electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
+    $('#FileTab').after(
+      $('<li id="ExportTab"><a href="#">Save Tree</a></li>').click(() => {
+        electron.remote.dialog.showSaveDialog({
+          filters: [
+            {name: 'Newick', extensions: ['nwk']}
+          ]
+        }, (fileName) => {
+          if (fileName === undefined){
+            return alertify.error('File not exported!');
+          }
+          jetpack.write(fileName, window.newick);
+          alertify.success('File Saved!');
+        });
+      })
+    );
 
     electron.ipcRenderer.send('get-data');
     electron.ipcRenderer.on('deliver-data', (e, data) => {
@@ -124,7 +139,8 @@ html, body{
       }));
       var RNJ = new nj.RapidNeighborJoining(data.distance_matrix, taxa);
       RNJ.run();
-      tree(RNJ.getAsNewick()).svg(svg).layout();
+      window.newick = RNJ.getAsNewick();
+      tree(window.newick).svg(svg).layout();
       tree.branch_length(null);
       tree.branch_name(null);
       tree.node_span('equal');
