@@ -41,7 +41,7 @@ $(function(){
     if(soft){
       resetDom();
     } else {
-      $('#FastaOrEdgeFile').val('');
+      $('#FastaOrLinkFile').val('');
       $('#NodeCSVFile').val('');
       $('#TableTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('disabled');
       $('#button-wrapper, #main_panel').fadeOut(() => resetDom());
@@ -80,7 +80,7 @@ $(function(){
     });
   }
 
-  $('#FastaOrEdgeFile').change(e => {
+  $('#FastaOrLinkFile').change(e => {
     reset(true);
 
     if(e.target.files.length < 1){
@@ -118,7 +118,7 @@ $(function(){
 
   $('#main-submit').click(() => {
     ipcRenderer.send('parse-file', {
-      file: $('#FastaOrEdgeFile')[0].files[0].path,
+      file: $('#FastaOrLinkFile')[0].files[0].path,
       supplement: $('#NodeCSVFile')[0].files.length > 0 ? $('#NodeCSVFile')[0].files[0].path : '',
       align: $('#align').is(':checked'),
       penalties: [
