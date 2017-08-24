@@ -6,6 +6,14 @@
   const Baby = require('babyparse');
   const Lazy = require('lazy.js');
 
+  var defaultNode = {
+    id: '',
+    padding: 0,
+    seq: '',
+    selected: false,
+    index: -1
+  }
+
   electron.ipcRenderer.on('deliver-instructions', (sender, instructions) => {
     electron.ipcRenderer.send('message', 'Parsing Link CSV...');
     var parsed = Baby.parseFiles(instructions.file, {
@@ -38,7 +46,7 @@
         dynamicTyping: true,
         skipEmptyLines: true
       });
-      csvNodes = parsed.data;
+      var csvNodes = parsed.data;
       electron.ipcRenderer.send('message', ' - Parsed ' + csvNodes.length + ' nodes from Supplement CSV.');
 
       var k = 0;
@@ -46,11 +54,21 @@
       nodes.forEach(node => {
         var match = csvNodes.find(n => n.id == node.id);
         if(match){
-          Object.assign(node, match);
+          Object.assign(node, defaultNode, match);
           k++;
         }
       });
       electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.');
+
+      var orphans = 0
+      csvNodes.forEach(node => {
+        var match = nodes.find(n => n.id == node.id);
+        if(!match){
+          nodes.push(Object.assign({}, defaultNode, node));
+          orphans++;
+        }
+      });
+      electron.ipcRenderer.send('message', ' - Identified ' + orphans + ' singleton nodes.');
     }
 
     electron.ipcRenderer.send('update-data', {
