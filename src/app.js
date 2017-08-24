@@ -80,6 +80,15 @@ $(function(){
     });
   }
 
+  function unquote(arr){
+    return arr.map(el => {
+      if(el[0] == '"' || el[0] == "'"){
+        return el.slice(1, -1);
+      }
+      return el;
+    });
+  }
+
   $('#FastaOrLinkFile').change(e => {
     reset(true);
 
@@ -90,6 +99,30 @@ $(function(){
       });
       return;
     }
+
+    var reader = new FileReader();
+    reader.onloadend = e2 => {
+      var full = e2.target.result;
+      var keys = unquote(full.slice(0, full.indexOf('\n')).split(','));
+      $('.linkVariables').html(
+        '<option value="none">None</option>\n' +
+        keys
+          .filter(key => !meta.includes(key))
+          .map(key => '<option value="' + key + '">' + key + '</option>')
+          .join('\n')
+      );
+      if(keys.includes('source')){
+        $('#LinkSourceColumn').val('source');
+      } else {
+        $('#LinkSourceColumn').val(keys[0]);
+      }
+      if(keys.includes('target')){
+        $('#LinkTargetColumn').val('target');
+      } else {
+        $('#LinkTargetColumn').val(keys[1]);
+      }
+    };
+    reader.readAsText(e.target.files[0]);
 
     if(e.target.files[0].name.slice(-3) == 'csv'){
       $('.showForSequence').hide();
@@ -108,11 +141,33 @@ $(function(){
     });
   });
 
-  $('#align').on('change', e => {
-    if(e.target.checked){
-      $('.showForAlign').css('display', 'table-row');
+  $('#NodeCSVFile').on('change', e => {
+    if(e.target.files.length > 0){
+      $('.showForNodeFile').css('display', 'table-row');
+      var reader = new FileReader();
+      reader.onloadend = e2 => {
+        var full = e2.target.result;
+        var keys = full.slice(0, full.indexOf('\n')).split(',');
+        $('.nodeVariables').html(
+          '<option value="none">None</option>\n' +
+          keys
+            .filter(key => !meta.includes(key))
+            .map(key => '<option value="' + key + '">' + key + '</option>')
+            .join('\n')
+        );
+        $('#NodeIDColumn').val(keys[0]);
+      };
+      reader.readAsText(e.target.files[0]);
     } else {
-      $('.showForAlign').hide();
+      $('.showForNodeFile').hide();
+    }
+  });
+
+  $('#NodeSequenceColumn').on('change', e => {
+    if(e.target.value === 'None'){
+      $('#showForSequence').show().filter('tr').css('display', 'table-row');
+    } else {
+      $('#showForSequence').hide();
     }
   });
 
@@ -121,10 +176,9 @@ $(function(){
       file: $('#FastaOrLinkFile')[0].files[0].path,
       supplement: $('#NodeCSVFile')[0].files.length > 0 ? $('#NodeCSVFile')[0].files[0].path : '',
       align: $('#align').is(':checked'),
-      penalties: [
-        -5, //$('#gapOpenPenalty').val(),
-        -1.7 //$('#gapExtensionPenalty').val()
-      ]
+      identifierColumn: $('#NodeIDColumn').val(),
+      sequenceColumn: $('#NodeSequenceColumn').val(),
+      penalties: [-5, -1.7]
     });
 
     $('#file_panel').fadeOut(() => {
@@ -518,8 +572,8 @@ $(function(){
       $('text').text('');
     } else {
       window.network.svg.select('.nodes')
-      .selectAll('text').data(window.nodes)
-      .text(d => d[e.target.value]);
+        .selectAll('text').data(window.nodes)
+        .text(d => d[e.target.value]);
     }
   });
 

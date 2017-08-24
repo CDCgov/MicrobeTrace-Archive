@@ -44,13 +44,23 @@
           <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="advancedHeader">
             <table class="table">
               <tbody>
-                <tr class="showForSequence">
-                  <td><a href="#" data-toggle="tooltip" title="If this file contains sequences that are already aligned, uncheck this box.">Align</a></td>
-                  <td><input type="checkbox" id="align" checked /></td>
+                <tr>
+                  <td><a href="#" data-toggle="tooltip" title="Which column of your Link CSV file contains the first node identifier?">Source</a></td>
+                  <td><select id="LinkSourceColumn" class="linkVariables"></select></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td><a href="#" data-toggle="tooltip" title="Which column of your Link CSV file contains the second node identifier?">Target</a></td>
+                  <td><select id="LinkTargetColumn" class="linkVariables"></select></td>
+                  <td></td>
                 </tr>
                 <tr>
                   <td><a href="#" data-toggle="tooltip" title="Optionally, provide a CSV file containing additional information about nodes.">Node Data</a></td>
                   <td><input id="NodeCSVFile" type="file" class="file-loading"  disabled="disabled" title="Please select a Network CSV or FASTA File First" /></td>
+                </tr>
+                <tr class="showForSequence">
+                  <td><a href="#" data-toggle="tooltip" title="If this file contains sequences that are already aligned, uncheck this box.">Align</a></td>
+                  <td><input type="checkbox" id="align" checked /></td>
                 </tr>
               </tbody>
             </table>
