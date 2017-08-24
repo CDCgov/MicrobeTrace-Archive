@@ -239,10 +239,9 @@
     electron.ipcRenderer.send('get-manifest');
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
-
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
-    electron.ipcRenderer.on('deliver-nodes', (e, nodes)=>{
+    electron.ipcRenderer.on('deliver-nodes', (e, nodes) => {
       window.nodes = nodes;
       var fields = Object.keys(window.nodes[0]);
       $('#lat').html('<option value="none"' + ('lat' in window.nodes[0]?'':' selected ') + '>None</option>' + fields.map(field => '<option value="'+field+'" ' + (field=='lat'?'selected':'') + '>'+field+'</option>'));
@@ -357,23 +356,6 @@
       }
     }
 
-    zoomFit = function(transitionDuration){
-      var bounds = g.node().getBBox();
-      var parent = svg.node();
-      var fullWidth  = parent.clientWidth  || parent.parentNode.clientWidth,
-          fullHeight = parent.clientHeight || parent.parentNode.clientHeight;
-      var scale = 0.85 / Math.max(width / fullWidth, height / fullHeight);
-
-      svg.transition()
-         .duration(transitionDuration || 600) // milliseconds
-         .call(zoom.transform,
-           d3.zoomIdentity.translate(
-             fullWidth  / 2 - scale * (bounds.x + width  / 2),
-             fullHeight / 2 - scale * (bounds.y + height / 2)
-           ).scale(scale)
-        );
-    };
-
     $('#button').click(() => $('#options').modal('show'));
 
     $('#globalScope').parent().click(e => {
@@ -400,7 +382,8 @@
         .attr('d', path).attr('stroke-width', 1/lastK);
     });
 
-    $('#lat, #lon').change(() => plotPoints());
+    $('#lat, #lon').change(plotPoints);
+
     $('#showCities').change(e => {
       if(e.target.checked){
         $('#cities').fadeIn();
