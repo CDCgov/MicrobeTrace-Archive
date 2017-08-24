@@ -254,6 +254,9 @@
       } else {
         $('#options').modal('show');
       }
+      if(window.nodes[0].seq !== ''){
+        $('.showForSequence').show().filter('tr').css('display', 'table-row');
+      }
     });
 
     var width = $(window).width(),
