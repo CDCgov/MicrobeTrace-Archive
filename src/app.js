@@ -290,6 +290,20 @@ $(function(){
         .on('mouseenter', showLinkToolTip)
         .on('mouseout', hideTooltip);
 
+    window.network.svg.append('svg:defs').selectAll('marker')
+      .data([{ id: 'end-arrow', opacity: 1 }, { id: 'end-arrow-fade', opacity: 0.1 }])
+      .enter().append('marker')
+        .attr('id', d => d.id)
+        .attr('viewBox', '0 0 10 10')
+        .attr('refX', 20)
+        .attr('refY', 5)
+        .attr('markerWidth', 4)
+        .attr('markerHeight', 4)
+        .attr('orient', 'auto')
+        .append('svg:path')
+          .attr('d', 'M0,0 L0,10 L10,5 z')
+          .style('opacity', 1);
+
     var node = window.network.svg.append('g')
       .attr('class', 'nodes')
       .selectAll('g')
@@ -607,6 +621,14 @@ $(function(){
     window.network.svg.select('.nodes').selectAll('path')
       .data(window.nodes)
       .classed('selected', d => d.selected);
+  });
+
+  $('#DirectedLinks').parent().click(e => {
+    window.network.svg.selectAll('line').attr('marker-end', 'url(#end-arrow)');
+  });
+
+  $('#UndirectedLinks').parent().click(e => {
+    window.network.svg.selectAll('line').attr('marker-end', null);
   });
 
   $('#default-link-length').on('input', e => {
