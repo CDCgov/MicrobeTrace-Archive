@@ -148,6 +148,11 @@
                     </td>
                     <td></td>
                   </tr>
+                  <tr>
+                    <td>Cities</td>
+                    <td><input id="showCities" type="checkbox" checked /></td>
+                    <td></td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -262,10 +267,13 @@
         .attr('width', width)
         .attr('height', height)
 
+    lastK = 1;
+
     zoom = d3.zoom().on('zoom', () => {
-      g.selectAll('g').attr('transform', d3.event.transform);
-      g.selectAll('path').attr('stroke-width', 1 / d3.event.transform.k + 'px');
-      g.selectAll('circle').attr('r', $('#radius').val() / d3.event.transform.k + 'px');
+      g.selectAll('g#countries, g#states, g#counties, g#nodes, g#cities').attr('transform', d3.event.transform);
+      g.selectAll('g#countries, g#states, g#counties').selectAll('path').attr('stroke-width', 1 / d3.event.transform.k);
+      g.selectAll('g#nodes').selectAll('circle').attr('r', $('#radius').val() / d3.event.transform.k);
+      lastK = d3.event.transform.k;
     });
 
     g = svg.append('g').call(zoom);
@@ -304,6 +312,21 @@
     g.append('g').attr('id', 'states');
 
     g.append('g').attr('id', 'counties');
+
+    window.cities = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'cities.csv'));
+    var citiesLayer = g.append('g').attr('id', 'cities').selectAll('g')
+      .attr('class', 'city').data(window.cities).enter().append('g');
+    citiesLayer.append('circle')
+      .attr('cx', d => projection([d['Longitude'], d['Latitude']])[0])
+      .attr('cy', d => projection([d['Longitude'], d['Latitude']])[1])
+      .attr('r', d => d['sqrtpop'])
+      .style('fill', 'black')
+      .style('opacity', .3);
+    citiesLayer.append('text').text(d => d['City'])
+      .attr('dx', d => projection([d['Longitude'], d['Latitude']])[0] + 1.5)
+      .attr('dy', d => projection([d['Longitude'], d['Latitude']])[1] + .7)
+      .style('fill', 'black')
+      .attr('font-size', 2);
 
     function showNodeToolTip(d){
       if($('#nodeTooltipVariable').val() == 'none') return;
@@ -379,10 +402,17 @@
     });
 
     $('#lat, #lon').change(() => plotPoints());
+    $('#showCities').change(e => {
+      if(e.target.checked){
+        $('#cities').fadeIn();
+      } else {
+        $('#cities').fadeOut();
+      }
+    });
 
-    $('#radius').on('input', e => g.selectAll('circle').attr('r', e.target.value));
+    $('#radius').on('input', e => g.select('#nodes').selectAll('circle').attr('r', e.target.value / lastK));
 
-    $('#color').on('input', e => g.selectAll('circle').style('fill', e.target.value));
+    $('#color').on('input', e => g.select('#nodes').selectAll('circle').style('fill', e.target.value));
 
     $('#jitter').on('input', e => {
       g.selectAll('circle')
@@ -391,7 +421,7 @@
     });
 
     $('#nodeColorField').change(e => {
-      var circles = g.selectAll('circle');
+      var circles = g.select('#nodes').selectAll('circle');
       var table = $('#groupKey').empty();
       if(e.target.value == 'none'){
         circles.style('fill', $('#color').val());
