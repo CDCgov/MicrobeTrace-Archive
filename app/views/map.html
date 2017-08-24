@@ -384,10 +384,8 @@
       $('.showForNational').css('display', 'table-row');
       g.select('#counties').html(null);
       if(!states) states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
-      g.select('#states').selectAll('path')
-            .data(states.features)
-          .enter().append('path')
-            .attr('d', path);
+      g.select('#states').selectAll('path').data(states.features).enter().append('path')
+        .attr('d', path).attr('stroke-width', 1/lastK);
     });
 
     $('#localScope').parent().click(e => {
@@ -395,10 +393,8 @@
       $('.showForLocal').css('display', 'table-row');
       g.select('#states').html(null);
       if(!counties) counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
-      g.select('#counties').selectAll('path')
-            .data(counties.features)
-          .enter().append('path')
-            .attr('d', path);
+      g.select('#counties').selectAll('path').data(counties.features).enter().append('path')
+        .attr('d', path).attr('stroke-width', 1/lastK);
     });
 
     $('#lat, #lon').change(() => plotPoints());
