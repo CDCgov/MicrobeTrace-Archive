@@ -20,7 +20,6 @@ var data;
 
 function reset(){
   data = {
-    metric: 'distance',
     nodes: [],
     links: [],
     distance_matrix: []

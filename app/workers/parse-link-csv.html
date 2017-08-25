@@ -8,13 +8,25 @@
 
   var defaultNode = {
     id: '',
+    index: -1,
     padding: 0,
-    seq: '',
     selected: false,
-    index: -1
-  }
+    seq: ''
+  };
 
-  electron.ipcRenderer.on('deliver-instructions', (sender, instructions) => {
+  var instructions = {
+    supplement: '',
+    identifierColumn: 'id',
+    sequenceColumn: 'seq',
+    align: true,
+    sourceColumn: 'source',
+    targetColumn: 'target'
+  };
+
+  var index = 0;
+
+  electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
+    Object.assign(instructions, i);
     electron.ipcRenderer.send('message', 'Parsing Link CSV...');
     var parsed = Baby.parseFiles(instructions.file, {
       header: true,
@@ -22,7 +34,12 @@
       skipEmptyLines: true
     });
     var links = parsed.data;
-    links.forEach(link => link.visible = link.orig = true);
+    links.forEach(link => {
+      link.index = index++;
+      link.orig = true;
+      link.source = link[instructions.sourceColumn];
+      link.target = link[instructions.targetColumn];
+    });
     electron.ipcRenderer.send('message', ' - Parsed ' + links.length + ' Links.');
 
     electron.ipcRenderer.send('message', 'Inferring Nodes...');
@@ -31,11 +48,11 @@
           llinks.pluck('source').union(
           llinks.pluck('target'))
         ).map((e, i) => ({
-          'id': e,
-          'index': i,
-          'seq': '',
-          'padding': 0,
-          'selected': false
+          id: e,
+          index: i,
+          padding: 0,
+          selected: false,
+          seq: ''
         })).toArray();
     electron.ipcRenderer.send('message', ' - Inferred ' + nodes.length + ' distinct nodes.');
 
@@ -49,26 +66,19 @@
       var csvNodes = parsed.data;
       electron.ipcRenderer.send('message', ' - Parsed ' + csvNodes.length + ' nodes from Supplement CSV.');
 
-      var k = 0;
+      var k = 0, l = 0;
       electron.ipcRenderer.send('message', 'Matching to Inferred nodes...');
-      nodes.forEach(node => {
-        var match = csvNodes.find(n => n.id == node.id);
-        if(match){
-          Object.assign(node, defaultNode, match);
-          k++;
-        }
-      });
-      electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.');
-
-      var orphans = 0
       csvNodes.forEach(node => {
-        var match = nodes.find(n => n.id == node.id);
-        if(!match){
-          nodes.push(Object.assign({}, defaultNode, node));
-          orphans++;
+        var match = nodes.find(n => n.id == node[instructions.identifierColumn]);
+        if(match){
+          Object.assign(match, node);
+          k++;
+        } else {
+          nodes.push(Object.assign({}, defaultNode, node, {index: index++}));
+          l++;
         }
       });
-      electron.ipcRenderer.send('message', ' - Identified ' + orphans + ' singleton nodes.');
+      electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.\n - Identified ' + l + ' singleton nodes.');
     }
 
     electron.ipcRenderer.send('update-data', {

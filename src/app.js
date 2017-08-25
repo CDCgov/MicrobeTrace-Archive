@@ -100,34 +100,27 @@ $(function(){
       return;
     }
 
-    var reader = new FileReader();
-    reader.onloadend = e2 => {
-      var full = e2.target.result;
-      var keys = unquote(full.slice(0, full.indexOf('\n')).split(','));
-      $('.linkVariables').html(
-        '<option value="none">None</option>\n' +
-        keys
-          .filter(key => !meta.includes(key))
-          .map(key => '<option value="' + key + '">' + key + '</option>')
-          .join('\n')
-      );
-      if(keys.includes('source')){
-        $('#LinkSourceColumn').val('source');
-      } else {
-        $('#LinkSourceColumn').val(keys[0]);
-      }
-      if(keys.includes('target')){
-        $('#LinkTargetColumn').val('target');
-      } else {
-        $('#LinkTargetColumn').val(keys[1]);
-      }
-    };
-    reader.readAsText(e.target.files[0]);
-
     if(e.target.files[0].name.slice(-3) == 'csv'){
+      var reader = new FileReader();
+      reader.onloadend = e2 => {
+        var full = e2.target.result;
+        var keys = unquote(full.slice(0, full.indexOf('\n')).split(','));
+        $('.linkVariables').html(
+          '<option value="none">None</option>\n' +
+          keys
+            .filter(key => !meta.includes(key))
+            .map(key => '<option value="' + key + '">' + key + '</option>')
+            .join('\n')
+        );
+        $('#LinkSourceColumn').val(keys.includes('source') ? 'source' : keys[0]);
+        $('#LinkTargetColumn').val(keys.includes('target') ? 'target' : keys[1]);
+      };
+      reader.readAsText(e.target.files[0]);
+      $('.showForLinkCSV').show().filter('tr').css('display', 'table-row');
       $('.showForSequence').hide();
     } else {
       $('.showForSequence').show().filter('tr').css('display', 'table-row');
+      $('.showForLinkCSV').hide();
     }
 
     $('#main-submit').prop({
@@ -147,7 +140,7 @@ $(function(){
       var reader = new FileReader();
       reader.onloadend = e2 => {
         var full = e2.target.result;
-        var keys = full.slice(0, full.indexOf('\n')).split(',');
+        var keys = unquote(full.slice(0, full.indexOf('\n')).split(','));
         $('.nodeVariables').html(
           '<option value="none">None</option>\n' +
           keys
@@ -178,6 +171,8 @@ $(function(){
       align: $('#align').is(':checked'),
       identifierColumn: $('#NodeIDColumn').val(),
       sequenceColumn: $('#NodeSequenceColumn').val(),
+      sourceColumn: $('#LinkSourceColumn').val(),
+      targetColumn: $('#LinkTargetColumn').val(),
       penalties: [-5, -1.7]
     });
 
