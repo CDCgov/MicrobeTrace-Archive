@@ -54,6 +54,7 @@ $(function(){
     window.network = undefined;
     window.nodes = undefined;
     window.links = undefined;
+    window.distance_matrix = undefined;
     ipcRenderer.send('reset');
   }
 
@@ -392,9 +393,9 @@ $(function(){
           if(!d3.event.shiftKey){
             window.nodes
               .filter(node => node !== n)
-              .forEach(node => Object.assign(node, {selected: 0}));
+              .forEach(node => node.selected = false);
           }
-          n.selected = math.abs(n.selected-1);
+          n.selected = !n.selected;
           ipcRenderer.send('update-node-selection', window.nodes);
           window.network.svg.select('.nodes').selectAll('path').data(nodes).classed('selected', d => d.selected);
           $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
@@ -554,7 +555,7 @@ $(function(){
   function redrawNodes(){
     var type = d3[$('#default-node-symbol').val()];
     var symbolVariable = $('#nodeSymbolVariable').val();
-    var o = function(){};
+    var o = a => (b => d3[$('#default-node-symbol').val()]);
     if(symbolVariable !== 'none'){
       o = getSymbolMapper();
     }
