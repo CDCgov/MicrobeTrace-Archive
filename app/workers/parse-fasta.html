@@ -15,7 +15,8 @@
 
   var data = {
     nodes: [],
-    links: []
+    links: [],
+    distance_matrix: []
   };
 
   var defaultNode = {
@@ -103,10 +104,10 @@
     electron.ipcRenderer.send('message', 'Computing Links...');
     var z = (data.nodes.length * (data.nodes.length - 1) / 2),
         k = 0,
-        lastTick = 0,
-        matrix = Array(data.nodes.length);
+        lastTick = 0;
+    data.distance_matrix = Array(data.nodes.length);
     for(var i = 0; i < data.nodes.length; i++){
-      matrix[i] = math.repeat(0, data.nodes.length);
+      data.distance_matrix[i] = math.repeat(0, data.nodes.length);
     }
     for(var i = 0; i < data.nodes.length; i++){
       for(var j = 0; j < i; j++){
@@ -123,14 +124,13 @@
           selected: false,
           distance: dist
         });
-        matrix[i][j] = matrix[j][i] = dist;
+        data.distance_matrix[i][j] = data.distance_matrix[j][i] = dist;
         if(k / z * 100 > lastTick + 1){
           electron.ipcRenderer.send('tick', ++lastTick);
         }
       }
     }
     electron.ipcRenderer.send('message', ' - ' + z + ' links computed.');
-    electron.ipcRenderer.send('update-distance-matrix', matrix);
     electron.ipcRenderer.send('update-data', data);
     electron.remote.getCurrentWindow().close();
   }

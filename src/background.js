@@ -99,10 +99,6 @@ ipcMain.on('update-nodes', (event, newNodes) => {
   distribute('deliver-nodes', data.nodes, event.sender.id);
 });
 
-ipcMain.on('update-distance-matrix', (event, distance_matrix) => {
-  data.distance_matrix = distance_matrix;
-});
-
 ipcMain.on('update-node-selection', (event, newNodes) => {
   data.nodes.forEach(d => d.selected = newNodes.find(nn => nn.id == d.id).selected);
   distribute('update-node-selection', data.nodes, event.sender.id);
