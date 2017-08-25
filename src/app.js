@@ -209,6 +209,25 @@ $(function(){
     renderNetwork();
     updateStatistics();
     $('#loadingInformationModal').modal('hide');
+    $('<li id="ExportTab" class=""><a href="#">Export Data</a></li>').click(e => {
+      remote.dialog.showSaveDialog({
+        filters: [
+          {name: 'FASTA', extensions: ['fas', 'fasta']},
+          {name: 'MEGA', extensions: ['meg', 'mega']}
+        ]
+      }, fileName => {
+        if (fileName === undefined){
+          return alertify.error('File not exported!');
+        }
+        var extension = fileName.split('.').pop();
+        if(extension === 'fas' || extension === 'fasta'){
+          jetpack.write(fileName, window.nodes.map(n => '>'+n.id+'\n'+n.seq).join('\n'));
+        } else {
+          jetpack.write(fileName, '#MEGA\nTitle: '+fileName+'\n\n'+window.nodes.map(n => '#'+n.id+'\n'+n.seq).join('\n'));
+        }
+        alertify.success('File Saved!');
+      });
+    }).insertAfter('#FileTab');
   });
 
   function updateStatistics(){
