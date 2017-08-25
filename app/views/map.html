@@ -397,7 +397,7 @@
     $('#color').on('input', e => g.select('#nodes').selectAll('circle').style('fill', e.target.value));
 
     $('#jitter').on('input', e => {
-      g.selectAll('circle')
+      g.select('#nodes').selectAll('circle')
         .attr('cx', d => projection([d[lonVar], d[latVar]])[0] + (Math.random()*2-1)*e.target.value)
         .attr('cy', d => projection([d[lonVar], d[latVar]])[1] + (Math.random()*2-1)*e.target.value)
     });
