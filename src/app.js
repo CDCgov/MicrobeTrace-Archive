@@ -31,9 +31,8 @@ $(function(){
       $('#loadingInformation').empty();
       $('#network').empty();
       $('#groupKey').find('tbody').empty();
-      $('.showForSequence, .showForMST').hide();
+      $('.showForSequence, .showForMST, .showForLinkCSV, .showForNodeFile').hide();
       $('.showForNotMST').show().filter('tr').css('display', 'table-row');
-      $('#sidebar-wrapper').removeClass('toggled');
       $('#collapseTwo').collapse('hide');
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
       $('#file_panel').fadeIn();
@@ -136,7 +135,12 @@ $(function(){
 
   $('#NodeCSVFile').on('change', e => {
     if(e.target.files.length > 0){
-      $('.showForNodeFile').css('display', 'table-row');
+      var mainFileExtension = $('#FastaOrLinkFile')[0].files[0].name.split('.').pop();
+      if(mainFileExtension === 'fas' || mainFileExtension === 'fasta'){
+        $('#NodeIDColumn').parent().parent().css('display', 'table-row');
+      } else {
+        $('.showForNodeFile').css('display', 'table-row');
+      }
       var reader = new FileReader();
       reader.onloadend = e2 => {
         var full = e2.target.result;
@@ -340,7 +344,7 @@ $(function(){
         .on('mouseout', hideTooltip);
 
     window.network.svg.append('svg:defs').selectAll('marker')
-      .data([{ id: 'end-arrow', opacity: 1 }, { id: 'end-arrow-fade', opacity: 0.1 }])
+      .data([{ id: 'end-arrow' }])
       .enter().append('marker')
         .attr('id', d => d.id)
         .attr('viewBox', '0 0 10 10')
@@ -351,7 +355,7 @@ $(function(){
         .attr('orient', 'auto')
         .append('svg:path')
           .attr('d', 'M0,0 L0,10 L10,5 z')
-          .style('opacity', 1);
+          .style('opacity', $('#default-link-opacity').val());
 
     var node = window.network.svg.append('g')
       .attr('class', 'nodes')
@@ -523,7 +527,7 @@ $(function(){
   var symbolKeys = ['symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye'].concat(Object.keys(extraSymbols));
 
   function getSymbolMapper(){
-    var circles = window.network.svg.selectAll('path').data(window.nodes);
+    var circles = window.network.svg.select('g.nodes').selectAll('path').data(window.nodes);
     var values = Lazy(window.nodes).pluck($('#nodeSymbolVariable').val()).uniq().sort().toArray();
     return d3.scaleOrdinal(symbolKeys).domain(values);
   }
@@ -545,7 +549,7 @@ $(function(){
       var rng = max - min;
       var med = rng / 2;
     }
-    window.network.svg.selectAll('path').data(window.nodes).each(function(d){
+    window.network.svg.select('g.nodes').selectAll('path').data(window.nodes).each(function(d){
       if(symbolVariable !== 'none'){
         type = d3[o(d[$('#nodeSymbolVariable').val()])];
       }
@@ -673,11 +677,11 @@ $(function(){
   });
 
   $('#DirectedLinks').parent().click(e => {
-    window.network.svg.selectAll('line').attr('marker-end', 'url(#end-arrow)');
+    window.network.svg.select('g.links').selectAll('line').attr('marker-end', 'url(#end-arrow)');
   });
 
   $('#UndirectedLinks').parent().click(e => {
-    window.network.svg.selectAll('line').attr('marker-end', null);
+    window.network.svg.select('g.links').selectAll('line').attr('marker-end', null);
   });
 
   $('#default-link-length').on('input', e => {
@@ -784,6 +788,14 @@ $(function(){
     });
     window.network.force.force('link').links(vlinks);
   }
+
+  $('#linkSortVariable').on('change', e => {
+    if(e.target.value === 'none'){
+      $('#computeMST').fadeOut();
+    } else {
+      $('#computeMST').fadeIn();
+    }
+  });
 
   ipcRenderer.on('update-links-mst', (event, newLinks) => {
     window.links.forEach(ol => {
