@@ -353,15 +353,7 @@ $(function(){
       .call(window.network.zoom)
       .append('g');
 
-    var link = window.network.svg.append('g')
-      .attr('class', 'links')
-      .selectAll('line')
-      .data(links).enter()
-      .append('line')
-        .attr('stroke-width', $('#default-link-width').val())
-        .attr('opacity', $('#default-link-opacity').val())
-        .on('mouseenter', showLinkToolTip)
-        .on('mouseout', hideTooltip);
+    var linkWidth = $('#default-link-width').val();
 
     window.network.svg.append('svg:defs').selectAll('marker')
       .data([{ id: 'end-arrow' }])
@@ -376,6 +368,16 @@ $(function(){
         .append('svg:path')
           .attr('d', 'M0,0 L0,10 L10,5 z')
           .style('opacity', $('#default-link-opacity').val());
+
+    var link = window.network.svg.append('g')
+      .attr('class', 'links')
+      .selectAll('line')
+      .data(links).enter()
+      .append('line')
+        .attr('stroke-width', linkWidth)
+        .attr('opacity', $('#default-link-opacity').val())
+        .on('mouseenter', showLinkToolTip)
+        .on('mouseout', hideTooltip);
 
     var node = window.network.svg.append('g')
       .attr('class', 'nodes')
@@ -513,8 +515,6 @@ $(function(){
         .transition().duration(100)
         .style('opacity', 1);
     }
-
-    return(network);
   }
 
   function showLinkToolTip(d){
@@ -704,6 +704,19 @@ $(function(){
     window.network.svg.select('g.links').selectAll('line').attr('marker-end', null);
   });
 
+  function setLinkPattern(){
+    var linkWidth = $('#default-link-width').val();
+    var mappings = {
+      'None': 'none',
+      'Dotted': linkWidth + ',' + 2 * linkWidth,
+      'Dashed': linkWidth * 5,
+      'Dot-Dashed': linkWidth * 5 + ',' + linkWidth * 5 + ',' + linkWidth  + ',' + linkWidth * 5
+    }
+    window.network.svg.select('g.links').selectAll('line').attr('stroke-dasharray', mappings[$('#default-link-pattern').val()]);
+  }
+
+  $('#default-link-pattern').on('change', setLinkPattern);
+
   $('#default-link-length').on('input', e => {
     window.network.force.force('link').distance(e.target.value);
     window.network.force.alpha(0.3).alphaTarget(0).restart();
@@ -791,6 +804,7 @@ $(function(){
     oldThreshold = newThreshold;
     scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),   'stroke-width');
     scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
+    setLinkPattern();
     window.network.force.nodes(window.nodes).on('tick', e => {
       selection
         .attr('x1', d => d.source.x)
