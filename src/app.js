@@ -901,8 +901,6 @@ $(function(){
 
   $('#network-color').on('input', e => $('#main_panel').css('background-color', e.target.value));
 
-  $('#main_panel').click(e => $('#sidebar-wrapper').removeClass('toggled'));
-
   $('[data-toggle="tooltip"]').tooltip();
 
   $(document).on('keydown', e => {
