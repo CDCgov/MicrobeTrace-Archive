@@ -728,26 +728,28 @@ $(function(){
     window.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
-  $('#default-link-color').on('input', e => window.network.svg.selectAll('line').style('stroke', e.target.value));
-  $('#linkColorVariable').change(e => {
-    $('#default-link-color').fadeOut();
-    var links = window.network.svg.selectAll('line');
-    var table = $('#linkGroupKey').empty();
-    if(e.target.value == 'none'){
-      links.style('stroke', $('#default-link-color').val());
+  function setLinkColor(e){
+    if($('#linkColorVariable').val() == 'none'){
+      window.network.svg.select('.links').selectAll('line').style('stroke', $('#default-link-color').val());
       $('#default-link-color').fadeIn();
-      table.fadeOut();
+      $('#linkColors').fadeOut();
       return;
     }
-    table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
-    var values = Lazy(window.links).pluck(e.target.value).uniq().sortBy().toArray();
+    $('#default-link-color').fadeOut();
+    var links = window.network.svg.selectAll('line');
+    $('#linkColors').remove();
+    $('#groupKey').append('<tbody id="linkColors"></tbody>');
+    var table = $('#linkColors');
+    var variable = $('#linkColorVariable').val();
+    table.append('<tr><th>'+variable+'</th><th>Color</th><tr>');
+    var values = Lazy(window.links).pluck(variable).uniq().sortBy().toArray();
     var o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
-    links.style('stroke', d => o(d[e.target.value]));
+    links.style('stroke', d => o(d[variable]));
     values.forEach(value => {
       var input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
         .on('input', evt => {
           links
-            .filter(d => d[e.target.value] === value)
+            .filter(d => d[variable] === value)
             .style('stroke', d => evt.target.value);
         });
       var cell = $('<td></td>').append(input);
@@ -755,7 +757,10 @@ $(function(){
       table.append(row);
     });
     table.fadeIn();
-  });
+  }
+
+  $('#default-link-color').on('input', setLinkColor);
+  $('#linkColorVariable').change(setLinkColor);
 
   function scaleLinkThing(scalar, variable, attribute, floor){
     var links = window.network.svg.selectAll('line');
@@ -789,10 +794,7 @@ $(function(){
   function refreshLinks(){
     setLinkVisibility();
     var vlinks = links.filter(l => l.visible);
-    var selection = window.network.svg
-      .select('.links')
-      .selectAll('line')
-      .data(vlinks);
+    var selection = window.network.svg.select('.links').selectAll('line').data(vlinks);
     var newThreshold = computeThreshold();
     if(newThreshold >= oldThreshold){
       selection.enter().append('line').merge(selection)
@@ -803,9 +805,6 @@ $(function(){
       selection.exit().remove();
     }
     oldThreshold = newThreshold;
-    scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
-    scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
-    setLinkPattern();
     window.network.force.nodes(window.nodes).on('tick', e => {
       selection
         .attr('x1', d => d.source.x)
@@ -879,6 +878,10 @@ $(function(){
         'display': 'inline'
       });
     });
+    setLinkColor();
+    scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
+    scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
+    setLinkPattern();
     window.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
