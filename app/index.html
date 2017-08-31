@@ -300,16 +300,6 @@
                       <td><input type="range" id="default-link-width" min="0.3" max="30" step=".3" value="3" /></td>
                     </tr>
                     <tr>
-                      <td><a href="#" data-toggle="tooltip" title="How long should links be?">Length</a></td>
-                      <td></td>
-                      <td><input type="range" id="default-link-length" min = "0" max="200" value="50" /></td>
-                    </tr>
-                    <tr>
-                      <td><a href="#" data-toggle="tooltip" title="How important is it that the links be the length specified above?">Strength</a></td>
-                      <td></td>
-                      <td><input type="range" id="default-link-strength" min = "0" max="1" value="0.95" step="0.025" /></td>
-                    </tr>
-                    <tr>
                       <td><a href="#" data-toggle="tooltip" title="By what variable would you like to prune links from the network?">Pruning</a></td>
                       <td><select id="linkSortVariable" class="linkVariables numeric"><option value="distance">Distance</option></select></td>
                       <td>
@@ -369,6 +359,14 @@
                     <tr>
                       <td><a href="#" data-toggle="tooltip" title="How quickly should moving nodes lose their momentum?">Friction</a></td>
                       <td><input type="range" id="network-friction" min="0" max="1" value="0.4" step="0.025" /></td>
+                    </tr>
+                    <tr>
+                      <td><a href="#" data-toggle="tooltip" title="How long should links be?">Length</a></td>
+                      <td><input type="range" id="default-link-length" min = "0" max="200" value="50" /></td>
+                    </tr>
+                    <tr>
+                      <td><a href="#" data-toggle="tooltip" title="How important is it that the links be the length specified above?">Strength</a></td>
+                      <td><input type="range" id="default-link-strength" min = "0" max="1" value="0.95" step="0.025" /></td>
                     </tr>
                     <tr>
                       <td><a href="#" data-toggle="tooltip" title="How attractive is the mass of the graph?">Gravity</a></td>
