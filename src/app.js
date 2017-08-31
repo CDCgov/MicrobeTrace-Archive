@@ -232,12 +232,13 @@ $(function(){
   });
 
   function updateStatistics(){
+    if($('#hideNetworkStatistics').is(':checked')) return;
+    var llinks = Lazy(window.links).filter(e => e.visible);
     $('#numberOfNodes').text(window.nodes.length.toLocaleString());
     $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
     $('#visibilityThreshold').text(math.toPrecision(computeThreshold(), 3));
-    $('#numberOfVisibleLinks').text(window.links.filter(link => link.visible).length.toLocaleString());
+    $('#numberOfVisibleLinks').text(llinks.size().toLocaleString());
     $('#numberOfPossibleLinks').text((window.nodes.length * (window.nodes.length - 1) / 2).toLocaleString());
-    var llinks = Lazy(window.links).filter(e => e.visible);
     var singletons = window.nodes.length - Lazy(llinks.pluck('source').union(llinks.pluck('target'))).uniq().size();
     $('#numberOfSingletonNodes').text(singletons.toLocaleString());
     $('#numberOfDisjointComponents').text((countComponents() - singletons).toLocaleString());
@@ -868,6 +869,7 @@ $(function(){
           'opacity': 1
         });
       refreshLinks();
+      updateStatistics();
     });
   }).on('change', function(e){
     $(this).off('mousemove');
@@ -878,12 +880,14 @@ $(function(){
         'display': 'inline'
       });
     });
-    updateStatistics();
     window.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#hideNetworkStatistics').parent().click(() => $('#networkStatistics').fadeOut());
-  $('#showNetworkStatistics').parent().click(() => $('#networkStatistics').fadeIn());
+  $('#showNetworkStatistics').parent().click(() => {
+    updateStatistics();
+    $('#networkStatistics').fadeIn()
+  });
 
   $('#network-friction').on('input', e => {
     window.network.force.velocityDecay(e.target.value);
