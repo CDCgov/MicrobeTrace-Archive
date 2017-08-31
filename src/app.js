@@ -374,6 +374,7 @@ $(function(){
       .selectAll('line')
       .data(links).enter()
       .append('line')
+        .attr('stroke', $('#default-link-color').val())
         .attr('stroke-width', linkWidth)
         .attr('opacity', $('#default-link-opacity').val())
         .on('mouseenter', showLinkToolTip)
