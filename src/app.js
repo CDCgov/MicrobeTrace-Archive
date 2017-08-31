@@ -588,7 +588,8 @@ $(function(){
 
   $('#nodeLabelVariable').change(e => {
     if(e.target.value === 'none'){
-      $('text').text('');
+      window.network.svg.select('.nodes')
+        .selectAll('text').text('');
     } else {
       window.network.svg.select('.nodes')
         .selectAll('text').data(window.nodes)
