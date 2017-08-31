@@ -436,8 +436,8 @@ $(function(){
         .attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y);
-      node.
-        attr('transform', d => {
+      node
+        .attr('transform', d => {
           if(d.fixed){
             return 'translate(' + d.fx + ', ' + d.fy + ')';
           } else {
@@ -540,9 +540,7 @@ $(function(){
 
   ipcRenderer.on('update-node-selection', (e, newNodes) => {
     window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
-    window.network.svg.select('.nodes').selectAll('path')
-      .data(window.nodes)
-      .classed('selected', d => d.selected);
+    window.network.svg.select('.nodes').selectAll('path').data(window.nodes).classed('selected', d => d.selected);
     $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
   });
 
@@ -804,7 +802,7 @@ $(function(){
       selection.exit().remove();
     }
     oldThreshold = newThreshold;
-    scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),   'stroke-width');
+    scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
     scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
     setLinkPattern();
     window.network.force.nodes(window.nodes).on('tick', e => {
