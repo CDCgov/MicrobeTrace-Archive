@@ -660,7 +660,9 @@ $(function(){
   $('#nodeColorVariable').change(e => {
     $('#default-node-color').fadeOut();
     var circles = window.network.svg.selectAll('path').data(window.nodes);
-    var table = $('#nodeGroupKey').empty();
+    $('#nodeColors').remove();
+    $('#groupKey').append('<tbody id="nodeColors"></tbody>');
+    var table = $('#nodeColors');
     if(e.target.value == 'none'){
       circles.attr('fill', $('#default-node-color').val());
       $('#default-node-color').fadeIn();
