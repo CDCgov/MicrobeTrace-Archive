@@ -354,8 +354,6 @@ $(function(){
       .call(window.network.zoom)
       .append('g');
 
-    var linkWidth = $('#default-link-width').val();
-
     window.network.svg.append('svg:defs').selectAll('marker')
       .data([{ id: 'end-arrow' }])
       .enter().append('marker')
@@ -367,8 +365,7 @@ $(function(){
         .attr('markerHeight', 4)
         .attr('orient', 'auto')
         .append('svg:path')
-          .attr('d', 'M0,0 L0,10 L10,5 z')
-          .style('opacity', $('#default-link-opacity').val());
+          .attr('d', 'M0,0 L0,10 L10,5 z');
 
     var link = window.network.svg.append('g')
       .attr('class', 'links')
@@ -376,7 +373,7 @@ $(function(){
       .data(links).enter()
       .append('line')
         .attr('stroke', $('#default-link-color').val())
-        .attr('stroke-width', linkWidth)
+        .attr('stroke-width', $('#default-link-width').val())
         .attr('opacity', $('#default-link-opacity').val())
         .on('mouseenter', showLinkToolTip)
         .on('mouseout', hideTooltip);
