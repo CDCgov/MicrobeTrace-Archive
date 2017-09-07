@@ -239,7 +239,7 @@ $(function(){
     $('#visibilityThreshold').text(math.toPrecision($('#default-link-threshold').val(), 3));
     $('#numberOfVisibleLinks').text(llinks.size().toLocaleString());
     $('#numberOfPossibleLinks').text((window.nodes.length * (window.nodes.length - 1) / 2).toLocaleString());
-    var singletons = window.nodes.length - Lazy(llinks.pluck('source').union(llinks.pluck('target'))).uniq().size();
+    var singletons = window.nodes.length - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
     $('#numberOfSingletonNodes').text(singletons.toLocaleString());
     $('#numberOfDisjointComponents').text((countComponents() - singletons).toLocaleString());
   }
