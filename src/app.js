@@ -410,6 +410,7 @@ $(function(){
       .force('link', d3.forceLink()
         .id(d => d.id)
         .distance($('#default-link-length').val())
+        .strength(0.125)
       )
       .force('charge', d3.forceManyBody()
         .strength(-$('#default-node-charge').val())
@@ -712,11 +713,6 @@ $(function(){
 
   $('#default-link-length').on('input', e => {
     window.network.force.force('link').distance(e.target.value);
-    window.network.force.alpha(0.3).alphaTarget(0).restart();
-  });
-
-  $('#default-link-strength').on('input', e => {
-    window.network.force.force('link').strength(e.target.value);
     window.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
