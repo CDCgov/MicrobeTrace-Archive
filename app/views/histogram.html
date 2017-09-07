@@ -38,20 +38,17 @@
                 <label class="btn btn-default">
                   <input type="radio" name="set" id="mstlinks" autocomplete="off"> MST Links
                 </label>
-                <!--label class="btn btn-default">
-                  <input type="radio" name="set" id="nodes" autocomplete="off"> Nodes
-                </label-->
               </div>
             </td>
           </tr>
-          <!--tr>
+          <tr>
             <td><a href="#" data-toggle="tooltip" title="Which variable should the histogram be drawn from?">Variable</a></td>
             <td>
-              <select id="variables">
-                <option val="distance">Distance</option>
+              <select id="variable">
+                <option>distance</option>
               </select>
             </td>
-          </tr-->
+          </tr>
           <tr>
             <td><a href="#" data-toggle="tooltip" title="Should the y-axis show a linear or logarithmic scale?">Scale</a></td>
             <td>
@@ -67,7 +64,7 @@
           </tr>
           <tr>
             <td><a href="#" data-toggle="tooltip" title="What color should the histogram be?">Color</a></td>
-            <td><input type="color" id="color" value="#ff0044" /></td>
+            <td><input type="color" id="color" value="#ff0000" /></td>
           </tr>
         </table>
         <div class="modal-footer">
@@ -94,63 +91,52 @@
     electron.ipcRenderer.send('get-manifest');
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
-
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
     electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
-      console.log('Got New Links.');
-      window.links.forEach(d => d.visible = newLinks.find(e => e.id == d.id).visible);
+      window.links = newLinks;
       if($('#vislinks').is(':checked')){
-        replot(window.links.filter(l => l.visible));
+        Plotly.update('main_panel', {x: [window.links.filter(l => l.visible)]});
       }
     });
 
-    var lastLinks = window.links;
-
-    function replot(links){
-      if(!links){
-        if(!window.links){
-          return alertify.error('No links are populated.')
-        }
-        links = lastLinks;
-      } else {
-        lastLinks = links;
-      }
-
-      if(window.plot) Plotly.purge('main_panel');
-
-      //var varName = $('#variable').val();
-      var varName = 'distance';
-
+    electron.ipcRenderer.on('deliver-links', (e, links) => {
+      $('#variable').html(Object.keys(links[0]).map(key => '<option>' + key + '</option>').join('\n'));
+      var varName = $('#variable').val();
+      window.links = links;
       window.plot = Plotly.newPlot('main_panel', [{
-        x: links.map(l => Math.abs(l[varName])),
+        x: links.map(l => l[varName]),
         type: 'histogram',
         marker: {
           color: $('#color').val(),
-        }
-      }], {
-        yaxis: $('#logScale').is(':checked') ? {type: 'log'} : {}
-      }, {
-        displaylogo: false,
-        displayModeBar: false
+          }
+        }], {
+          yaxis: $('#logScale').is(':checked') ? {type: 'log'} : {}
+        }, {
+          displaylogo: false,
+          displayModeBar: false
       });
-    }
-
-    electron.ipcRenderer.on('deliver-links', (e, links) => {
-      window.links = links;
-      replot(window.links);
+      $(window).on('resize', e => Plotly.relayout('main_panel', {width: $('#main_panel').width(), height: $('#main_panel').height()}));
     });
     electron.ipcRenderer.send('get-links');
 
-    $('#alllinks').parent().click(e => replot(window.links));
-    $('#vislinks').parent().click(e => replot(window.links.filter(l => l.visible)));
-    $('#mstlinks').parent().click(e => replot(window.links.filter(l => l.mst)));
+    $('#alllinks').parent().click(e => {
+      var varName = $('#variable').val();
+      Plotly.restyle('main_panel', {x: [window.links.map(l => l[varName])]});
+    });
+    $('#vislinks').parent().click(e => {
+      var varName = $('#variable').val();
+      Plotly.restyle('main_panel', {x: [window.links.filter(l => l.visible).map(l => l[varName])]});
+    });
+    $('#mstlinks').parent().click(e => {
+      var varName = $('#variable').val();
+      Plotly.restyle('main_panel', {x: [window.links.filter(l => l.mst).map(l => l[varName])]});
+    });
 
     $('#logScale, #linearScale').parent().click(e => Plotly.relayout('main_panel', {yaxis: e.target.outerText === 'Log' ? {type: 'log'} : {}}));
 
-    $('#color').on('input', e => Plotly.update('main_panel', {marker : {color: e.target.value}}));
+    $('#color').on('input', e => Plotly.restyle('main_panel', {marker : {color: e.target.value}}));
 
-    $(window).on('resize', e => replot(lastLinks));
   });
 
   </script>
