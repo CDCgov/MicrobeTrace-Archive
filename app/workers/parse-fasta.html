@@ -99,7 +99,7 @@
         l++;
       }
     });
-    electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.\n - Failed to match ' + l + 'nodes.');
+    electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.\n - Identified ' + l + ' singletons.');
   }
 
   function computeLinks(){
