@@ -801,6 +801,7 @@ $(function(){
         });
     });
     window.network.force.force('link').links(vlinks);
+    window.network.svg.select('.links').selectAll('line').style('stroke', $('#default-link-color').val());
   }
 
   $('#linkSortVariable').on('change', e => {
