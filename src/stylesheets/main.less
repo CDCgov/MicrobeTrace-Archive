@@ -97,6 +97,19 @@ td {
 
 .nodes path.selected {
   stroke: #000;
+  animation-duration: 1s;
+  animation-name: ripple;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@keyframes ripple {
+  from {
+    stroke-width: 2px;
+  }
+  to {
+    stroke-width: 8px;
+  }
 }
 
 .brush .extent {
