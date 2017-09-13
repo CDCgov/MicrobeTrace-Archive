@@ -1,6 +1,7 @@
 import { clipboard, remote, ipcRenderer } from 'electron';
 import Lazy from 'lazy.js';
 import math from 'bettermath';
+import jetpack from 'fs-jetpack';
 import './helpers/window.js';
 
 import d3 from 'd3';
@@ -62,6 +63,19 @@ $(function(){
   $('#FileTab').click(() => reset());
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
+  $('<li id="ExportHIVTraceTab"><a href="#">Export HIVTRACE File</a></li>').click(() => {
+    remote.dialog.showSaveDialog({
+      filters: [
+        {name: 'JSON', extensions: ['json']}
+      ]
+    }, (fileName) => {
+      if (fileName === undefined){
+        return alertify.error('File not exported!');
+      }
+      jetpack.write(fileName, makeHIVTraceOutput());
+      alertify.success('File Saved!');
+    });
+  }).insertAfter('#FileTab');
 
   // Before anything else gets done, ask the user to accept the legal agreement
   if(!localStorage.getItem('licenseAccepted')){
@@ -241,7 +255,7 @@ $(function(){
     $('#numberOfPossibleLinks').text((window.nodes.length * (window.nodes.length - 1) / 2).toLocaleString());
     var singletons = window.nodes.length - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
     $('#numberOfSingletonNodes').text(singletons.toLocaleString());
-    $('#numberOfDisjointComponents').text((countComponents() - singletons).toLocaleString());
+    $('#numberOfDisjointComponents').text((tagClusters() - singletons).toLocaleString());
   }
 
   const meta = ['seq', 'padding', 'selected', 'orig', 'mst', 'visible', 'index'];
@@ -285,26 +299,29 @@ $(function(){
     }
   }
 
-  function DFS(v){
-    v.discovered = true;
+  var numClusters = 0;
+
+  function DFS(node){
+    if(typeof node.cluster !== 'undefined') return;
+    node.cluster = window.clusters.length;
     window.links
-      .filter(l => l.visible && (l.source.id == v.id || l.target.id == v.id))
+      .filter(l => l.visible && (l.source.id == node.id || l.target.id == node.id))
       .forEach(l => {
-        if(!l.source.discovered) DFS(l.source);
-        if(!l.target.discovered) DFS(l.target);
+        if(!l.source.cluster) DFS(l.source);
+        if(!l.target.cluster) DFS(l.target);
       });
   }
 
-  function countComponents(){
-    var components = 0;
+  function tagClusters(){
+    window.clusters = [];
+    window.nodes.forEach(node => delete node.cluster);
     window.nodes.forEach(node => {
-      if(!node.discovered){
+      if(typeof node.cluster === 'undefined'){
         DFS(node);
-        components++;
+        numClusters++;
       }
     });
-    window.nodes.forEach(node => delete node.discovered);
-    return components;
+    return ;
   }
 
   function setLinkVisibility(){
@@ -527,6 +544,33 @@ $(function(){
       .transition().duration(100)
       .style('opacity', 0)
       .on('end', () => tooltip.style('left', '-40px').style('top', '-40px'));
+  }
+
+  function makeHIVTraceOutput(){
+    return JSON.stringify({
+      trace_results: {
+        'HIV Stages': {},
+        'Degrees': {},
+        'Multiple sequences': {},
+        'Edge Stages': {},
+        'Cluster sizes': [],
+        'Settings': {
+          'contaminant-ids': ['HXB2_prrt'],
+          'contaminants': 'remove',
+          'edge-filtering': 'remove',
+          'threshold': $('#default-link-threshold').val()
+        },
+        'Network Summary': {
+          'Sequences used to make links': 0,
+          'Clusters': numClusters,
+          'Edges': window.links.filter(l => l.visible).length,
+          'Nodes': window.nodes.length
+        },
+        'Directed Edges': {},
+        'Edges': [],
+        'Nodes': []
+      }
+    });
   }
 
   ipcRenderer.on('update-node-selection', (e, newNodes) => {
