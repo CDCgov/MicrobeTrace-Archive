@@ -15,6 +15,12 @@
 body{
   overflow:auto;
 }
+#searchBox{
+  position:absolute;
+  top: 60px;
+  right: 20px;
+  display:none;
+}
 #main_panel{
   padding-top: 10px;
 }
@@ -89,12 +95,20 @@ body{
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
 
+  <div id="searchBox">
+    <input type="search" id="search" />
+    <button type="button" id="close_search" class="btn btn-default btn-xs">
+      <i class="fa fa-times" aria-hidden="true"></i>
+    </button>
+  </div>
+
   <table id="networkStatistics">
     <tr>
       <td>Selected Branches</td>
       <td id="selected_branch_counter">0</td>
     </tr>
   </table>
+
   <div id="main_panel"></div>
 
   <script>
@@ -130,6 +144,21 @@ body{
         });
       })
     );
+
+    function show_search(){
+      $('#searchBox').show();
+      $('#search').focus();
+    }
+
+    function hide_search(){
+      $('#searchBox').slideUp();
+      tree.modify_selection(n => false, "tag");
+    }
+
+    $('<li id="FindTab"><a href="#">Find</a></li>')
+      .click(show_search)
+      .append('<li role="separator" class="divider"></li>')
+      .insertBefore('#SettingsTab');
 
     electron.ipcRenderer.send('get-data');
     electron.ipcRenderer.on('deliver-data', (e, data) => {
@@ -220,6 +249,22 @@ body{
 
     $('#sort_original').click(e => tree.resort_children((a,b) => a['original_child_order'] - b['original_child_order']));
     $('#sort_ascending, #sort_descending').click(e => sort_nodes(e.target.id === 'sort_ascending'));
+
+    $("#search").on ("input propertychange focus", e => {
+      var rx = new RegExp(e.target.value, "i");
+      tree.modify_selection(n => e.target.value.length && (tree.branch_name()(n.target).search(rx)) != -1, "tag");
+    });
+
+    $('#close_search').click(hide_search);
+
+    $(document).on('keydown', e => {
+      if(e.ctrlKey){
+        if(e.which === 70) show_search(); // ctrl+f
+      }
+      if(e.which === 27) hide_search(); //Escape
+      if(e.which === 116) reset(); //F5
+      if(e.which === 123) remote.getCurrentWindow().toggleDevTools(); //F12
+    });
 
   });
   </script>
