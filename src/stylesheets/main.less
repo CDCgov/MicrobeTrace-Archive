@@ -152,27 +152,22 @@ td {
   .modal-dialog, .modal-content {
     background-color: rgba(255, 255, 255, .5);
   }
+  .tab-pane {
+    border: 1px solid #ddd;
+    border-top: none;
+  }
   #accordion {
+    margin-bottom: 0;
     .panel {
       background-color: transparent;
 
-      #minThreshold, #maxThreshold {
-        width: 4em;
-        display: inline;
-        border: none;
-      }
-
-      #maxThreshold {
-        margin-left: 1em;
-      }
-
-      #default-link-threshold {
-        width: ~"calc(95% - 9em)";
-        display: inline;
-      }
-
       #computeMST {
         display: none;
+        margin: 0 1em;
+      }
+      .showForMST {
+        display: inline-block;
+        margin: 0 1em
       }
     }
   }

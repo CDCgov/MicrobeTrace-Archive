@@ -864,8 +864,8 @@ $(function(){
         ol.mst = newlink.mst;
       }
     });
-    $('.showForMST').fadeIn().filter('tr').css('display', 'table-row');
-    alertify.success('MST successfully computed.', 0);
+    $('.showForMST').css('display', 'inline-block');
+    alertify.success('MST successfully computed.', 10);
   });
 
   $('#computeMST').click(e => {
