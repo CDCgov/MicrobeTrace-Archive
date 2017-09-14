@@ -253,9 +253,10 @@ $(function(){
     $('#visibilityThreshold').text(math.toPrecision($('#default-link-threshold').val(), 3));
     $('#numberOfVisibleLinks').text(llinks.size().toLocaleString());
     $('#numberOfPossibleLinks').text((window.nodes.length * (window.nodes.length - 1) / 2).toLocaleString());
+    tagClusters();
     var singletons = window.nodes.length - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
     $('#numberOfSingletonNodes').text(singletons.toLocaleString());
-    $('#numberOfDisjointComponents').text((tagClusters() - singletons).toLocaleString());
+    $('#numberOfDisjointComponents').text((window.clusters.length - singletons).toLocaleString());
   }
 
   const meta = ['seq', 'padding', 'selected', 'orig', 'mst', 'visible', 'index'];
@@ -299,8 +300,6 @@ $(function(){
     }
   }
 
-  var numClusters = 0;
-
   function DFS(node){
     if(typeof node.cluster !== 'undefined') return;
     node.cluster = window.clusters.length;
@@ -318,10 +317,11 @@ $(function(){
     window.nodes.forEach(node => {
       if(typeof node.cluster === 'undefined'){
         DFS(node);
-        numClusters++;
+        window.clusters.push({
+          id: window.clusters.length
+        });
       }
     });
-    return ;
   }
 
   function setLinkVisibility(){
