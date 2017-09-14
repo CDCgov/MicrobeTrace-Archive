@@ -33,8 +33,8 @@ $(function(){
       $('#network').empty();
       $('#groupKey').find('tbody').empty();
       $('.showForSequence, .showForMST, .showForLinkCSV, .showForNodeFile').hide();
-      $('.showForNotMST').show().filter('tr').css('display', 'table-row');
-      $('#collapseTwo').collapse('hide');
+      $('.showForNotMST').css('display', 'inline-block');
+      $('#advancedFileLoadOptions').collapse('hide');
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
       $('#file_panel').fadeIn();
     }
@@ -852,7 +852,7 @@ $(function(){
     if(e.target.value === 'none'){
       $('#computeMST').fadeOut();
     } else {
-      $('#computeMST').fadeIn();
+      $('#computeMST').css('display', 'inline-block');
     }
   });
 
