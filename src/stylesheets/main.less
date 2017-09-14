@@ -97,18 +97,20 @@ td {
 
 .nodes path.selected {
   stroke: #000;
+  stroke-dasharray: 6, 13;
+  stroke-width: 2px;
   animation-duration: 1s;
   animation-name: ripple;
   animation-iteration-count: infinite;
-  animation-direction: alternate;
+  animation-timing-function: linear;
 }
 
 @keyframes ripple {
   from {
-    stroke-width: 2px;
+    stroke-dashoffset: 0px;
   }
   to {
-    stroke-width: 8px;
+    stroke-dashoffset: 19px;
   }
 }
 
