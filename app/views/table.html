@@ -157,6 +157,8 @@
       })
     );
 
+    $('body').append(electron.ipcRenderer.sendSync('get-component', 'search.html'));
+
     window.table = { destroy: () => {} };
 
     function reorder(){ window.table.draw(false); }
@@ -187,10 +189,11 @@
       updateData();
       window.table.destroy();
       var options = {
+        dom: 'lrtip',
         data: window.data,
         columns: window.columns,
         deferRender: true,
-        colReorder: false,
+        colReorder: true,
         select: {
           style: 'multi'
         }
@@ -254,6 +257,15 @@
     });
 
     electron.ipcRenderer.send('get-data');
+
+    function hide_search(){
+      $('#searchBox').slideUp();
+      window.table.search('').draw();
+    }
+
+    $('#search').on('input', e => {
+      window.table.search(e.target.value).draw();
+    });
 
     $('#font-size-slider').on('input', resetTextsize);
     $('input[name=nodelink]').on('change', updateTable);
