@@ -1,0 +1,40 @@
+<style>
+#searchBox{
+  position:absolute;
+  top: 60px;
+  right: 20px;
+  display:none;
+}
+</style>
+
+<div id="searchBox">
+  <input type="search" id="search" />
+  <button type="button" id="close_search" class="btn btn-default btn-xs"><b>🗙</b></button>
+</div>
+
+<script>
+
+  function show_search(){
+    $('#searchBox').show();
+    $('#search').focus();
+  }
+
+  function hide_search(){
+    $('#searchBox').slideUp();
+  }
+
+  $('<li id="FindTab"><a href="#">Find</a></li>')
+    .click(show_search)
+    .append('<li role="separator" class="divider"></li>')
+    .insertBefore('#SettingsTab');
+
+  $('#close_search').click(hide_search);
+
+  $(document).on('keydown', e => {
+    if(e.ctrlKey){
+      if(e.which === 70) show_search(); // ctrl+f
+    }
+    if(e.which === 27) hide_search(); //Escape
+  });
+
+</script>
