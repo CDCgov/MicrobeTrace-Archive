@@ -29,6 +29,7 @@
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">View</a>
             <ul class="dropdown-menu">
               <li id="TableTab"><a href="#">Table</a></li>
+              <li id="FlowTab"><a href="#">Flow Diagram</a></li>
               <li id="HistogramTab" class="showForSequence"><a href="#">Histogram</a></li>
               <li id="DistanceMatrixTab" class="showForSequence"><a href="#">Heatmap</a></li>
               <li id="SequencesTab" class="showForSequence"><a href="#">Sequences</a></li>
@@ -92,6 +93,14 @@
   $('#TableTab').click(function(){
     if(!$(this).hasClass('disabled')){
       electron.ipcRenderer.send('launch-view', 'views/table.html');
+    } else {
+      alertify.warning('Please load some data first!');
+    }
+  });
+
+  $('#FlowTab').click(function(){
+    if(!$(this).hasClass('disabled')){
+      electron.ipcRenderer.send('launch-view', 'views/flowDiagram.html');
     } else {
       alertify.warning('Please load some data first!');
     }
