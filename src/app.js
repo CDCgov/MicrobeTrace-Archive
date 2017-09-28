@@ -328,6 +328,7 @@ $(function(){
         });
       }
     });
+    ipcRenderer.send('update-node-cluster', window.nodes);
   }
 
   function setLinkVisibility(){

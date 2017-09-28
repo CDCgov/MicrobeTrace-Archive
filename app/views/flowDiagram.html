@@ -73,10 +73,13 @@ svg{
       drawGraph();
     });
 
-    electron.ipcRenderer.on('update-node-selection', (e, data) => {
+    function updateData(e, data){
       window.nodes = data;
       drawGraph();
-    });
+    }
+
+    electron.ipcRenderer.on('update-node-selection', updateData);
+    electron.ipcRenderer.on('update-node-cluster',   updateData);
 
     function drawGraph(){
       var width = $(window).width() - 40,

@@ -103,6 +103,11 @@ ipcMain.on('update-node-selection', (event, newNodes) => {
   distribute('update-node-selection', data.nodes, event.sender.id);
 });
 
+ipcMain.on('update-node-cluster', (event, newNodes) => {
+  data.nodes.forEach(d => d.cluster = newNodes.find(nn => nn.id == d.id).cluster);
+  distribute('update-node-cluster', data.nodes, event.sender.id);
+});
+
 ipcMain.on('update-link-visibility', (event, newLinks) => {
   data.links.forEach(l => l.visible = newLinks.find(nl => nl.id == l.id).visible);
   distribute('update-link-visibility', data.links, event.sender.id);
