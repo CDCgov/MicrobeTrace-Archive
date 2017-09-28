@@ -43,7 +43,7 @@ $(function(){
     } else {
       $('#FastaOrLinkFile').val('');
       $('#NodeCSVFile').val('');
-      $('#TableTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('disabled');
+      $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('hidden');
       $('#button-wrapper, #main_panel').fadeOut(() => resetDom());
     }
     //Trust me, this is necessary. Don't ask why.
@@ -63,7 +63,30 @@ $(function(){
   $('#FileTab').click(() => reset());
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
-  $('<li id="ExportHIVTraceTab"><a href="#">Export HIVTRACE File</a></li>').click(() => {
+
+  $('#FileTab').append('<li role="separator" class="divider"></li>');
+
+  $('<li id="ExportTab" class="hidden"><a href="#">Export Data</a></li>').click(e => {
+    remote.dialog.showSaveDialog({
+      filters: [
+        {name: 'FASTA', extensions: ['fas', 'fasta']},
+        {name: 'MEGA', extensions: ['meg', 'mega']}
+      ]
+    }, fileName => {
+      if (fileName === undefined){
+        return alertify.error('File not exported!');
+      }
+      var extension = fileName.split('.').pop();
+      if(extension === 'fas' || extension === 'fasta'){
+        jetpack.write(fileName, window.nodes.map(n => '>'+n.id+'\n'+n.seq).join('\n'));
+      } else {
+        jetpack.write(fileName, '#MEGA\nTitle: '+fileName+'\n\n'+window.nodes.map(n => '#'+n.id+'\n'+n.seq).join('\n'));
+      }
+      alertify.success('File Saved!');
+    });
+  }).insertAfter('#FileTab');
+
+  $('<li id="ExportHIVTraceTab" class="hidden"><a href="#">Export HIVTRACE File</a></li>').click(() => {
     remote.dialog.showSaveDialog({
       filters: [
         {name: 'JSON', extensions: ['json']}
@@ -76,6 +99,8 @@ $(function(){
       alertify.success('File Saved!');
     });
   }).insertAfter('#FileTab');
+
+  reset();
 
   // Before anything else gets done, ask the user to accept the legal agreement
   if(!localStorage.getItem('licenseAccepted')){
@@ -205,7 +230,6 @@ $(function(){
         }
       });
     });
-    $('.disabled').removeClass('disabled');
   });
 
   ipcRenderer.on('tick', (event, msg) => $('.progress-bar').css('width', msg+'%').attr('aria-valuenow', msg));
@@ -223,26 +247,8 @@ $(function(){
     updateLinkVariables();
     renderNetwork();
     updateStatistics();
+    $('.hidden').removeClass('hidden');
     $('#loadingInformationModal').modal('hide');
-    $('<li id="ExportTab" class=""><a href="#">Export Data</a></li>').click(e => {
-      remote.dialog.showSaveDialog({
-        filters: [
-          {name: 'FASTA', extensions: ['fas', 'fasta']},
-          {name: 'MEGA', extensions: ['meg', 'mega']}
-        ]
-      }, fileName => {
-        if (fileName === undefined){
-          return alertify.error('File not exported!');
-        }
-        var extension = fileName.split('.').pop();
-        if(extension === 'fas' || extension === 'fasta'){
-          jetpack.write(fileName, window.nodes.map(n => '>'+n.id+'\n'+n.seq).join('\n'));
-        } else {
-          jetpack.write(fileName, '#MEGA\nTitle: '+fileName+'\n\n'+window.nodes.map(n => '#'+n.id+'\n'+n.seq).join('\n'));
-        }
-        alertify.success('File Saved!');
-      });
-    }).insertAfter('#FileTab');
   });
 
   function updateStatistics(){
