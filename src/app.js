@@ -2,6 +2,7 @@ import { clipboard, remote, ipcRenderer } from 'electron';
 import Lazy from 'lazy.js';
 import math from 'bettermath';
 import jetpack from 'fs-jetpack';
+import Papa from 'papaparse';
 import './helpers/window.js';
 
 import d3 from 'd3';
@@ -119,15 +120,6 @@ $(function(){
     });
   }
 
-  function unquote(arr){
-    return arr.map(el => {
-      if(el[0] == '"' || el[0] == "'"){
-        return el.slice(1, -1);
-      }
-      return el;
-    });
-  }
-
   $('#FastaOrLinkFile').change(e => {
     reset(true);
 
@@ -140,21 +132,22 @@ $(function(){
     }
 
     if(e.target.files[0].name.slice(-3) == 'csv'){
-      var reader = new FileReader();
-      reader.onloadend = e2 => {
-        var full = e2.target.result;
-        var keys = unquote(full.slice(0, full.indexOf('\n')).split(','));
-        $('.linkVariables').html(
-          '<option value="none">None</option>\n' +
-          keys
+      Papa.parse(e.target.files[0], {
+        header: true,
+        preview: 1,
+        complete: results => {
+          window.links = results.data;
+          var keys = Object.keys(window.links[0]);
+          $('.linkVariables').html(
+            keys
             .filter(key => !meta.includes(key))
             .map(key => '<option value="' + key + '">' + key + '</option>')
             .join('\n')
-        );
-        $('#LinkSourceColumn').val(keys.includes('source') ? 'source' : keys[0]);
-        $('#LinkTargetColumn').val(keys.includes('target') ? 'target' : keys[1]);
-      };
-      reader.readAsText(e.target.files[0]);
+          );
+          $('#LinkSourceColumn').val(keys.includes('source') ? 'source' : keys[0]);
+          $('#LinkTargetColumn').val(keys.includes('target') ? 'target' : keys[1]);
+        }
+      });
       $('.showForLinkCSV').show().filter('tr').css('display', 'table-row');
       $('.showForSequence').hide();
     } else {
@@ -181,20 +174,21 @@ $(function(){
       } else {
         $('.showForNodeFile').css('display', 'table-row');
       }
-      var reader = new FileReader();
-      reader.onloadend = e2 => {
-        var full = e2.target.result;
-        var keys = unquote(full.slice(0, full.indexOf('\n')).split(','));
-        $('.nodeVariables').html(
-          '<option value="none">None</option>\n' +
-          keys
-            .filter(key => !meta.includes(key))
-            .map(key => '<option value="' + key + '">' + key + '</option>')
-            .join('\n')
-        );
-        $('#NodeIDColumn').val(keys[0]);
-      };
-      reader.readAsText(e.target.files[0]);
+      Papa.parse(e.target.files[0], {
+        header: true,
+        preview: 1,
+        complete: results => {
+          var keys = Object.keys(results.data[0]);
+          $('.nodeVariables').html(
+            '<option value="none">None</option>\n' +
+            keys
+              .filter(key => !meta.includes(key))
+              .map(key => '<option value="' + key + '">' + key + '</option>')
+              .join('\n')
+          );
+          $('#NodeIDColumn').val(keys[0]);
+        }
+      });
     } else {
       $('.showForNodeFile').hide();
     }

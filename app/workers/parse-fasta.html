@@ -8,7 +8,7 @@
   const bioseq   = require('bioseq');
   const fs       = require('fs');
   const tn93     = require('tn93');
-  const Baby     = require('babyparse');
+  const Papa     = require('papaparse');
   const math     = require('bettermath');
 
   var reference = electron.ipcRenderer.sendSync('get-component', 'HXB2.txt');
@@ -20,25 +20,22 @@
   };
 
   var defaultNode = {
+    id: '',
+    index: -1,
     padding: 0,
-    seq: '',
     selected: false,
-    index: -1
-  }
+    seq: ''
+  };
 
   var instructions = {
     align: true,
     penalties: [-5, -1.7]
   };
 
-  electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
-    Object.assign(instructions, i);
-    parseFASTA();
-  });
-
   var index = 0;
 
-  function parseFASTA(){
+  electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
+    Object.assign(instructions, i);
     var message = 'Parsing FASTA file';
     if(instructions.align){
       message += ' and aligning sequences';
@@ -68,28 +65,28 @@
         data.nodes.forEach(d => d.seq = "-".repeat(d.padding - minPadding) + d.seq);
         electron.ipcRenderer.send('tick', 100);
         electron.ipcRenderer.send('message', ' - Parsed ' + data.nodes.length + ' nodes.');
-        if(instructions.supplement !== ''){
+        if(instructions.supplement){
           matchCSV();
         }
         computeLinks();
       });
     parser.write(jetpack.read(instructions.file));
     parser.end();
-  }
+  });
 
   function matchCSV(){
     electron.ipcRenderer.send('message', 'Parsing Node CSV...');
-    var parsed = Baby.parseFiles(instructions.supplement, {
+    var k = 0, l = 0;
+
+    var results = Papa.parse(jetpack.read(instructions.supplement), {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true
     });
-    csvNodes = parsed.data;
-    electron.ipcRenderer.send('message', ' - Parsed ' + csvNodes.length + ' nodes from Supplement CSV.');
+    electron.ipcRenderer.send('message', ' - Parsed ' + results.data.length + ' nodes from Supplement CSV.');
 
-    var k = 0, l = 0;
     electron.ipcRenderer.send('message', 'Matching to Inferred nodes...');
-    csvNodes.forEach(node => {
+    results.data.forEach(node => {
       var match = data.nodes.find(n => n.id == node[instructions.identifierColumn]);
       if(match){
         Object.assign(match, node);
@@ -99,7 +96,8 @@
         l++;
       }
     });
-    electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.\n - Identified ' + l + ' singletons.');
+    electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.');
+    electron.ipcRenderer.send('message', ' - Identified ' + l + ' singletons.');
   }
 
   function computeLinks(){

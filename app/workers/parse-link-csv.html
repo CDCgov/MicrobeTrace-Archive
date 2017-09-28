@@ -3,8 +3,14 @@
 <head>
   <script>
   const electron = require('electron');
-  const Baby = require('babyparse');
+  const jetpack = require('fs-jetpack');
+  const Papa = require('papaparse');
   const Lazy = require('lazy.js');
+
+  var data = {
+    nodes: [],
+    links: []
+  };
 
   var defaultNode = {
     id: '',
@@ -28,65 +34,67 @@
   electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
     Object.assign(instructions, i);
     electron.ipcRenderer.send('message', 'Parsing Link CSV...');
-    var parsed = Baby.parseFiles(instructions.file, {
+    var results = Papa.parse(jetpack.read(instructions.file), {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true
     });
-    var links = parsed.data;
-    links.forEach(link => {
+
+    data.links = results.data.map(link => {
       link.index = index++;
       link.orig = true;
       link.source = link[instructions.sourceColumn];
       link.target = link[instructions.targetColumn];
+      return link;
     });
-    electron.ipcRenderer.send('message', ' - Parsed ' + links.length + ' Links.');
+    electron.ipcRenderer.send('message', ' - Parsed ' + data.links.length + ' Links.');
 
     electron.ipcRenderer.send('message', 'Inferring Nodes...');
-    var llinks = Lazy(links);
-    var nodes  = Lazy(
-          llinks.pluck('source').union(
-          llinks.pluck('target'))
-        ).map((e, i) => ({
-          id: e,
-          index: i,
-          padding: 0,
-          selected: false,
-          seq: ''
-        })).toArray();
-    electron.ipcRenderer.send('message', ' - Inferred ' + nodes.length + ' distinct nodes.');
-
-    if(instructions.supplement !== ''){
-      electron.ipcRenderer.send('message', 'Parsing Node CSV...');
-      var parsed = Baby.parseFiles(instructions.supplement, {
-        header: true,
-        dynamicTyping: true,
-        skipEmptyLines: true
-      });
-      var csvNodes = parsed.data;
-      electron.ipcRenderer.send('message', ' - Parsed ' + csvNodes.length + ' nodes from Supplement CSV.');
-
-      var k = 0, l = 0;
-      electron.ipcRenderer.send('message', 'Matching to Inferred nodes...');
-      csvNodes.forEach(node => {
-        var match = nodes.find(n => n.id == node[instructions.identifierColumn]);
-        if(match){
-          Object.assign(match, node);
-          k++;
-        } else {
-          nodes.push(Object.assign({}, defaultNode, node, {index: index++}));
-          l++;
-        }
-      });
-      electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.\n - Identified ' + l + ' singleton nodes.');
+    var llinks = Lazy(data.links);
+    data.nodes = Lazy(
+        llinks.pluck(instructions.sourceColumn).union(
+        llinks.pluck(instructions.targetColumn))
+      ).map((e, i) => ({
+        id: e,
+        index: i,
+        padding: 0,
+        selected: false,
+        seq: ''
+      })).toArray();
+    electron.ipcRenderer.send('message', ' - Inferred ' + data.nodes.length + ' distinct nodes.');
+    if(instructions.supplement){
+      matchCSV();
     }
-
-    electron.ipcRenderer.send('update-data', {
-      links: links,
-      nodes: nodes
-    });
+    electron.ipcRenderer.send('update-data', data);
     electron.remote.getCurrentWindow().close();
   });
+
+  function matchCSV(){
+    electron.ipcRenderer.send('message', 'Parsing Node CSV...');
+    var k = 0, l = 0, output = [];
+
+    var results = Papa.parse(jetpack.read(instructions.supplement), {
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true
+    });
+    electron.ipcRenderer.send('message', ' - Parsed ' + results.data.length + ' nodes from Supplement CSV.');
+
+    electron.ipcRenderer.send('message', 'Matching to Inferred nodes...');
+    results.data.forEach(node => {
+      var match = data.nodes.find(n => n.id == node[instructions.identifierColumn]);
+      if(match){
+        Object.assign(match, node);
+        k++;
+      } else {
+        Object.assign({}, defaultNode, node, {index: index++});
+        l++;
+      }
+    });
+    electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.')
+    electron.ipcRenderer.send('message', ' - Identified ' + l + ' singleton nodes.');
+  }
+
   </script>
 </head>
 </html>
