@@ -130,7 +130,7 @@
   require('datatables.net')(window, $);
   require('datatables.net-colreorder')(window, $);
   require('datatables.net-select')(window, $);
-  const Baby = require('babyparse');
+  const Papa = require('papaparse');
 
   const meta = ['seq', 'padding', 'orig', 'mst', 'visible', 'index', 'selected', 'padding'];
 
@@ -152,7 +152,7 @@
           if (fileName === undefined){
             return alertify.error('File not exported!');
           }
-          jetpack.write(fileName, Baby.unparse(window.data));
+          jetpack.write(fileName, Papa.unparse(window.data));
         });
       })
     );
