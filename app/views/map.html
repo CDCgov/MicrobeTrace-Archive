@@ -10,9 +10,6 @@
   <link rel="stylesheet" type="text/css" href="../css/alertify.min.css" />
   <link rel="stylesheet" type="text/css" href="../stylesheets/main.css" />
   <style>
-    .showForNational, .showForLocal{
-      display: none;
-    }
     svg {
       fill: #9bbff4;
     }
@@ -43,115 +40,52 @@
               <table class="table">
                 <tbody>
                   <tr>
-                    <td>Scope</td>
-                    <td></td>
-                    <td>
-                      <div class="btn-group btn-group-xs" data-toggle="buttons">
-                        <label class="btn btn-default active">
-                          <input type="radio" name="ScopeOptions" id="globalScope" autocomplete="off" checked> Global
-                        </label>
-                        <label class="btn btn-default">
-                          <input type="radio" name="ScopeOptions" id="nationalScope" autocomplete="off"> National
-                        </label>
-                        <label class="btn btn-default">
-                          <input type="radio" name="ScopeOptions" id="localScope" autocomplete="off"> Local
-                        </label>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr class="showForGlobal">
                     <td>Latitude</td>
                     <td>
-                      <select id="lat">
-                        <option value="lat" selected>lat</option>
+                      <select id="latitudeField" class="fields">
+                        <option selected>None</option>
                       </select>
                     </td>
-                    <td></td>
                   </tr>
-                  <tr class="showForGlobal">
+                  <tr>
                     <td>Longitude</td>
                     <td>
-                      <select id="lon">
-                        <option value="lon" selected>lon</option>
+                      <select id="longitudeField" class="fields">
+                        <option selected>None</option>
                       </select>
                     </td>
-                    <td></td>
                   </tr>
-                  <tr class="showForNational showForLocal">
+                  <tr>
+                    <td>Zipcode</td>
+                    <td>
+                      <select id="zipcodeField" class="fields">
+                        <option selected>None</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>County</td>
+                    <td>
+                      <select id="countyField" class="fields">
+                        <option selected>None</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
                     <td>State</td>
                     <td>
                       <select id="stateField" class="fields">
-                        <option>None</option>
+                        <option selected>None</option>
                       </select>
                     </td>
-                    <td>
-                      <select id="state">
-                        <option>None</option>
-                        <option>Alabama</option>
-                      	<option>Alaska</option>
-                      	<option>Arizona</option>
-                      	<option>Arkansas</option>
-                      	<option>California</option>
-                      	<option>Colorado</option>
-                      	<option>Connecticut</option>
-                      	<option>Delaware</option>
-                      	<option>District Of Columbia</option>
-                      	<option>Florida</option>
-                      	<option>Georgia</option>
-                      	<option>Hawaii</option>
-                      	<option>Idaho</option>
-                      	<option>Illinois</option>
-                      	<option>Indiana</option>
-                      	<option>Iowa</option>
-                      	<option>Kansas</option>
-                      	<option>Kentucky</option>
-                      	<option>Louisiana</option>
-                      	<option>Maine</option>
-                      	<option>Maryland</option>
-                      	<option>Massachusetts</option>
-                      	<option>Michigan</option>
-                      	<option>Minnesota</option>
-                      	<option>Mississippi</option>
-                      	<option>Missouri</option>
-                      	<option>Montana</option>
-                      	<option>Nebraska</option>
-                      	<option>Nevada</option>
-                      	<option>New Hampshire</option>
-                      	<option>New Jersey</option>
-                      	<option>New Mexico</option>
-                      	<option>New York</option>
-                      	<option>North Carolina</option>
-                      	<option>North Dakota</option>
-                      	<option>Ohio</option>
-                      	<option>Oklahoma</option>
-                      	<option>Oregon</option>
-                      	<option>Pennsylvania</option>
-                      	<option>Rhode Island</option>
-                      	<option>South Carolina</option>
-                      	<option>South Dakota</option>
-                      	<option>Tennessee</option>
-                      	<option>Texas</option>
-                      	<option>Utah</option>
-                      	<option>Vermont</option>
-                      	<option>Virginia</option>
-                      	<option>Washington</option>
-                      	<option>West Virginia</option>
-                      	<option>Wisconsin</option>
-                      	<option>Wyoming</option>
-                      </select>
-                    </td>
-                  </tr>
-                  <tr class="showForLocal">
-                    <td>County</td>
-                    <td>
-                      <select id="countyField" class="fields"></select>
-                    </td>
-                    <td></td>
                   </tr>
                   <tr>
-                    <td>Cities</td>
-                    <td><input id="showCities" type="checkbox" checked /></td>
-                    <td></td>
+                    <td>Country</td>
+                    <td>
+                      <select id="countryField" class="fields">
+                        <option selected>None</option>
+                      </select>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -169,7 +103,9 @@
                   <tr>
                     <td>Radius</td>
                     <td>
-                      <select id="radiusField" class="fields"></select>
+                      <select id="radiusField" class="fields">
+                        <option selected>None</option>
+                      </select>
                     </td>
                     <td>
                       <input type="range" id="radius" min="1" max="30" step="0.1" value="6" />
@@ -178,7 +114,9 @@
                   <tr>
                     <td>Color</td>
                     <td>
-                      <select id="nodeColorField" class="fields"></select>
+                      <select id="nodeColorField" class="fields">
+                        <option selected>None</option>
+                      </select>
                     </td>
                     <td>
                       <input type="color" id="color" value="#0000ff" />
@@ -187,7 +125,9 @@
                   <tr>
                     <td>Opacity</td>
                     <td>
-                      <select id="opacityField" class="fields"></select>
+                      <select id="opacityField" class="fields">
+                        <option selected>None</option>
+                      </select>
                     </td>
                     <td>
                       <input type="range" id="opacity" min="0.00" max="1.00" step="0.01" value="1.00" />
@@ -203,9 +143,45 @@
                   <tr>
                     <td>Tooltip</td>
                     <td>
-                      <select id="nodeTooltipVariable"></select>
+                      <select id="nodeTooltipVariable" class="fields">
+                        <option selected>None</option>
+                      </select>
                     </td>
                     <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingThree">
+              <h4 class="panel-title">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseTwo">Map</a>
+              </h4>
+            </div>
+            <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <td>Layers</td>
+                    <td>
+                      <button type="button" class="btn btn-default btn-xs active" data-toggle="button" id="showCountries" aria-pressed="true" autocomplete="off">Countries</button>
+                      <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showStates" aria-pressed="false" autocomplete="off">States</button>
+                      <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showCounties" aria-pressed="false" autocomplete="off">Counties</button>
+                      <button type="button" class="btn btn-default btn-xs active" data-toggle="button" id="showCities" aria-pressed="true" autocomplete="off">Cities</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Land Color</td>
+                    <td>
+                      <input type="color" id="landColor" value="#bbdaa4" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Water Color</td>
+                    <td>
+                      <input type="color" id="waterColor" value="#9bbff4" />
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -223,11 +199,12 @@
   const electron = require('electron');
   const Lazy = require('lazy.js');
   const d3 = require('d3');
+  const Papa = require('papaparse');
 
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
 
-  var countries, states, counties, projection, path, zoom, svg, g, zoomFit;
+  var countries, states, counties, cities, projection, path, zoom, svg, g;
 
   $(function(){
 
@@ -244,18 +221,16 @@
     electron.ipcRenderer.on('deliver-nodes', (e, nodes) => {
       window.nodes = nodes;
       var fields = Object.keys(window.nodes[0]);
-      $('#lat').html('<option value="none"' + ('lat' in window.nodes[0]?'':' selected ') + '>None</option>' + fields.map(field => '<option value="'+field+'" ' + (field=='lat'?'selected':'') + '>'+field+'</option>'));
-      $('#lon').html('<option value="none"' + ('lon' in window.nodes[0]?'':' selected ') + '>None</option>' + fields.map(field => '<option value="'+field+'" ' + (field=='lon'?'selected':'') + '>'+field+'</option>'));
-      $('#nodeTooltipVariable').html('<option value="none"' + ('id' in window.nodes[0]?'':' selected ') + '>None</option>' + fields.map(field => '<option value="'+field+'" ' + (field=='id'?'selected':'') + '>'+field+'</option>'));
-      $('.fields').html('<option value="none" selected>None</option>' + fields.map(field => '<option value="'+field+'">'+field+'</option>'));
-      if('lat' in window.nodes[0] && 'lon' in window.nodes[0]){
-        plotPoints();
-      } else {
-        $('#options').modal('show');
-      }
-      if(window.nodes[0].seq !== ''){
-        $('.showForSequence').show().filter('tr').css('display', 'table-row');
-      }
+      $('.fields').append(fields.map(field => '<option value="'+field+'">'+field+'</option>').join('\n'));
+      if(fields.includes('lat')) $('#latitudeField').val('lat');
+      if(fields.includes('lon')) $('#longitudeField').val('lon');
+      if(fields.includes('zipcode')) $('#zipcodeField').val('zipcode');
+      if(fields.includes('county')) $('#countyField').val('county');
+      if(fields.includes('state')) $('#stateField').val('state');
+      if(fields.includes('country')) $('#countryField').val('country');
+      if(fields.includes('id')) $('#nodeTooltipVariable').val('id');
+      matchCoordinates();
+      $('#settingsModal').modal('show');
     });
 
     var width = $(window).width(),
@@ -269,13 +244,10 @@
         .attr('width', width)
         .attr('height', height)
 
-    lastK = 1;
-
     zoom = d3.zoom().on('zoom', () => {
       g.selectAll('g#countries, g#states, g#counties, g#nodes, g#cities').attr('transform', d3.event.transform);
       g.selectAll('g#countries, g#states, g#counties').selectAll('path').attr('stroke-width', 1 / d3.event.transform.k);
       g.selectAll('g#nodes').selectAll('circle').attr('r', $('#radius').val() / d3.event.transform.k);
-      lastK = d3.event.transform.k;
     });
 
     g = svg.append('g').call(zoom);
@@ -285,50 +257,35 @@
       .attr('width', width)
       .attr('height', height);
 
-    countries = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'countries.json'));
-
     function showRegionToolTip(d){
       if($('#nodeTooltipVariable').val() == 'none') return;
       d3.select('#tooltip')
         .html(d.properties.name)
         .style('left', (d3.event.pageX + 8) + 'px')
-        .style('top', (d3.event.pageY - 28) + 'px')
-        .transition().duration(400)
+        .style('top', (d3.event.pageY + 18) + 'px')
+        .transition().duration(100)
         .style('opacity', 1);
     }
 
     function hideTooltip(){
       var tooltip = d3.select('#tooltip');
       tooltip
-        .transition().duration(400)
+        .transition().duration(100)
         .style('opacity', 0)
         .on('end', () => tooltip.style('right', '0px').style('top', '0px'));
     }
 
-    g.append('g').attr('id', 'countries')
+    countries = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'countries.json'));
+    countryLayer = g.append('g').attr('id', 'countries')
       .selectAll('path').data(countries.features).enter().append('path')
         .attr('d', path)
         .on('mouseenter', showRegionToolTip)
         .on('mouseout', hideTooltip);
 
-    g.append('g').attr('id', 'states');
-
-    g.append('g').attr('id', 'counties');
-
-    window.cities = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'cities.csv'));
-    var citiesLayer = g.append('g').attr('id', 'cities').selectAll('g')
-      .attr('class', 'city').data(window.cities).enter().append('g');
-    citiesLayer.append('circle')
-      .attr('cx', d => projection([d['Longitude'], d['Latitude']])[0])
-      .attr('cy', d => projection([d['Longitude'], d['Latitude']])[1])
-      .attr('r', d => d['sqrtpop'])
-      .style('fill', 'black')
-      .style('opacity', .3);
-    citiesLayer.append('text').text(d => d['City'])
-      .attr('dx', d => projection([d['Longitude'], d['Latitude']])[0] + 1.5)
-      .attr('dy', d => projection([d['Longitude'], d['Latitude']])[1] + .7)
-      .style('fill', 'black')
-      .attr('font-size', 2);
+    stateLayer  = g.append('g').attr('id', 'states');
+    countyLayer = g.append('g').attr('id', 'counties');
+    cityLayer   = g.append('g').attr('id', 'cities');
+    nodeLayer   = g.append('g').attr('id', 'nodes');
 
     function showNodeToolTip(d){
       if($('#nodeTooltipVariable').val() == 'none') return;
@@ -340,15 +297,57 @@
         .style('opacity', 1);
     }
 
+    function matchCoordinates(){
+      if($('#latitudeField').val() !== 'None' && $('#longitudeField').val() !== 'None'){
+
+      } else if($('#zipcodeField').val() !== 'None'){
+        if(!zipcodes){
+          zipcodes = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'zipcodes.csv'), d => ({
+            'zipcode':d.zipcode,
+            'name':d.zipcode,
+            'lat':+d.lat,
+            'lon':+d.lon
+          }));
+        }
+        let val = $('#zipcodeField').val();
+        window.nodes.forEach(n => {
+          let zo = zipcodes.find(z => z.zipcode == n[val]);
+          if(zo) Object.assign(n, zo);
+        });
+      } else if($('#countyField').val() !== 'None'){
+        let val = $('#countyField').val();
+        window.nodes.forEach(n => {
+          //TODO: Work out the State Problem.
+          //TODO: Add Fuzzy String matching.
+          let county = counties.find(c => c.name == n[val]);
+          if(zo) Object.assign(n, zo);
+        });
+      } else if($('#stateField').val() !== 'None'){
+        var val = $('#stateField').val();
+        window.nodes.forEach(n => {
+          //TODO: Work out the format problem.
+          var state = states.find(s => s.usps == n[val]);
+          if(state) Object.assign(n, {lat: state.lat, lon: state.lon});
+        });
+      } else if($('#countryField').val() !== 'None'){
+        var val = $('#countryField').val();
+        window.nodes.forEach(n => {
+          //TODO: Merge content of countries.csv into countries.json
+          //TODO: Work out the format problem.
+          var country = countries.find(c => c.name == n[val]);
+          if(state) Object.assign(n, {lat: state.lat, lon: state.lon});
+        });
+      }
+      plotPoints();
+    }
+
     function plotPoints(){
-      if($('#globalScope').is(':checked')){
-        lonVar = $('#lon').val();
-        latVar = $('#lat').val();
-        g.append('g').attr('id', 'nodes')
+      if(window.nodes[0].lat && window.nodes[0].lon){
+        nodeLayer
           .selectAll('circle').data(window.nodes).enter()
           .append('circle')
-          .attr('cx', d => projection([d[lonVar], d[latVar]])[0])
-          .attr('cy', d => projection([d[lonVar], d[latVar]])[1])
+          .attr('cx', d => projection([d.lon, d.lat])[0])
+          .attr('cy', d => projection([d.lon, d.lat])[1])
           .attr('r', $('#radius').val())
           .style('fill', $('#color').val())
           .on('mouseenter', showNodeToolTip)
@@ -356,50 +355,75 @@
       }
     }
 
-    $('#button').click(() => $('#options').modal('show'));
+    $('#longitudeField, #latitudeField, #countyField, #stateField, #countryField, #zipcodeField').change(plotPoints);
 
-    $('#globalScope').parent().click(e => {
-      $('.showForNational, .showForLocal').hide();
-      $('.showForGlobal').css('display', 'table-row');
-      g.selectAll('#states, #counties').html(null);
-    });
-
-    $('#nationalScope').parent().click(e => {
-      $('.showForGlobal, .showForLocal').hide();
-      $('.showForNational').css('display', 'table-row');
-      g.select('#counties').html(null);
-      if(!states) states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
-      g.select('#states').selectAll('path').data(states.features).enter().append('path')
-        .attr('d', path).attr('stroke-width', 1/lastK);
-    });
-
-    $('#localScope').parent().click(e => {
-      $('.showForGlobal, .showForNational').hide();
-      $('.showForLocal').css('display', 'table-row');
-      g.select('#states').html(null);
-      if(!counties) counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
-      g.select('#counties').selectAll('path').data(counties.features).enter().append('path')
-        .attr('d', path).attr('stroke-width', 1/lastK);
-    });
-
-    $('#lat, #lon').change(plotPoints);
-
-    $('#showCities').change(e => {
-      if(e.target.checked){
-        $('#cities').fadeIn();
+    $('#showStates').click(function(e){
+      if(!$(this).hasClass('active')){
+        countryLayer.selectAll('path').filter(d => d.id === 'USA').style('display', 'none');
+        states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
+        stateLayer.selectAll('path').data(states.features).enter().append('path')
+          .attr('d', path)
+          .on('mouseenter', showRegionToolTip)
+          .on('mouseout', hideTooltip);
+        $('#states').fadeIn();
       } else {
-        $('#cities').fadeOut();
+        countryLayer.selectAll('path').filter(d => d.id === 'USA').style('display', 'inline');
+        $('#states').fadeOut(function(e){
+          $(this).html('');
+        });
       }
     });
 
-    $('#radius').on('input', e => g.select('#nodes').selectAll('circle').attr('r', e.target.value / lastK));
+    $('#showCounties').click(function(e){
+      if(!$(this).hasClass('active')){
+        countryLayer.selectAll('path').filter(d => d.id === 'USA').style('display', 'none');
+        counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
+        countyLayer.selectAll('path').data(counties.features).enter().append('path')
+          .attr('d', path)
+          .on('mouseenter', showRegionToolTip)
+          .on('mouseout', hideTooltip);
+      } else {
+        countryLayer.selectAll('path').filter(d => d.id === 'USA').style('display', 'inline');
+        $('#counties').fadeOut(function(e){
+          $(this).html('');
+        })
+      }
+    });
 
-    $('#color').on('input', e => g.select('#nodes').selectAll('circle').style('fill', e.target.value));
+    $('#showCities').click(function(e){
+      if(!$(this).hasClass('active')){
+        cities = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'cities.csv'));
+        cityWrappers = cityLayer
+          .style('display', 'none')
+          .selectAll('g').attr('class', 'city')
+          .data(window.cities).enter().append('g');
+        cityWrappers.append('circle')
+          .attr('cx', d => projection([d['Longitude'], d['Latitude']])[0])
+          .attr('cy', d => projection([d['Longitude'], d['Latitude']])[1])
+          .attr('r', d => d['sqrtpop'])
+          .style('fill', 'black')
+          .style('opacity', .3);
+        cityWrappers.append('text').text(d => d['name'])
+          .attr('dx', d => projection([d['Longitude'], d['Latitude']])[0] + d['sqrtpop']/2 + .7)
+          .attr('dy', d => projection([d['Longitude'], d['Latitude']])[1] + .7)
+          .style('fill', 'black')
+          .attr('font-size', 2);
+        $('#cities').fadeIn();
+      } else {
+        $('#cities').fadeOut(function(e){
+          $(this).html('');
+        });
+      }
+    });
+
+    $('#radius').on('input', e => nodeLayer.selectAll('circle').attr('r', e.target.value));
+
+    $('#color').on('input', e => nodeLayer.selectAll('circle').style('fill', e.target.value));
 
     $('#jitter').on('input', e => {
-      g.select('#nodes').selectAll('circle')
-        .attr('cx', d => projection([d[lonVar], d[latVar]])[0] + (Math.random()*2-1)*e.target.value)
-        .attr('cy', d => projection([d[lonVar], d[latVar]])[1] + (Math.random()*2-1)*e.target.value)
+      nodeLayer.selectAll('circle')
+        .attr('cx', d => projection([d.lon, d.lat])[0] + (Math.random()*2-1)*e.target.value)
+        .attr('cy', d => projection([d.lon, d.lat])[1] + (Math.random()*2-1)*e.target.value);
     });
 
     $('#nodeColorField').change(e => {
@@ -429,9 +453,10 @@
     });
 
     $('#opacity').on('input', e => svg.selectAll('circle').attr('opacity', e.target.value));
+    $('#landColor').on('input', e => svg.selectAll('path').attr('fill', e.target.value));
+    $('#waterColor').on('input', e => svg.style('fill', e.target.value));
 
     electron.ipcRenderer.send('get-nodes');
-
   });
 
   </script>

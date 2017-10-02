@@ -1,4 +1,4 @@
-City,Country,Latitude,Longitude,Country_ISO3,pop2015,sqrtpop
+name,Country,Latitude,Longitude,Country_ISO3,pop2015,sqrtpop
 Tokyo,Japan,35.68,139.8,JPN,36090,3.79947364775702
 Bombay,India,19.07,72.82,IND,20070,2.83337254874822
 Sao Paulo,Brazil,-23.58,-46.62,BRA,19580,2.79857106395389
