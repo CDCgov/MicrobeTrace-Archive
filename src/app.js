@@ -378,22 +378,16 @@ $(function(){
         .append('svg:path')
           .attr('d', 'M0,0 L0,10 L10,5 z');
 
-    var link = window.network.svg.append('g')
-      .attr('class', 'links')
-      .selectAll('line')
-      .data(links).enter()
-      .append('line')
+    var link = window.network.svg.append('g').attr('id', 'links')
+      .selectAll('line').data(links).enter().append('line').attr('class', 'link')
         .attr('stroke', $('#default-link-color').val())
         .attr('stroke-width', $('#default-link-width').val())
         .attr('opacity', $('#default-link-opacity').val())
         .on('mouseenter', showLinkToolTip)
         .on('mouseout', hideTooltip);
 
-    var node = window.network.svg.append('g')
-      .attr('class', 'nodes')
-      .selectAll('g')
-      .data(window.nodes)
-      .enter().append('g')
+    var node = window.network.svg.append('g').attr('id', 'nodes')
+      .selectAll('g').data(window.nodes).enter().append('g').attr('class', 'node')
         .call(d3.drag()
           .on('start', dragstarted)
           .on('drag', dragged)
@@ -409,7 +403,7 @@ $(function(){
           }
           n.selected = !n.selected;
           ipcRenderer.send('update-node-selection', window.nodes);
-          window.network.svg.select('.nodes').selectAll('path').data(nodes).classed('selected', d => d.selected);
+          window.network.svg.select('g#nodes').selectAll('path').data(nodes).classed('selected', d => d.selected);
           $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
         });
 
@@ -576,25 +570,28 @@ $(function(){
 
   ipcRenderer.on('update-node-selection', (e, newNodes) => {
     window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
-    window.network.svg.select('.nodes').selectAll('path').data(window.nodes).classed('selected', d => d.selected);
+    window.network.svg.select('g#nodes').selectAll('path').data(window.nodes).classed('selected', d => d.selected);
     $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
   });
 
   var symbolKeys = ['symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye'].concat(Object.keys(extraSymbols));
 
   function getSymbolMapper(){
-    var circles = window.network.svg.select('g.nodes').selectAll('path').data(window.nodes);
+    var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
     var values = Lazy(window.nodes).pluck($('#nodeSymbolVariable').val()).uniq().sort().toArray();
     return d3.scaleOrdinal(symbolKeys).domain(values);
   }
 
   function redrawNodes(){
+    //Things to track in the function:
+    //* Symbols:
     var type = d3[$('#default-node-symbol').val()];
     var symbolVariable = $('#nodeSymbolVariable').val();
     var o = a => (b => d3[$('#default-node-symbol').val()]);
     if(symbolVariable !== 'none'){
       o = getSymbolMapper();
     }
+    //* Sizes:
     var defaultSize = $('#default-node-radius').val();
     var size = 1;
     var sizeVariable = $('#nodeRadiusVariable').val();
@@ -605,7 +602,8 @@ $(function(){
       var rng = max - min;
       var med = rng / 2;
     }
-    window.network.svg.select('g.nodes').selectAll('path').data(window.nodes).each(function(d){
+    //* Colors (TODO)
+    window.network.svg.select('g#nodes').selectAll('path').data(window.nodes).each(function(d){
       if(symbolVariable !== 'none'){
         type = d3[o(d[$('#nodeSymbolVariable').val()])];
       }
@@ -624,10 +622,10 @@ $(function(){
 
   $('#nodeLabelVariable').change(e => {
     if(e.target.value === 'none'){
-      window.network.svg.select('.nodes')
+      window.network.svg.select('g#nodes')
         .selectAll('text').text('');
     } else {
-      window.network.svg.select('.nodes')
+      window.network.svg.select('g#nodes')
         .selectAll('text').data(window.nodes)
         .text(d => d[e.target.value]);
     }
@@ -645,7 +643,7 @@ $(function(){
       table.remove();
       return;
     }
-    var circles = window.network.svg.selectAll('path').data(window.nodes);
+    var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
     table.append('<tr><th>'+e.target.value+'</th><th>Shape</th><tr>');
     var values = Lazy(window.nodes).pluck(e.target.value).uniq().sort().toArray();
     var o = getSymbolMapper();
@@ -673,7 +671,7 @@ $(function(){
   function scaleNodeOpacity(){
     var scalar = $('#default-node-opacity').val();
     var variable = $('#nodeOpacityVariable').val();
-    var circles = window.network.svg.selectAll('path');
+    var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
     if(variable === 'none'){
       return circles.attr('opacity', scalar);
     }
@@ -692,13 +690,13 @@ $(function(){
   $('#default-node-opacity').on('input', scaleNodeOpacity);
   $('#nodeOpacityVariable').change(scaleNodeOpacity);
 
-  $('#default-node-color').on('input', e => window.network.svg.selectAll('path').attr('fill', e.target.value));
+  $('#default-node-color').on('input', e => window.network.svg.select('g#nodes').selectAll('path').attr('fill', e.target.value));
   $('#nodeColorVariable').change(e => {
     $('#default-node-color').fadeOut();
-    var circles = window.network.svg.selectAll('path').data(window.nodes);
     $('#nodeColors').remove();
     $('#groupKey').append('<tbody id="nodeColors"></tbody>');
     var table = $('#nodeColors');
+    var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
     if(e.target.value == 'none'){
       circles.attr('fill', $('#default-node-color').val());
       $('#default-node-color').fadeIn();
@@ -730,17 +728,17 @@ $(function(){
 
   ipcRenderer.on('deliver-nodes', (e, nodes) => {
     window.nodes = nodes;
-    window.network.svg.select('.nodes').selectAll('path')
+    window.network.svg.select('g#nodes').selectAll('path')
       .data(window.nodes)
       .classed('selected', d => d.selected);
   });
 
   $('#DirectedLinks').parent().click(e => {
-    window.network.svg.select('g.links').selectAll('line').attr('marker-end', 'url(#end-arrow)');
+    window.network.svg.select('g#links').selectAll('line').attr('marker-end', 'url(#end-arrow)');
   });
 
   $('#UndirectedLinks').parent().click(e => {
-    window.network.svg.select('g.links').selectAll('line').attr('marker-end', null);
+    window.network.svg.select('g#links').selectAll('line').attr('marker-end', null);
   });
 
   function setLinkPattern(){
@@ -751,7 +749,7 @@ $(function(){
       'Dashed': linkWidth * 5,
       'Dot-Dashed': linkWidth * 5 + ',' + linkWidth * 5 + ',' + linkWidth  + ',' + linkWidth * 5
     }
-    window.network.svg.select('g.links').selectAll('line').attr('stroke-dasharray', mappings[$('#default-link-pattern').val()]);
+    window.network.svg.select('g#links').selectAll('line').attr('stroke-dasharray', mappings[$('#default-link-pattern').val()]);
   }
 
   $('#default-link-pattern').on('change', setLinkPattern);
@@ -763,7 +761,7 @@ $(function(){
 
   function setLinkColor(e){
     if($('#linkColorVariable').val() == 'none'){
-      window.network.svg.select('.links').selectAll('line').style('stroke', $('#default-link-color').val());
+      window.network.svg.select('g#links').selectAll('line').style('stroke', $('#default-link-color').val());
       $('#default-link-color').fadeIn();
       $('#linkColors').fadeOut();
       return;
@@ -825,7 +823,7 @@ $(function(){
   function refreshLinks(){
     setLinkVisibility();
     var vlinks = links.filter(l => l.visible);
-    var selection = window.network.svg.select('.links').selectAll('line').data(vlinks);
+    var selection = window.network.svg.select('g#links').selectAll('line').data(vlinks);
     selection.enter().append('line').merge(selection)
         .on('mouseenter', showLinkToolTip)
         .on('mouseout', hideTooltip);
@@ -836,7 +834,7 @@ $(function(){
         .attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y);
-      window.network.svg.select('.nodes').selectAll('g')
+      window.network.svg.select('g#nodes').selectAll('g')
         .attr('transform', d => {
           if(d.fixed){
             return 'translate(' + d.fx + ', ' + d.fy + ')';
@@ -846,7 +844,7 @@ $(function(){
         });
     });
     window.network.force.force('link').links(vlinks);
-    window.network.svg.select('.links').selectAll('line').style('stroke', $('#default-link-color').val());
+    window.network.svg.select('g#links').selectAll('line').style('stroke', $('#default-link-color').val());
   }
 
   $('#linkSortVariable').on('change', e => {
