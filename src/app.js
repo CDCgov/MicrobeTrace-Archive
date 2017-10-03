@@ -408,7 +408,7 @@ $(function(){
 
     node.append('path')
       .attr('d', d3.symbol()
-        .size(1000 * $('#default-node-radius').val())
+        .size($('#default-node-radius').val())
         .type(d3[$('#default-node-symbol').val()])
       )
       .attr('fill', $('#default-node-color').val());
@@ -573,35 +573,31 @@ $(function(){
     $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
   });
 
-  var symbolKeys = ['symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye'].concat(Object.keys(extraSymbols));
-
-  function getSymbolMapper(){
-    var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
-    var values = Lazy(window.nodes).pluck($('#nodeSymbolVariable').val()).uniq().sort().toArray();
-    return d3.scaleOrdinal(symbolKeys).domain(values);
-  }
-
   function redrawNodes(){
     //Things to track in the function:
     //* Symbols:
     var type = d3[$('#default-node-symbol').val()];
     var symbolVariable = $('#nodeSymbolVariable').val();
-    var o = a => (b => d3[$('#default-node-symbol').val()]);
+    var o = (b => d3[$('#default-node-symbol').val()]);
     if(symbolVariable !== 'none'){
-      o = getSymbolMapper();
+      var map = {};
+      var values = Lazy(window.nodes).pluck($('#nodeSymbolVariable').val()).uniq().sort().toArray();
+      $('#nodeShapes select').each(function(i, el){
+        map[values[i]] = $(this).val();
+      });
+      o = (v => map[v]);
     }
     //* Sizes:
     var defaultSize = $('#default-node-radius').val();
-    var size = 1;
+    var size = defaultSize;
     var sizeVariable = $('#nodeRadiusVariable').val();
     if(sizeVariable !== 'none'){
       var values = Lazy(window.nodes).pluck(sizeVariable).without(undefined).uniq().sort().toArray();
       var min = math.min(values);
       var max = math.max(values);
-      var rng = max - min;
-      var med = rng / 2;
+      var oldrng = max - min;
+      var med = oldrng / 2;
     }
-    //* Colors (TODO)
     window.network.svg.select('g#nodes').selectAll('path').data(window.nodes).each(function(d){
       if(symbolVariable !== 'none'){
         type = d3[o(d[$('#nodeSymbolVariable').val()])];
@@ -611,10 +607,11 @@ $(function(){
         if(typeof d[sizeVariable] !== 'undefined'){
           size = d[sizeVariable];
         }
-        size = (size - min) / rng;
+        size = (size - min + 1) / oldrng
+        size = size * size * defaultSize;
       }
       d3.select(this).attr('d', d3.symbol()
-        .size(size * 1000 * defaultSize)
+        .size(size)
         .type(type));
     });
   }
@@ -643,17 +640,12 @@ $(function(){
     var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
     table.append('<tr><th>'+e.target.value+'</th><th>Shape</th><tr>');
     var values = Lazy(window.nodes).pluck(e.target.value).uniq().sort().toArray();
-    var o = getSymbolMapper();
+    var symbolKeys = ['symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye'].concat(Object.keys(extraSymbols));
+    var o = d3.scaleOrdinal(symbolKeys).domain(values);
     var options = $('#default-node-symbol').html();
     values.forEach(v => {
       var subset = circles.filter(d => d[e.target.value] === v);
-      var selector = $('<select></select>').append(options).val(o(v)).change(e2 => {
-        subset.each(function(d, i, nodes){
-          d3.select(this).attr('d', d3.symbol()
-            .size(1000 * $('#default-node-radius').val())
-            .type(d3[e2.target.value]));
-        });
-      });
+      var selector = $('<select></select>').append(options).val(o(v)).change(redrawNodes);
       var cell = $('<td></td>').append(selector);
       var row = $('<tr><td>' + v + '</td></tr>').append(cell);
       table.append(row);
