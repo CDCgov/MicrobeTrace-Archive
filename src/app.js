@@ -7,8 +7,8 @@ import './helpers/window.js';
 
 import d3 from 'd3';
 const extraSymbols = require('d3-symbol-extra');
-Object.assign(d3, extraSymbols);
-d3.symbols.concat(Object.values(extraSymbols));
+Object.assign(d3, extraSymbols); //d3-symbol-extra doesn't automatically write to d3
+d3.symbols.concat(Object.values(extraSymbols)); //update the list of available symbols
 import { forceAttract } from 'd3-force-attract';
 
 window.jquery = window.jQuery = window.$ = require('jquery');
@@ -140,9 +140,9 @@ $(function(){
           var keys = Object.keys(window.links[0]);
           $('.linkVariables').html(
             keys
-            .filter(key => !meta.includes(key))
-            .map(key => '<option value="' + key + '">' + key + '</option>')
-            .join('\n')
+              .filter(key => !meta.includes(key))
+              .map(key => '<option value="' + key + '">' + key + '</option>')
+              .join('\n')
           );
           $('#LinkSourceColumn').val(keys.includes('source') ? 'source' : keys[0]);
           $('#LinkTargetColumn').val(keys.includes('target') ? 'target' : keys[1]);
@@ -277,7 +277,7 @@ $(function(){
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
-    $('#nodeTooltipVariable').val('id');
+    if(keys.includes('id')) $('#nodeTooltipVariable').val('id');
   }
 
   function updateLinkVariables(){
@@ -365,9 +365,8 @@ $(function(){
       .call(window.network.zoom)
       .append('g');
 
-    window.network.svg.append('svg:defs').selectAll('marker')
-      .data([{ id: 'end-arrow' }])
-      .enter().append('marker')
+    window.network.svg.append('svg:defs')
+      .selectAll('marker').data([{id: 'end-arrow'}]).enter().append('marker')
         .attr('id', d => d.id)
         .attr('viewBox', '0 0 10 10')
         .attr('refX', 20)
@@ -634,14 +633,12 @@ $(function(){
   $('#default-node-symbol').on('input', redrawNodes);
   $('#nodeSymbolVariable').change(e => {
     $('#default-node-symbol').fadeOut();
-    $('#nodeShapes').remove();
-    $('#groupKey').append('<tbody id="nodeShapes"></tbody>');
-    var table = $('#nodeShapes');
-    if(e.target.value == 'none'){
+    $('#nodeShapes').fadeOut(function(){$(this).remove()});
+    var table = $('<tbody id="nodeShapes"></tbody>').appendTo('#groupKey');
+    if(e.target.value === 'none'){
       redrawNodes();
       $('#default-node-symbol').fadeIn();
-      table.remove();
-      return;
+      return table.fadeOut(e => table.remove());
     }
     var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
     table.append('<tr><th>'+e.target.value+'</th><th>Shape</th><tr>');
@@ -680,7 +677,7 @@ $(function(){
     var max = math.max(values);
     var rng = max - min;
     var med = rng / 2 + min;
-    circles.attr(attribute, d => {
+    circles.attr('opacity', d => {
       var v = d[variable];
       if(typeof v === 'undefined') v = med;
       return scalar * (v - min) / rng + 0.1;
@@ -693,10 +690,9 @@ $(function(){
   $('#default-node-color').on('input', e => window.network.svg.select('g#nodes').selectAll('path').attr('fill', e.target.value));
   $('#nodeColorVariable').change(e => {
     $('#default-node-color').fadeOut();
-    $('#nodeColors').remove();
-    $('#groupKey').append('<tbody id="nodeColors"></tbody>');
-    var table = $('#nodeColors');
     var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
+    $('#nodeColors').fadeOut(function(){$(this).remove()});
+    var table = $('<tbody id="nodeColors"></tbody>').appendTo('#groupKey');
     if(e.target.value == 'none'){
       circles.attr('fill', $('#default-node-color').val());
       $('#default-node-color').fadeIn();
@@ -708,7 +704,7 @@ $(function(){
     var o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
     circles.attr('fill', d => o(d[e.target.value]));
     values.forEach(value => {
-      var input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
+      var input = $('<input type="color" value="'+o(value)+'" />')
         .on('input', evt => {
           circles
             .filter(d => d[e.target.value] == value)
