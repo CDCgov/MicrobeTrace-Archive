@@ -204,7 +204,7 @@
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
 
-  var countries, states, counties, cities, projection, path, zoom, svg, g;
+  var countries, states, counties, cities, zipcodes, projection, path, zoom, svg, g;
 
   $(function(){
 
@@ -359,34 +359,30 @@
 
     $('#showStates').click(function(e){
       if(!$(this).hasClass('active')){
-        countryLayer.selectAll('path').filter(d => d.id === 'USA').style('display', 'none');
-        states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
+        countryLayer.filter(d => d.id === 'USA').style('display', 'none');
+        if(!states) states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
         stateLayer.selectAll('path').data(states.features).enter().append('path')
           .attr('d', path)
           .on('mouseenter', showRegionToolTip)
           .on('mouseout', hideTooltip);
-        $('#states').fadeIn();
+        stateLayer.transition().style('opacity', 1);
       } else {
-        countryLayer.selectAll('path').filter(d => d.id === 'USA').style('display', 'inline');
-        $('#states').fadeOut(function(e){
-          $(this).html('');
-        });
+        countryLayer.filter(d => d.id === 'USA').style('display', 'inline');
+        stateLayer.transition().style('opacity', 0).on('end', e => stateLayer.html(null));
       }
     });
 
     $('#showCounties').click(function(e){
       if(!$(this).hasClass('active')){
-        countryLayer.selectAll('path').filter(d => d.id === 'USA').style('display', 'none');
-        counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
+        countryLayer.filter(d => d.id === 'USA').style('display', 'none');
+        if(!counties) counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
         countyLayer.selectAll('path').data(counties.features).enter().append('path')
           .attr('d', path)
           .on('mouseenter', showRegionToolTip)
           .on('mouseout', hideTooltip);
       } else {
-        countryLayer.selectAll('path').filter(d => d.id === 'USA').style('display', 'inline');
-        $('#counties').fadeOut(function(e){
-          $(this).html('');
-        })
+        countryLayer.filter(d => d.id === 'USA').style('display', 'inline');
+        countyLayer.transition().style('opacity', 0).on('end', e => countyLayer.html(null));
       }
     });
 
