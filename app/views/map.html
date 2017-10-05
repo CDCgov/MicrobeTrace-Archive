@@ -21,7 +21,7 @@
 </head>
 <body>
   <table id="groupKey"></table>
-  <div id="tooltip"></div>
+  <span id="tooltip"></span>
   <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" data-backdrop="false">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -258,9 +258,10 @@
       .attr('height', height);
 
     function showRegionToolTip(d){
-      if($('#nodeTooltipVariable').val() == 'none') return;
+      var tooltiptext = d.properties.name;
+      if(!tooltip && $('#nodeTooltipVariable').val() !== 'None') tooltiptext = d[$('#nodeTooltipVariable').val()];
       d3.select('#tooltip')
-        .html(d.properties.name)
+        .html(tooltiptext)
         .style('left', (d3.event.pageX + 8) + 'px')
         .style('top', (d3.event.pageY + 18) + 'px')
         .transition().duration(100)
@@ -293,7 +294,7 @@
         .html(d[$('#nodeTooltipVariable').val()])
         .style('left', (d3.event.pageX + 8) + 'px')
         .style('top', (d3.event.pageY - 28) + 'px')
-        .transition().duration(400)
+        .transition().duration(100)
         .style('opacity', 1);
     }
 
