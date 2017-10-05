@@ -102,11 +102,11 @@
                 <tbody>
                   <tr>
                     <td>Radius</td>
-                    <td>
+                    <!--td>
                       <select id="radiusField" class="fields">
                         <option selected>None</option>
                       </select>
-                    </td>
+                    </td-->
                     <td>
                       <input type="range" id="radius" min="1" max="30" step="0.1" value="6" />
                     </td>
@@ -117,25 +117,20 @@
                       <select id="nodeColorField" class="fields">
                         <option selected>None</option>
                       </select>
-                    </td>
-                    <td>
                       <input type="color" id="color" value="#0000ff" />
                     </td>
                   </tr>
                   <tr>
-                    <td>Opacity</td>
+                    <td>Transparency</td>
                     <td>
-                      <select id="opacityField" class="fields">
+                      <!--select id="opacityField" class="fields">
                         <option selected>None</option>
-                      </select>
-                    </td>
-                    <td>
+                      </select-->
                       <input type="range" id="opacity" min="0.00" max="1.00" step="0.01" value="1.00" />
                     </td>
                   </tr>
                   <tr>
                     <td>Jitter</td>
-                    <td></td>
                     <td>
                       <input type="range" id="jitter" min="0.00" max="30" step="0.1" value="0.00" />
                     </td>
@@ -147,7 +142,6 @@
                         <option selected>None</option>
                       </select>
                     </td>
-                    <td></td>
                   </tr>
                 </tbody>
               </table>
@@ -165,7 +159,6 @@
                   <tr>
                     <td>Layers</td>
                     <td>
-                      <button type="button" class="btn btn-default btn-xs active" data-toggle="button" id="showCountries" aria-pressed="true" autocomplete="off">Countries</button>
                       <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showStates" aria-pressed="false" autocomplete="off">States</button>
                       <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showCounties" aria-pressed="false" autocomplete="off">Counties</button>
                       <button type="button" class="btn btn-default btn-xs active" data-toggle="button" id="showCities" aria-pressed="true" autocomplete="off">Cities</button>
@@ -244,18 +237,27 @@
         .attr('width', width)
         .attr('height', height)
 
+    lastTransform = {};
+
     zoom = d3.zoom().on('zoom', () => {
       g.selectAll('g#countries, g#states, g#counties, g#nodes, g#cities').attr('transform', d3.event.transform);
       g.selectAll('g#countries, g#states, g#counties').selectAll('path').attr('stroke-width', 1 / d3.event.transform.k);
       g.selectAll('g#nodes').selectAll('circle').attr('r', $('#radius').val() / d3.event.transform.k);
+      lastTransform = Object.assign({}, d3.event.transform);
     });
 
-    g = svg.append('g').call(zoom);
+    g = svg.append('g').attr('id', 'zoomLayer').call(zoom);
 
     g.append('rect')
       .attr('class', 'background')
       .attr('width', width)
       .attr('height', height);
+
+    countryLayer = g.append('g').attr('id', 'countries');
+    stateLayer   = g.append('g').attr('id', 'states');
+    countyLayer  = g.append('g').attr('id', 'counties');
+    cityLayer    = g.append('g').attr('id', 'cities');
+    nodeLayer    = g.append('g').attr('id', 'nodes');
 
     function showRegionToolTip(d){
       var tooltiptext = d.properties.name;
@@ -268,26 +270,6 @@
         .style('opacity', 1);
     }
 
-    function hideTooltip(){
-      var tooltip = d3.select('#tooltip');
-      tooltip
-        .transition().duration(100)
-        .style('opacity', 0)
-        .on('end', () => tooltip.style('right', '0px').style('top', '0px'));
-    }
-
-    countries = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'countries.json'));
-    countryLayer = g.append('g').attr('id', 'countries')
-      .selectAll('path').data(countries.features).enter().append('path')
-        .attr('d', path)
-        .on('mouseenter', showRegionToolTip)
-        .on('mouseout', hideTooltip);
-
-    stateLayer  = g.append('g').attr('id', 'states');
-    countyLayer = g.append('g').attr('id', 'counties');
-    cityLayer   = g.append('g').attr('id', 'cities');
-    nodeLayer   = g.append('g').attr('id', 'nodes');
-
     function showNodeToolTip(d){
       if($('#nodeTooltipVariable').val() == 'none') return;
       d3.select('#tooltip')
@@ -298,9 +280,64 @@
         .style('opacity', 1);
     }
 
+    function hideTooltip(){
+      var tooltip = d3.select('#tooltip');
+      tooltip
+        .transition().duration(100)
+        .style('opacity', 0)
+        .on('end', () => tooltip.style('right', '0px').style('top', '0px'));
+    }
+
+    function drawCountries(){
+      if(!countries) countries = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'countries.json'));
+      countryWrappers = countryLayer.selectAll('path').data(countries.features).enter().append('path')
+        .attr('d', path)
+        .on('mouseenter', showRegionToolTip)
+        .on('mouseout', hideTooltip);
+    }
+
+    function drawStates(){
+      if(!states) states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
+      stateLayer.selectAll('path').data(states.features).enter().append('path')
+        .attr('d', path)
+        .attr('stroke-width', 1 / lastTransform.k)
+        .on('mouseenter', showRegionToolTip)
+        .on('mouseout', hideTooltip);
+      stateLayer.transition().style('opacity', 1);
+    }
+
+    function drawCounties(){
+      if(!counties) counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
+      countyLayer.selectAll('path').data(counties.features).enter().append('path')
+        .attr('d', path)
+        .attr('stroke-width', 1 / lastTransform.k)
+        .on('mouseenter', showRegionToolTip)
+        .on('mouseout', hideTooltip);
+    }
+
+    function drawCities(){
+      if(!cities) cities = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'cities.csv'));
+      cityWrappers = cityLayer
+        .style('opacity', 0)
+        .selectAll('g').attr('class', 'city')
+        .data(window.cities).enter().append('g');
+      cityWrappers.append('circle')
+        .attr('cx', d => projection([d['Longitude'], d['Latitude']])[0])
+        .attr('cy', d => projection([d['Longitude'], d['Latitude']])[1])
+        .attr('r', d => d['sqrtpop'])
+        .style('fill', 'black')
+        .style('opacity', .3);
+      cityWrappers.append('text').text(d => d['name'])
+        .attr('dx', d => projection([d['Longitude'], d['Latitude']])[0] + d['sqrtpop']/2 + 1.2)
+        .attr('dy', d => projection([d['Longitude'], d['Latitude']])[1] + .7)
+        .style('fill', 'black')
+        .attr('font-size', 2);
+      cityLayer.transition().style('opacity', 1);
+    }
+
     function matchCoordinates(){
       if($('#latitudeField').val() !== 'None' && $('#longitudeField').val() !== 'None'){
-
+        //We don't actually need to do anything in this case.
       } else if($('#zipcodeField').val() !== 'None'){
         if(!zipcodes){
           zipcodes = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'zipcodes.csv'), d => ({
@@ -339,7 +376,7 @@
           if(state) Object.assign(n, {lat: state.lat, lon: state.lon});
         });
       }
-      plotPoints();
+      if(window.nodes[0].lat && window.nodes[0].lon) plotPoints();
     }
 
     function plotPoints(){
@@ -360,56 +397,29 @@
 
     $('#showStates').click(function(e){
       if(!$(this).hasClass('active')){
-        countryLayer.filter(d => d.id === 'USA').style('display', 'none');
-        if(!states) states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
-        stateLayer.selectAll('path').data(states.features).enter().append('path')
-          .attr('d', path)
-          .on('mouseenter', showRegionToolTip)
-          .on('mouseout', hideTooltip);
-        stateLayer.transition().style('opacity', 1);
+        countryWrappers.filter(d => d.id === 'USA').transition().style('opacity', 0);
+        drawStates();
       } else {
-        countryLayer.filter(d => d.id === 'USA').style('display', 'inline');
+        countryWrappers.filter(d => d.id === 'USA').transition().style('opacity', 0);
         stateLayer.transition().style('opacity', 0).on('end', e => stateLayer.html(null));
       }
     });
 
     $('#showCounties').click(function(e){
       if(!$(this).hasClass('active')){
-        countryLayer.filter(d => d.id === 'USA').style('display', 'none');
-        if(!counties) counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
-        countyLayer.selectAll('path').data(counties.features).enter().append('path')
-          .attr('d', path)
-          .on('mouseenter', showRegionToolTip)
-          .on('mouseout', hideTooltip);
+        countryWrappers.filter(d => d.id === 'USA').transition().style('opacity', 0);
+        drawCounties();
       } else {
-        countryLayer.filter(d => d.id === 'USA').style('display', 'inline');
+        countryWrappers.filter(d => d.id === 'USA').transition().style('opacity', 1);
         countyLayer.transition().style('opacity', 0).on('end', e => countyLayer.html(null));
       }
     });
 
     $('#showCities').click(function(e){
       if(!$(this).hasClass('active')){
-        cities = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'cities.csv'));
-        cityWrappers = cityLayer
-          .style('display', 'none')
-          .selectAll('g').attr('class', 'city')
-          .data(window.cities).enter().append('g');
-        cityWrappers.append('circle')
-          .attr('cx', d => projection([d['Longitude'], d['Latitude']])[0])
-          .attr('cy', d => projection([d['Longitude'], d['Latitude']])[1])
-          .attr('r', d => d['sqrtpop'])
-          .style('fill', 'black')
-          .style('opacity', .3);
-        cityWrappers.append('text').text(d => d['name'])
-          .attr('dx', d => projection([d['Longitude'], d['Latitude']])[0] + d['sqrtpop']/2 + .7)
-          .attr('dy', d => projection([d['Longitude'], d['Latitude']])[1] + .7)
-          .style('fill', 'black')
-          .attr('font-size', 2);
-        $('#cities').fadeIn();
+        drawCities();
       } else {
-        $('#cities').fadeOut(function(e){
-          $(this).html('');
-        });
+        cityLayer.transition().style('opacity', 0).on('end', e => cityLayer.html(null));
       }
     });
 
@@ -424,7 +434,7 @@
     });
 
     $('#nodeColorField').change(e => {
-      var circles = g.select('#nodes').selectAll('circle');
+      var circles = g.select('g#nodes').selectAll('circle').data(window.nodes);
       var table = $('#groupKey').empty();
       if(e.target.value == 'none'){
         circles.style('fill', $('#color').val());
@@ -436,7 +446,7 @@
       var o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
       circles.style('fill', d => o(d[e.target.value]));
       values.forEach(value => {
-        var input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
+        var input = $('<input type="color" value="'+o(value)+'" />')
           .on('input', evt => {
             circles
               .filter(d => d[e.target.value] == value)
@@ -450,8 +460,13 @@
     });
 
     $('#opacity').on('input', e => svg.selectAll('circle').attr('opacity', e.target.value));
+
     $('#landColor').on('input', e => svg.selectAll('path').attr('fill', e.target.value));
+
     $('#waterColor').on('input', e => svg.style('fill', e.target.value));
+
+    drawCountries();
+    drawCities();
 
     electron.ipcRenderer.send('get-nodes');
   });
