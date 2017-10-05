@@ -5,7 +5,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title></title>
-  <link rel="icon" href="img/image32.ico" />
+  <link href="img/image32.ico" rel="icon" />
+  <link href="css/font-awesome.css" rel="stylesheet" type="text/css" />
   <link href="css/alertify.min.css" rel="stylesheet" type="text/css" />
   <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
   <link href="stylesheets/main.css" rel="stylesheet" type="text/css" />
@@ -19,7 +20,7 @@
         </div>
         <div class="modal-body">
           <p>THE MATERIAL EMBODIED IN THIS SOFTWARE IS PROVIDED TO YOU "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE.  IN NO EVENT SHALL THE CENTERS FOR DISEASE CONTROL AND PREVENTION (CDC) OR THE UNITED STATES (U.S.) GOVERNMENT BE LIABLE TO YOU OR ANYONE ELSE FOR ANY DIRECT, SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER, INCLUDING WITHOUT LIMITATION, LOSS OF PROFIT, LOSS OF USE, SAVINGS OR REVENUE, OR THE CLAIMS OF THIRD PARTIES, WHETHER OR NOT CDC OR THE U.S. GOVERNMENT HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH LOSS, HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE POSSESSION, USE OR PERFORMANCE OF THIS SOFTWARE.</p>
-          <p>Please Click 'Accept' to accept this agreement, or 'Reject' to close this application.</p>
+          <p>Please Click "Accept" to accept this agreement, or "Reject" to close this application.</p>
         </div>
         <div class="modal-footer">
           <button id="rejectAgreement" type="button" class="btn btn-danger" data-dismiss="modal">Reject</button>
@@ -32,49 +33,87 @@
   <div id="file_panel">
     <div class="panel panel-default">
       <div class="panel-heading">
-        <h3 class="panel-title">Select Files</h3>
+        <h3 class="panel-title">Load Data</h3>
       </div>
-      <div class="panel-body">
-        <p>Provide either a FASTA file OR an Link CSV file:<p>
-        <p><input id="FastaOrLinkFile" type="file" class="file-loading" /></p>
-        <div class="panel panel-default">
-          <div class="panel-heading" role="tab" id="advancedHeader">
-            <a class="collapsed" role="button" data-toggle="collapse" href="#advancedFileLoadOptions" aria-expanded="false" aria-controls="advancedFileLoadOptions">Advanced</a>
+      <div class="panel-body row">
+          <div class="col-sm-6" style="border-right: 1px solid lightgray">
+            <div class="row text-center" style="margin-bottom: 15px">
+              <a href="#" data-toggle="tooltip" title="Provide a CSV file containing information about links, or a FASTA file with a sequence for each node.">
+                <label class="btn btn-default btn-file">
+                  <input id="FastaOrLinkFile" type="file" class="file-loading hidden" />
+                  <i class="fa fa-folder-open-o" aria-hidden="true"></i>
+                  <strong>Link CSV or FASTA</strong>
+                </label>
+              </a>
+            </div>
+            <div class="row" style="margin-bottom: 5px">
+              <div class="col-sm-12 text-center">
+                <pre id="FastaOrLinkFileName" style="display:none"></pre>
+              </div>
+            </div>
+            <div class="row showForLinkCSV" style="margin-bottom: 5px">
+              <div class="col-sm-4">
+                <a href="#" data-toggle="tooltip" title="Which column of your Link CSV file contains the first node identifier?">Source Column</a>
+              </div>
+              <div class="col-sm-8">
+                <select id="LinkSourceColumn" class="linkVariables"></select>
+              </div>
+            </div>
+            <div class="row showForLinkCSV">
+              <div class="col-sm-4">
+                <a href="#" data-toggle="tooltip" title="Which column of your Link CSV file contains the second node identifier?">Target Column</a>
+              </div>
+              <div class="col-sm-8">
+                <select id="LinkTargetColumn" class="linkVariables"></select>
+              </div>
+            </div>
+            <div class="row showForSequence">
+              <div class="col-sm-12 text-center">
+                <a href="#" data-toggle="tooltip" title="If this file contains sequences that are already aligned, uncheck this box.">
+                  <div class="btn-group" data-toggle="buttons">
+                    <label class="btn btn-default">
+                      <input type="checkbox" autocomplete="off" id="align"> Align?
+                    </label>
+                  </div>
+                </a>
+              </div>
+            </div>
           </div>
-          <div id="advancedFileLoadOptions" class="panel-collapse collapse" role="tabpanel" aria-labelledby="advancedHeader">
-            <table class="table">
-              <tbody>
-                <tr class="showForLinkCSV">
-                  <td><a href="#" data-toggle="tooltip" title="Which column of your Link CSV file contains the first node identifier?">Source</a></td>
-                  <td><select id="LinkSourceColumn" class="linkVariables"></select></td>
-                </tr>
-                <tr class="showForLinkCSV">
-                  <td><a href="#" data-toggle="tooltip" title="Which column of your Link CSV file contains the second node identifier?">Target</a></td>
-                  <td><select id="LinkTargetColumn" class="linkVariables"></select></td>
-                </tr>
-                <tr>
-                  <td><a href="#" data-toggle="tooltip" title="Optionally, provide a CSV file containing additional information about nodes.">Node Data</a></td>
-                  <td><input id="NodeCSVFile" type="file" class="file-loading"  disabled="disabled" title="Please select a Network CSV or FASTA File First" /></td>
-                </tr>
-                <tr class="showForNodeFile">
-                  <td><a href="#" data-toggle="tooltip" title="Which column of your node file contains the node identifier?">ID Column</a></td>
-                  <td><select id="NodeIDColumn" class="nodeVariables"></select></td>
-                </tr>
-                <tr class="showForNodeFile">
-                  <td><a href="#" data-toggle="tooltip" title="Does Your Node file contain a sequence field?">Sequence Column</a></td>
-                  <td><select id="NodeSequenceColumn" class="nodeVariables"></select></td>
-                </tr>
-                <tr class="showForSequence">
-                  <td><a href="#" data-toggle="tooltip" title="If this file contains sequences that are already aligned, uncheck this box.">Align</a></td>
-                  <td><input type="checkbox" id="align" checked /></td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="col-sm-6">
+            <div class="row" style="margin-bottom: 15px; text-align: center; display: none;">
+              <a href="#" data-toggle="tooltip" title="Optionally, provide a CSV file containing additional information about nodes.">
+                <label class="btn btn-default btn-file">
+                  <input id="NodeCSVFile" type="file" class="file-loading hidden" title="Please select a Network CSV or FASTA File First" />
+                  <i class="fa fa-folder-open-o" aria-hidden="true"></i>
+                  <strong>Node CSV</strong>
+                </label>
+              </a>
+            </div>
+            <div class="row" style="margin-bottom: 5px">
+              <div class="col-sm-12 text-center">
+                <pre id="NodeCSVFileName" style="display:none"></pre>
+              </div>
+            </div>
+            <div class="row showForNodeFile" style="margin-bottom: 5px">
+              <div class="col-sm-4">
+                <a href="#" data-toggle="tooltip" title="Which column of your node file contains the node identifier?">ID Column</a>
+              </div>
+              <div class="col-sm-8">
+                <select id="NodeIDColumn" class="nodeVariables"></select>
+              </div>
+            </div>
+            <!--div class="row showForNodeFile">
+              <div class="col-sm-4">
+                <a href="#" data-toggle="tooltip" title="Does Your Node file contain a sequence field?">Sequence Column</a>
+              </div>
+              <div class="col-sm-8">
+                <select id="NodeSequenceColumn" class="nodeVariables"></select>
+              </div>
+            </div-->
           </div>
-        </div>
       </div>
-      <div class="panel-footer" style="text-align:right;">
-        <button type="submit" id="main-submit" class="btn btn-primary" disabled="disabled" title="Please select a Network CSV or FASTA File">Submit</button>
+      <div class="panel-footer text-right">
+        <button type="submit" id="main-submit" class="btn btn-primary" title="Please select a Network CSV or FASTA File">Submit</button>
       </div>
     </div>
   </div>
@@ -185,24 +224,24 @@
                     <td><a href="#" data-toggle="tooltip" title="What shape should the nodes be?">Shape</a></td>
                     <td><select id="nodeSymbolVariable" class="nodeVariables categorical"><option value="none">None</option></select></td>
                     <td><select id="default-node-symbol">
-                      <option value='symbolCircle' selected>&nbsp;&#11044; (Circle)</option>
-                      <option value='symbolTriangle'>&nbsp;&#9650; (Up Triangle)</option>
-                      <option value='symbolTriangleDown'>&nbsp;&#9660; (Down Triangle)</option>
-                      <option value='symbolTriangleLeft'>&nbsp;&#9664; (Left Triangle)</option>
-                      <option value='symbolTriangleRight'>&nbsp;&#9654; (Right Triangle)</option>
-                      <option value='symbolDiamond'>&nbsp;&#10731; (Vertical Diamond)</option>
-                      <option value='symbolDiamondAlt'>&nbsp;&#10731; (Horizontal Diamond)</option>
-                      <option value='symbolSquare'>&nbsp;&#9632; (Square)</option>
-                      <option value='symbolDiamondSquare'>&nbsp;&#9670; (Tilted Square)</option>
-                      <option value='symbolPentagon'>&nbsp;&#11039; (Pentagon)</option>
-                      <option value='symbolHexagon'>&nbsp;&#11042; (Hexagon)</option>
-                      <option value='symbolHexagonAlt'>&nbsp;&#11043; (Tilted Hexagon)</option>
-                      <option value='symbolOctagon'>&nbsp;&#11204; (Octagon)</option>
-                      <option value='symbolOctagonAlt'>&nbsp;&#11203; (Tilted Octagon)</option>
-                      <option value='symbolCross'>&nbsp;&#10010; (Addition Sign)</option>
-                      <option value='symbolX'>&nbsp;&#10006; (Multiplication Sign)</option>
-                      <option value='symbolWye'>&nbsp;&#120300; (Wye)</option>
-                      <option value='symbolStar'>&nbsp;&#9733; (Star)</option>
+                      <option value="symbolCircle" selected>&nbsp;&#11044; (Circle)</option>
+                      <option value="symbolTriangle">&nbsp;&#9650; (Up Triangle)</option>
+                      <option value="symbolTriangleDown">&nbsp;&#9660; (Down Triangle)</option>
+                      <option value="symbolTriangleLeft">&nbsp;&#9664; (Left Triangle)</option>
+                      <option value="symbolTriangleRight">&nbsp;&#9654; (Right Triangle)</option>
+                      <option value="symbolDiamond">&nbsp;&#10731; (Vertical Diamond)</option>
+                      <option value="symbolDiamondAlt">&nbsp;&#10731; (Horizontal Diamond)</option>
+                      <option value="symbolSquare">&nbsp;&#9632; (Square)</option>
+                      <option value="symbolDiamondSquare">&nbsp;&#9670; (Tilted Square)</option>
+                      <option value="symbolPentagon">&nbsp;&#11039; (Pentagon)</option>
+                      <option value="symbolHexagon">&nbsp;&#11042; (Hexagon)</option>
+                      <option value="symbolHexagonAlt">&nbsp;&#11043; (Tilted Hexagon)</option>
+                      <option value="symbolOctagon">&nbsp;&#11204; (Octagon)</option>
+                      <option value="symbolOctagonAlt">&nbsp;&#11203; (Tilted Octagon)</option>
+                      <option value="symbolCross">&nbsp;&#10010; (Addition Sign)</option>
+                      <option value="symbolX">&nbsp;&#10006; (Multiplication Sign)</option>
+                      <option value="symbolWye">&nbsp;&#120300; (Wye)</option>
+                      <option value="symbolStar">&nbsp;&#9733; (Star)</option>
                     </select></td>
                   </tr>
                   <tr>
@@ -221,7 +260,7 @@
                     <td><input type="color" id="default-node-color" value="#ff0000" /></td>
                   </tr>
                   <tr>
-                    <td><a href="#" data-toggle="tooltip" title="How opaque should the nodes be?">Opacity</a></td>
+                    <td><a href="#" data-toggle="tooltip" title="How transparent should the nodes be?">Transparency</a></td>
                     <td><select id="nodeOpacityVariable" class="nodeVariables numeric"><option value="none">None</option></select></td>
                     <td><input type="range" id="default-node-opacity" min="0" max="1" value="1" step="0.01" /></td>
                   </tr>
@@ -303,7 +342,7 @@
                           <td><input type="color" id="default-link-color" value="#6f6f6f" /></td>
                         </tr>
                         <tr>
-                          <td><a href="#" data-toggle="tooltip" title="How opaque should the links be?">Opacity</a></td>
+                          <td><a href="#" data-toggle="tooltip" title="How transparent should the links be?">Transparency</a></td>
                           <td><select id="linkOpacityVariable" class="linkVariables"><option value="none">None</option></select></td>
                           <td><input type="range" id="default-link-opacity" min="0" max="1" value="0.5" step="0.01" /></td>
                         </tr>

@@ -33,17 +33,20 @@ $(function(){
       $('#loadingInformation').empty();
       $('#network').empty();
       $('#groupKey').find('tbody').empty();
-      $('.showForSequence, .showForMST, .showForLinkCSV, .showForNodeFile').hide();
+      $('.showForSequence, .showForMST, .showForLinkCSV, .showForNodeFile').slideUp();
       $('.showForNotMST').css('display', 'inline-block');
-      $('#advancedFileLoadOptions').collapse('hide');
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
+      $('#align').prop('checked', false).parent().removeClass('active');
       $('#file_panel').fadeIn();
+      $('#FastaOrLinkFileName').text('').hide();
+      $('#main-submit').hide();
+      $('#NodeCSVFile').val('').parent().parent().parent().hide();
     }
     if(soft){
       resetDom();
     } else {
       $('#FastaOrLinkFile').val('');
-      $('#NodeCSVFile').val('');
+      $('#NodeCSVFileName').text('').hide();
       $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('hidden');
       $('#button-wrapper, #main_panel').fadeOut(() => resetDom());
     }
@@ -123,13 +126,9 @@ $(function(){
   $('#FastaOrLinkFile').change(e => {
     reset(true);
 
-    if(e.target.files.length < 1){
-      $('#main-submit, #NodeCSVFile').prop({
-        'title': 'Please select a Network CSV or FASTA File',
-        'disabled': 'disabled'
-      });
-      return;
-    }
+    if(e.target.files.length < 1) return
+
+    $('#FastaOrLinkFileName').text(e.target.files[0].name).slideDown();
 
     if(e.target.files[0].name.slice(-3) == 'csv'){
       Papa.parse(e.target.files[0], {
@@ -148,61 +147,60 @@ $(function(){
           $('#LinkTargetColumn').val(keys.includes('target') ? 'target' : keys[1]);
         }
       });
-      $('.showForLinkCSV').show().filter('tr').css('display', 'table-row');
-      $('.showForSequence').hide();
+      $('.showForLinkCSV').slideDown().filter('tr').css('display', 'table-row');
+      $('.showForSequence').slideUp();
     } else {
-      $('.showForSequence').show().filter('tr').css('display', 'table-row');
-      $('.showForLinkCSV').hide();
+      $('.showForSequence').slideDown().filter('tr').css('display', 'table-row');
+      $('.showForLinkCSV').slideUp();
     }
 
-    $('#main-submit').prop({
-      'title': 'Click to build Network',
-      'disabled': ''
-    });
+    $('#main-submit').slideDown();
+    $('#NodeCSVFile').parent().parent().parent().slideDown();
+  });
 
-    $('#NodeCSVFile').prop({
-      'title': 'Click to add a CSV of additional Node data',
-      'disabled': ''
-    });
+  $('#NodeCSVFile').parent().click(e => {
+    if($('#FastaOrLinkFile')[0].files.length === 0){
+      e.preventDefault();
+      alertify.error('Please load a Link CSV or FASTA file first.');
+    }
   });
 
   $('#NodeCSVFile').on('change', e => {
     if(e.target.files.length > 0){
-      var mainFileExtension = $('#FastaOrLinkFile')[0].files[0].name.split('.').pop();
-      if(mainFileExtension === 'fas' || mainFileExtension === 'fasta'){
-        $('#NodeIDColumn').parent().parent().css('display', 'table-row');
-      } else {
-        $('.showForNodeFile').css('display', 'table-row');
-      }
+      $('#NodeCSVFileName').text(e.target.files[0].name).slideDown();
       Papa.parse(e.target.files[0], {
         header: true,
         preview: 1,
         complete: results => {
           var keys = Object.keys(results.data[0]);
           $('.nodeVariables').html(
-            '<option value="none">None</option>\n' +
             keys
               .filter(key => !meta.includes(key))
               .map(key => '<option value="' + key + '">' + key + '</option>')
               .join('\n')
           );
+          $('#NodeSequenceColumn').prepend('<option value="none" selected>None</option>\n');
           $('#NodeIDColumn').val(keys[0]);
+          $('.showForNodeFile').slideDown();
         }
       });
     } else {
-      $('.showForNodeFile').hide();
+      $('.showForNodeFile').slideUp();
     }
   });
 
   $('#NodeSequenceColumn').on('change', e => {
     if(e.target.value === 'None'){
-      $('#showForSequence').show().filter('tr').css('display', 'table-row');
+      $('#showForSequence').slideDown().filter('tr').css('display', 'table-row');
     } else {
-      $('#showForSequence').hide();
+      $('#showForSequence').slideUp();
     }
   });
 
-  $('#main-submit').click(() => {
+  $('#main-submit').click(function(e){
+    if($('#FastaOrLinkFile')[0].files.length == 0){
+      return alertify.error('Please load a Link CSV or FASTA file first.');
+    }
     ipcRenderer.send('parse-file', {
       file: $('#FastaOrLinkFile')[0].files[0].path,
       supplement: $('#NodeCSVFile')[0].files.length > 0 ? $('#NodeCSVFile')[0].files[0].path : '',
