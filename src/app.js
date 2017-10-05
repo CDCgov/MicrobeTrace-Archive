@@ -303,6 +303,7 @@ $(function(){
   function DFS(node){
     if(typeof node.cluster !== 'undefined') return;
     node.cluster = window.clusters.length;
+    window.clusters[window.clusters.length - 1].size++;
     window.links
       .filter(l => l.visible && (l.source.id == node.id || l.target.id == node.id))
       .forEach(l => {
@@ -316,10 +317,11 @@ $(function(){
     window.nodes.forEach(node => delete node.cluster);
     window.nodes.forEach(node => {
       if(typeof node.cluster === 'undefined'){
-        DFS(node);
         window.clusters.push({
-          id: window.clusters.length
+          id: window.clusters.length,
+          size: 0
         });
+        DFS(node);
       }
     });
     ipcRenderer.send('update-node-cluster', window.nodes);
@@ -547,7 +549,7 @@ $(function(){
         'Degrees': {},
         'Multiple sequences': {},
         'Edge Stages': {},
-        'Cluster sizes': [],
+        'Cluster sizes': window.clusters.map(c => c.size),
         'Settings': {
           'contaminant-ids': ['HXB2_prrt'],
           'contaminants': 'remove',
@@ -556,7 +558,7 @@ $(function(){
         },
         'Network Summary': {
           'Sequences used to make links': 0,
-          'Clusters': numClusters,
+          'Clusters': window.clusters.length,
           'Edges': window.links.filter(l => l.visible).length,
           'Nodes': window.nodes.length
         },
@@ -564,7 +566,7 @@ $(function(){
         'Edges': [],
         'Nodes': []
       }
-    });
+    }, null, 2);
   }
 
   ipcRenderer.on('update-node-selection', (e, newNodes) => {
