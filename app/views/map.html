@@ -11,7 +11,7 @@
   <link rel="stylesheet" type="text/css" href="../stylesheets/main.css" />
   <style>
     svg {
-      fill: #9bbff4;
+      background: #9bbff4;
     }
     #countries, #states, #counties {
       fill: #bbdaa4;
@@ -162,6 +162,7 @@
                       <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showStates" aria-pressed="false" autocomplete="off">States</button>
                       <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showCounties" aria-pressed="false" autocomplete="off">Counties</button>
                       <button type="button" class="btn btn-default btn-xs active" data-toggle="button" id="showCities" aria-pressed="true" autocomplete="off">Cities</button>
+                      <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showLinks" aria-pressed="false" autocomplete="off">Links</button>
                     </td>
                   </tr>
                   <tr>
@@ -197,7 +198,8 @@
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
 
-  var countries, states, counties, cities, zipcodes, projection, path, zoom, svg, g;
+  //TODO: Get rid of some of these globals!
+  var countries, states, counties, cities, zipcodes, projection, path, svg;
 
   $(function(){
 
@@ -211,8 +213,9 @@
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
-    electron.ipcRenderer.on('deliver-nodes', (e, nodes) => {
-      window.nodes = nodes;
+    electron.ipcRenderer.on('deliver-data', (e, data) => {
+      window.nodes = data.nodes;
+      window.links = data.links;
       var fields = Object.keys(window.nodes[0]);
       $('.fields').append(fields.map(field => '<option value="'+field+'">'+field+'</option>').join('\n'));
       if(fields.includes('lat')) $('#latitudeField').val('lat');
@@ -225,115 +228,6 @@
       matchCoordinates();
       $('#settingsModal').modal('show');
     });
-
-    var width = $(window).width(),
-        height = $(window).height();
-
-    projection = d3.geoMercator();
-
-    path = d3.geoPath().projection(projection);
-
-    svg = d3.select('#main_panel').append('svg')
-        .attr('width', width)
-        .attr('height', height)
-
-    lastTransform = {};
-
-    zoom = d3.zoom().on('zoom', () => {
-      g.selectAll('g#countries, g#states, g#counties, g#nodes, g#cities').attr('transform', d3.event.transform);
-      g.selectAll('g#countries, g#states, g#counties').selectAll('path').attr('stroke-width', 1 / d3.event.transform.k);
-      g.selectAll('g#nodes').selectAll('circle').attr('r', $('#radius').val() / d3.event.transform.k);
-      lastTransform = Object.assign({}, d3.event.transform);
-    });
-
-    g = svg.append('g').attr('id', 'zoomLayer').call(zoom);
-
-    g.append('rect')
-      .attr('class', 'background')
-      .attr('width', width)
-      .attr('height', height);
-
-    countryLayer = g.append('g').attr('id', 'countries');
-    stateLayer   = g.append('g').attr('id', 'states');
-    countyLayer  = g.append('g').attr('id', 'counties');
-    cityLayer    = g.append('g').attr('id', 'cities');
-    nodeLayer    = g.append('g').attr('id', 'nodes');
-
-    function showRegionToolTip(d){
-      var tooltiptext = d.properties.name;
-      if(!tooltip && $('#nodeTooltipVariable').val() !== 'None') tooltiptext = d[$('#nodeTooltipVariable').val()];
-      d3.select('#tooltip')
-        .html(tooltiptext)
-        .style('left', (d3.event.pageX + 8) + 'px')
-        .style('top', (d3.event.pageY + 18) + 'px')
-        .transition().duration(100)
-        .style('opacity', 1);
-    }
-
-    function showNodeToolTip(d){
-      if($('#nodeTooltipVariable').val() == 'none') return;
-      d3.select('#tooltip')
-        .html(d[$('#nodeTooltipVariable').val()])
-        .style('left', (d3.event.pageX + 8) + 'px')
-        .style('top', (d3.event.pageY - 28) + 'px')
-        .transition().duration(100)
-        .style('opacity', 1);
-    }
-
-    function hideTooltip(){
-      var tooltip = d3.select('#tooltip');
-      tooltip
-        .transition().duration(100)
-        .style('opacity', 0)
-        .on('end', () => tooltip.style('right', '0px').style('top', '0px'));
-    }
-
-    function drawCountries(){
-      if(!countries) countries = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'countries.json'));
-      countryWrappers = countryLayer.selectAll('path').data(countries.features).enter().append('path')
-        .attr('d', path)
-        .on('mouseenter', showRegionToolTip)
-        .on('mouseout', hideTooltip);
-    }
-
-    function drawStates(){
-      if(!states) states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
-      stateLayer.selectAll('path').data(states.features).enter().append('path')
-        .attr('d', path)
-        .attr('stroke-width', 1 / lastTransform.k)
-        .on('mouseenter', showRegionToolTip)
-        .on('mouseout', hideTooltip);
-      stateLayer.transition().style('opacity', 1);
-    }
-
-    function drawCounties(){
-      if(!counties) counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
-      countyLayer.selectAll('path').data(counties.features).enter().append('path')
-        .attr('d', path)
-        .attr('stroke-width', 1 / lastTransform.k)
-        .on('mouseenter', showRegionToolTip)
-        .on('mouseout', hideTooltip);
-    }
-
-    function drawCities(){
-      if(!cities) cities = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'cities.csv'));
-      cityWrappers = cityLayer
-        .style('opacity', 0)
-        .selectAll('g').attr('class', 'city')
-        .data(window.cities).enter().append('g');
-      cityWrappers.append('circle')
-        .attr('cx', d => projection([d['Longitude'], d['Latitude']])[0])
-        .attr('cy', d => projection([d['Longitude'], d['Latitude']])[1])
-        .attr('r', d => d['sqrtpop'])
-        .style('fill', 'black')
-        .style('opacity', .3);
-      cityWrappers.append('text').text(d => d['name'])
-        .attr('dx', d => projection([d['Longitude'], d['Latitude']])[0] + d['sqrtpop']/2 + 1.2)
-        .attr('dy', d => projection([d['Longitude'], d['Latitude']])[1] + .7)
-        .style('fill', 'black')
-        .attr('font-size', 2);
-      cityLayer.transition().style('opacity', 1);
-    }
 
     function matchCoordinates(){
       if($('#latitudeField').val() !== 'None' && $('#longitudeField').val() !== 'None'){
@@ -376,10 +270,112 @@
           if(state) Object.assign(n, {lat: state.lat, lon: state.lon});
         });
       }
-      if(window.nodes[0].lat && window.nodes[0].lon) plotPoints();
+      if(window.nodes[0].lat && window.nodes[0].lon) drawNodes();
     }
 
-    function plotPoints(){
+    electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
+      window.links.forEach((l, i) => l.visible = newLinks[i].visible);
+      if($('#showLinks').hasClass('active')) drawLinks();
+    });
+
+    var width = $(window).width(),
+        height = $(window).height();
+
+    projection = d3.geoMercator();
+
+    path = d3.geoPath().projection(projection);
+
+    svg = d3.select('#main_panel').append('svg')
+        .attr('width', width)
+        .attr('height', height)
+
+    lastTransform = {};
+
+    svg.call(d3.zoom().on('zoom', () => {
+      svg.selectAll('g#countries, g#states, g#counties, g#nodes, g#links, g#cities').attr('transform', d3.event.transform);
+      svg.selectAll('g#countries, g#states, g#counties').selectAll('path').attr('stroke-width', 1 / d3.event.transform.k);
+      svg.selectAll('g#nodes').selectAll('circle').attr('r', $('#radius').val() / d3.event.transform.k);
+      svg.selectAll('g#links').selectAll('line').attr('stroke-width', 2 / d3.event.transform.k);
+      lastTransform = Object.assign({}, d3.event.transform);
+    }));
+
+    countryLayer = svg.append('g').attr('id', 'countries');
+    stateLayer   = svg.append('g').attr('id', 'states');
+    countyLayer  = svg.append('g').attr('id', 'counties');
+    cityLayer    = svg.append('g').attr('id', 'cities');
+    linkLayer    = svg.append('g').attr('id', 'links');
+    nodeLayer    = svg.append('g').attr('id', 'nodes');
+
+    function showToolTip(d){
+      var tooltiptext = '';
+      if(d.properties) tooltiptext = d.properties.name;
+      else if($('#nodeTooltipVariable').val() !== 'None' && d[$('#nodeTooltipVariable').val()]) tooltiptext = d[$('#nodeTooltipVariable').val()];
+      d3.select('#tooltip')
+        .html(tooltiptext)
+        .style('left', (d3.event.pageX + 8) + 'px')
+        .style('top', (d3.event.pageY + 18) + 'px')
+        .transition().duration(100)
+        .style('opacity', 1);
+    }
+
+    function hideTooltip(){
+      var tooltip = d3.select('#tooltip');
+      tooltip
+        .transition().duration(100)
+        .style('opacity', 0)
+        .on('end', () => tooltip.style('right', '0px').style('top', '0px'));
+    }
+
+    function drawCountries(){
+      if(!countries) countries = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'countries.json'));
+      countryWrappers = countryLayer.selectAll('path').data(countries.features).enter().append('path')
+        .attr('d', path)
+        .on('mouseenter', showToolTip)
+        .on('mouseout', hideTooltip);
+      countryLayer.transition().style('opacity', 1);
+    }
+
+    function drawStates(){
+      if(!states) states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
+      stateLayer.selectAll('path').data(states.features).enter().append('path')
+        .attr('d', path)
+        .attr('stroke-width', 1 / lastTransform.k)
+        .on('mouseenter', showToolTip)
+        .on('mouseout', hideTooltip);
+      stateLayer.style('opacity', 1);
+    }
+
+    function drawCounties(){
+      if(!counties) counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
+      countyLayer.selectAll('path').data(counties.features).enter().append('path')
+        .attr('d', path)
+        .attr('stroke-width', 1 / lastTransform.k)
+        .on('mouseenter', showToolTip)
+        .on('mouseout', hideTooltip);
+      countyLayer.style('opacity', 1);
+    }
+
+    function drawCities(){
+      if(!cities) cities = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'cities.csv'));
+      cityWrappers = cityLayer
+        .style('opacity', 0)
+        .selectAll('g').attr('class', 'city')
+        .data(window.cities).enter().append('g');
+      cityWrappers.append('circle')
+        .attr('cx', d => projection([d['Longitude'], d['Latitude']])[0])
+        .attr('cy', d => projection([d['Longitude'], d['Latitude']])[1])
+        .attr('r', d => d['sqrtpop'])
+        .style('fill', 'black')
+        .style('opacity', .3);
+      cityWrappers.append('text').text(d => d['name'])
+        .attr('dx', d => projection([d['Longitude'], d['Latitude']])[0] + d['sqrtpop']/2 + 1.2)
+        .attr('dy', d => projection([d['Longitude'], d['Latitude']])[1] + .7)
+        .style('fill', 'black')
+        .attr('font-size', 2);
+      cityLayer.transition().style('opacity', 1);
+    }
+
+    function drawNodes(){
       if(window.nodes[0].lat && window.nodes[0].lon){
         nodeLayer
           .selectAll('circle').data(window.nodes).enter()
@@ -388,19 +384,39 @@
           .attr('cy', d => projection([d.lon, d.lat])[1])
           .attr('r', $('#radius').val())
           .style('fill', $('#color').val())
-          .on('mouseenter', showNodeToolTip)
+          .on('mouseenter', showToolTip)
           .on('mouseout', hideTooltip);
       }
     }
 
-    $('#longitudeField, #latitudeField, #countyField, #stateField, #countryField, #zipcodeField').change(plotPoints);
+    function drawLinks(){
+      if(typeof window.links[0].source !== 'object'){
+        window.links.forEach(l => {
+          l.source = window.nodes.find(d => d.id === l.source);
+          l.target = window.nodes.find(d => d.id === l.target);
+        });
+      }
+      let vlinks = window.links.filter(l => l.visible)
+      let ll = linkLayer.selectAll('line').data(vlinks);
+      ll.exit().remove();
+      ll.enter().append('line').merge(ll)
+        .attr('class', 'link')
+        .style('stroke', '#ff0000')
+        .attr('stroke-width', 2 / lastTransform.k)
+        .attr('x1', d => projection([d.source.lon, d.source.lat])[0])
+        .attr('y1', d => projection([d.source.lon, d.source.lat])[1])
+        .attr('x2', d => projection([d.target.lon, d.target.lat])[0])
+        .attr('y2', d => projection([d.target.lon, d.target.lat])[1]);
+    }
+
+    $('#longitudeField, #latitudeField, #countyField, #stateField, #countryField, #zipcodeField').change(drawNodes);
 
     $('#showStates').click(function(e){
       if(!$(this).hasClass('active')){
         countryWrappers.filter(d => d.id === 'USA').transition().style('opacity', 0);
         drawStates();
       } else {
-        countryWrappers.filter(d => d.id === 'USA').transition().style('opacity', 0);
+        countryWrappers.filter(d => d.id === 'USA').transition().style('opacity', 1);
         stateLayer.transition().style('opacity', 0).on('end', e => stateLayer.html(null));
       }
     });
@@ -423,18 +439,26 @@
       }
     });
 
+    $('#showLinks').click(function(e){
+      if(!$(this).hasClass('active')){
+        drawLinks();
+      } else {
+        linkLayer.transition().style('opacity', 0).on('end', e => linkLayer.html(null));
+      }
+    });
+
     $('#radius').on('input', e => nodeLayer.selectAll('circle').attr('r', e.target.value));
 
     $('#color').on('input', e => nodeLayer.selectAll('circle').style('fill', e.target.value));
 
     $('#jitter').on('input', e => {
-      nodeLayer.selectAll('circle')
+      nodeLayer.selectAll('circle').data(window.nodes)
         .attr('cx', d => projection([d.lon, d.lat])[0] + (Math.random()*2-1)*e.target.value)
         .attr('cy', d => projection([d.lon, d.lat])[1] + (Math.random()*2-1)*e.target.value);
     });
 
     $('#nodeColorField').change(e => {
-      var circles = g.select('g#nodes').selectAll('circle').data(window.nodes);
+      var circles = svg.select('g#nodes').selectAll('circle').data(window.nodes);
       var table = $('#groupKey').empty();
       if(e.target.value == 'none'){
         circles.style('fill', $('#color').val());
@@ -463,12 +487,12 @@
 
     $('#landColor').on('input', e => svg.selectAll('path').attr('fill', e.target.value));
 
-    $('#waterColor').on('input', e => svg.style('fill', e.target.value));
+    $('#waterColor').on('input', e => svg.style('background', e.target.value));
 
     drawCountries();
     drawCities();
 
-    electron.ipcRenderer.send('get-nodes');
+    electron.ipcRenderer.send('get-data');
   });
 
   </script>

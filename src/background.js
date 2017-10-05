@@ -109,7 +109,7 @@ ipcMain.on('update-node-cluster', (event, newNodes) => {
 });
 
 ipcMain.on('update-link-visibility', (event, newLinks) => {
-  data.links.forEach(l => l.visible = newLinks.find(nl => nl.id == l.id).visible);
+  data.links.forEach((l, i) => l.visible = newLinks[i].visible);
   distribute('update-link-visibility', data.links, event.sender.id);
 });
 
