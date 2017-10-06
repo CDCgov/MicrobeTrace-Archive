@@ -186,11 +186,13 @@
 
     <span id="tooltip"></span>
 
-    <table id="contextmenu">
-      <tr><td><a href="#" id="copyID">Copy ID</a></td></tr>
-      <tr class="showForSequence"><td><a href="#" id="copySeq">Copy Sequence</a></td></tr>
-      <tr><td><a href="#" id="pinNode">Pin Node</a></td></tr>
-    </table>
+    <ul id="contextmenu" class="dropdown-menu">
+      <li><a href="#" id="copyID">Copy ID</a></li>
+      <li class="showForSequence"><a href="#" id="copySeq">Copy Sequence</a></li>
+      <li><a href="#" id="pinNode">Pin Node</a></li>
+      <li role="separator" class="divider"></li>
+      <li><a href="#" id="isolateCluster">Isolate Cluster</a></li>
+    </ul>
   </div>
 
   <div id="settingsModal" class="modal fade" tabindex="-1" role="dialog" data-backdrop="false">

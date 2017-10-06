@@ -60,6 +60,7 @@ $(function(){
     window.nodes = undefined;
     window.links = undefined;
     window.distance_matrix = undefined;
+    window.visible_clusters = undefined;
     ipcRenderer.send('reset');
   }
 
@@ -237,7 +238,7 @@ $(function(){
     window.links = data.links;
     updateNodeVariables();
     updateLinkVariables();
-    renderNetwork();
+    setupNetwork();
     updateStatistics();
     $('.hidden').removeClass('hidden');
     $('#loadingInformationModal').modal('hide');
@@ -245,13 +246,13 @@ $(function(){
 
   function updateStatistics(){
     if($('#hideNetworkStatistics').is(':checked')) return;
+    tagClusters();
     var llinks = Lazy(window.links).filter(e => e.visible);
     $('#numberOfNodes').text(window.nodes.length.toLocaleString());
     $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
     $('#visibilityThreshold').text(math.toPrecision($('#default-link-threshold').val(), 3));
     $('#numberOfVisibleLinks').text(llinks.size().toLocaleString());
     $('#numberOfPossibleLinks').text((window.nodes.length * (window.nodes.length - 1) / 2).toLocaleString());
-    tagClusters();
     var singletons = window.nodes.length - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
     $('#numberOfSingletonNodes').text(singletons.toLocaleString());
     $('#numberOfDisjointComponents').text((window.clusters.length - singletons).toLocaleString());
@@ -305,6 +306,7 @@ $(function(){
     window.links
       .filter(l => l.visible && (l.source.id == node.id || l.target.id == node.id))
       .forEach(l => {
+        l.cluster = window.clusters.length;
         if(!l.source.cluster) DFS(l.source);
         if(!l.target.cluster) DFS(l.target);
       });
@@ -327,33 +329,31 @@ $(function(){
 
   function setLinkVisibility(){
     var metric  = $('#linkSortVariable').val(),
-        showMST = $('#showMSTLinks').is(':checked'),
         threshold = $('#default-link-threshold').val();
-    if(metric == 'none' && window.links[0].orig){
-      window.links.forEach(link => link.visible = true);
-    } else {
-      window.links.forEach(link => {
-        if(link[metric] <= threshold){
-          if(showMST){
-            link.visible = link.mst;
-          } else {
-            link.visible = true;
-          }
-        } else {
-          link.visible = false;
-        }
-      });
+    window.links.forEach(link => link.visible = true);
+    if(metric !== 'none'){
+      window.links.forEach(link => link.visible = link.visible && (link[metric] <= threshold));
+    }
+    if(window.visible_clusters){
+      window.links.forEach(link => link.visible = link.visible && window.visible_clusters.includes(link.cluster));
+    }
+    if($('#showMSTLinks').is(':checked')){
+      window.links.forEach(link => link.visible = link.visible && link.mst);
     }
     ipcRenderer.send('update-link-visibility', window.links);
   }
 
-  function renderNetwork(){
+  function setNodeVisibility(){
+    if(window.visible_clusters){
+      window.nodes.forEach(n => n.visible = window.visible_clusters.includes(n.cluster));
+    } else {
+      window.nodes.forEach(n => n.visible = true);
+    }
+  }
+
+  function setupNetwork(){
     window.network = {};
-
-    setLinkVisibility();
-
-    var links = window.links.filter(link => link.visible),
-        width = $(window).width(),
+    let width = $(window).width(),
         height = $(window).height(),
         xScale = d3.scaleLinear().domain([0, width]).range([0, width]),
         yScale = d3.scaleLinear().domain([0, height]).range([0, height]);
@@ -365,17 +365,47 @@ $(function(){
       .call(window.network.zoom)
       .append('g');
 
-    window.network.svg.append('svg:defs')
-      .selectAll('marker').data([{id: 'end-arrow'}]).enter().append('marker')
-        .attr('id', d => d.id)
-        .attr('viewBox', '0 0 10 10')
-        .attr('refX', 20)
-        .attr('refY', 5)
-        .attr('markerWidth', 4)
-        .attr('markerHeight', 4)
-        .attr('orient', 'auto')
-        .append('svg:path')
-          .attr('d', 'M0,0 L0,10 L10,5 z');
+    window.network.force = d3.forceSimulation()
+      .force('link', d3.forceLink()
+        .id(d => d.id)
+        .distance($('#default-link-length').val())
+        .strength(0.125)
+      )
+      .force('charge', d3.forceManyBody()
+        .strength(-$('#default-node-charge').val())
+      )
+      .force('gravity', forceAttract()
+        .target([width/2, height/2])
+        .strength($('#network-gravity').val())
+      )
+      .force('center', d3.forceCenter(width / 2, height / 2));
+
+    renderNetwork();
+  }
+
+  function renderNetwork(){
+    setNodeVisibility();
+    setLinkVisibility();
+
+    window.network.svg = d3.select('svg')
+      .on('click', hideContextMenu)
+      .html('') //Let's make sure the canvas is blank.
+      .call(window.network.zoom)
+      .append('g');
+
+    window.network.svg.append('svg:defs').append('marker')
+      .attr('id', 'end-arrow')
+      .attr('viewBox', '0 0 10 10')
+      .attr('refX', 20)
+      .attr('refY', 5)
+      .attr('markerWidth', 4)
+      .attr('markerHeight', 4)
+      .attr('orient', 'auto')
+      .append('svg:path')
+        .attr('d', 'M0,0 L0,10 L10,5 z');
+
+    let links = window.links.filter(link => link.visible),
+        nodes = window.nodes.filter(node => node.visible);
 
     var link = window.network.svg.append('g').attr('id', 'links')
       .selectAll('line').data(links).enter().append('line').attr('class', 'link')
@@ -386,7 +416,7 @@ $(function(){
         .on('mouseout', hideTooltip);
 
     var node = window.network.svg.append('g').attr('id', 'nodes')
-      .selectAll('g').data(window.nodes).enter().append('g').attr('class', 'node')
+      .selectAll('g').data(nodes).enter().append('g').attr('class', 'node')
         .call(d3.drag()
           .on('start', dragstarted)
           .on('drag', dragged)
@@ -417,21 +447,6 @@ $(function(){
       .attr('dy', 5)
       .attr('dx', 5);
 
-    window.network.force = d3.forceSimulation()
-      .force('link', d3.forceLink()
-        .id(d => d.id)
-        .distance($('#default-link-length').val())
-        .strength(0.125)
-      )
-      .force('charge', d3.forceManyBody()
-        .strength(-$('#default-node-charge').val())
-      )
-      .force('gravity', forceAttract()
-        .target([width/2, height/2])
-        .strength($('#network-gravity').val())
-      )
-      .force('center', d3.forceCenter(width / 2, height / 2));
-
     window.network.force.nodes(nodes).on('tick', () => {
       link
         .attr('x1', d => d.source.x)
@@ -449,76 +464,89 @@ $(function(){
     });
 
     window.network.force.force('link').links(links);
+  }
 
-    function dragstarted(d) {
-      if (!d3.event.active) window.network.force.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
+  function dragstarted(d) {
+    if (!d3.event.active) window.network.force.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+
+  function dragged(d) {
+    d.fx = d3.event.x;
+    d.fy = d3.event.y;
+  }
+
+  function dragended(d) {
+    if (!d3.event.active) window.network.force.alphaTarget(0);
+    if(!d.fixed){
+      d.fx = null;
+      d.fy = null;
     }
+  }
 
-    function dragged(d) {
-      d.fx = d3.event.x;
-      d.fy = d3.event.y;
-    }
-
-    function dragended(d) {
-      if (!d3.event.active) window.network.force.alphaTarget(0);
-      if(!d.fixed){
+  function showContextMenu(d){
+    d3.event.preventDefault();
+    hideTooltip();
+    d3.select('#copyID').on('click', e => {
+      clipboard.writeText(d.id);
+      hideContextMenu();
+    });
+    d3.select('#copySeq').on('click', e => {
+      clipboard.writeText(d.seq);
+      hideContextMenu();
+    });
+    if(d.fixed){
+      $('#pinNode').text('Unpin Node').click(e => {
         d.fx = null;
         d.fy = null;
-      }
-    }
-
-    function showContextMenu(d){
-      d3.event.preventDefault();
-      hideTooltip();
-      d3.select('#copyID').on('click', e => {
-        clipboard.writeText(d.id);
+        d.fixed = false;
+        window.network.force.alpha(0.3).alphaTarget(0).restart();
         hideContextMenu();
       });
-      d3.select('#copySeq').on('click', e => {
-        clipboard.writeText(d.seq);
+    } else {
+      $('#pinNode').text('Pin Node').click(e => {
+        d.fx = d.x;
+        d.fy = d.y;
+        d.fixed = true;
         hideContextMenu();
       });
-      if(d.fixed){
-        $('#pinNode').text('Unpin Node').click(e => {
-          d.fx = null;
-          d.fy = null;
-          d.fixed = false;
-          window.network.force.alpha(0.3).alphaTarget(0).restart();
-          hideContextMenu();
-        });
-      } else {
-        $('#pinNode').text('Pin Node').click(e => {
-          d.fx = d.x;
-          d.fy = d.y;
-          d.fixed = true;
-          hideContextMenu();
-        });
-      }
-      d3.select('#contextmenu')
-        .style('left', (d3.event.pageX) + 'px')
-        .style('top', (d3.event.pageY) + 'px')
-        .style('opacity', 1);
     }
+    if(window.visible_clusters){
+      $('#isolateCluster').text('De-isolate Cluster').click(e => {
+        window.visible_clusters = null;
+        renderNetwork();
+        hideContextMenu();
+      });
+    } else {
+      $('#isolateCluster').text('Isolate Cluster').click(e => {
+        window.visible_clusters = [d.cluster];
+        renderNetwork();
+        hideContextMenu();
+      });
+    }
+    d3.select('#contextmenu')
+      .style('left', (d3.event.pageX) + 'px')
+      .style('top', (d3.event.pageY) + 'px')
+      .style('opacity', 1);
+  }
 
-    function hideContextMenu(){
-      var menu = d3.select('#contextmenu');
-      menu
-        .transition().duration(100)
-        .style('opacity', 0)
-        .on('end', () =>  menu.style('left', '0px').style('top', '0px'));
-    }
+  function hideContextMenu(){
+    var menu = d3.select('#contextmenu');
+    menu
+      .transition().duration(100)
+      .style('opacity', 0)
+      .on('end', () =>  menu.style('left', '0px').style('top', '0px'));
+  }
 
-    function showNodeToolTip(d){
-      if($('#nodeTooltipVariable').val() === 'none') return;
-      d3.select('#tooltip')
-        .html(d[$('#nodeTooltipVariable').val()])
-        .style('left', (d3.event.pageX + 8) + 'px')
-        .style('top', (d3.event.pageY - 28) + 'px')
-        .transition().duration(100)
-        .style('opacity', 1);
-    }
+  function showNodeToolTip(d){
+    if($('#nodeTooltipVariable').val() === 'none') return;
+    d3.select('#tooltip')
+      .html(d[$('#nodeTooltipVariable').val()])
+      .style('left', (d3.event.pageX + 8) + 'px')
+      .style('top', (d3.event.pageY - 28) + 'px')
+      .transition().duration(100)
+      .style('opacity', 1);
   }
 
   function showLinkToolTip(d){
@@ -808,33 +836,6 @@ $(function(){
   $('#default-link-width').on('input', e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
   $('#linkWidthVariable, #reciprocal-link-width').change(e => scaleLinkThing($('#default-link-width').val(), $('#linkWidthVariable').val(), 'stroke-width'));
 
-  function refreshLinks(){
-    setLinkVisibility();
-    var vlinks = links.filter(l => l.visible);
-    var selection = window.network.svg.select('g#links').selectAll('line').data(vlinks);
-    selection.enter().append('line').merge(selection)
-        .on('mouseenter', showLinkToolTip)
-        .on('mouseout', hideTooltip);
-    selection.exit().remove();
-    window.network.force.nodes(window.nodes).on('tick', e => {
-      selection
-        .attr('x1', d => d.source.x)
-        .attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y);
-      window.network.svg.select('g#nodes').selectAll('g')
-        .attr('transform', d => {
-          if(d.fixed){
-            return 'translate(' + d.fx + ', ' + d.fy + ')';
-          } else {
-            return 'translate(' + d.x + ', ' + d.y + ')';
-          }
-        });
-    });
-    window.network.force.force('link').links(vlinks);
-    window.network.svg.select('g#links').selectAll('line').style('stroke', $('#default-link-color').val());
-  }
-
   $('#linkSortVariable').on('change', e => {
     if(e.target.value === 'none'){
       $('#computeMST').fadeOut();
@@ -861,12 +862,12 @@ $(function(){
   });
 
   $('#showMSTLinks, #showAllLinks').parent().click(e => {
-    refreshLinks();
+    renderNetwork();
     window.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#default-link-threshold').on('input', e => {
-    refreshLinks();
+    renderNetwork();
     setLinkPattern();
     setLinkColor();
     scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
