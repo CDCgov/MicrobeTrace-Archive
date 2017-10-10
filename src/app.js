@@ -286,6 +286,7 @@ $(function(){
     );
     if(keys.includes('distance')){
       $('#linkSortVariable').val('distance');
+      $('#default-link-threshold').css('visibility', 'visible');
     }
   }
 
@@ -829,8 +830,10 @@ $(function(){
   $('#linkSortVariable').on('change', e => {
     if(e.target.value === 'none'){
       $('#computeMST').fadeOut();
+      $('#default-link-threshold').css('visibility', 'hidden');
     } else {
       $('#computeMST').css('display', 'inline-block');
+      $('#default-link-threshold').css('visibility', 'visible');
     }
   });
 
