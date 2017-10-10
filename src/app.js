@@ -159,13 +159,6 @@ $(function(){
     $('#NodeCSVFile').parent().parent().parent().slideDown();
   });
 
-  $('#NodeCSVFile').parent().click(e => {
-    if($('#FastaOrLinkFile')[0].files.length === 0){
-      e.preventDefault();
-      alertify.error('Please load a Link CSV or FASTA file first.');
-    }
-  });
-
   $('#NodeCSVFile').on('change', e => {
     if(e.target.files.length > 0){
       $('#NodeCSVFileName').text(e.target.files[0].name).slideDown();
@@ -199,9 +192,6 @@ $(function(){
   });
 
   $('#main-submit').click(function(e){
-    if($('#FastaOrLinkFile')[0].files.length == 0){
-      return alertify.error('Please load a Link CSV or FASTA file first.');
-    }
     ipcRenderer.send('parse-file', {
       file: $('#FastaOrLinkFile')[0].files[0].path,
       supplement: $('#NodeCSVFile')[0].files.length > 0 ? $('#NodeCSVFile')[0].files[0].path : '',
