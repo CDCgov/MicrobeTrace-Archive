@@ -240,20 +240,6 @@ $(function(){
     $('#loadingInformationModal').modal('hide');
   });
 
-  function updateStatistics(){
-    if($('#hideNetworkStatistics').is(':checked')) return;
-    tagClusters();
-    let llinks = Lazy(app.data.links).filter(e => e.visible);
-    $('#numberOfNodes').text(app.data.nodes.length.toLocaleString());
-    $('#numberOfSelectedNodes').text(app.data.nodes.filter(d => d.selected).length.toLocaleString());
-    $('#visibilityThreshold').text(math.toPrecision($('#default-link-threshold').val(), 3));
-    $('#numberOfVisibleLinks').text(llinks.size().toLocaleString());
-    $('#numberOfPossibleLinks').text((app.data.nodes.length * (app.data.nodes.length - 1) / 2).toLocaleString());
-    let singletons = app.data.nodes.length - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
-    $('#numberOfSingletonNodes').text(singletons.toLocaleString());
-    $('#numberOfDisjointComponents').text((app.data.clusters.length - singletons).toLocaleString());
-  }
-
   const meta = ['seq', 'padding', 'selected', 'orig', 'mst', 'visible', 'index'];
 
   function updateNodeVariables(){
@@ -296,6 +282,37 @@ $(function(){
     }
   }
 
+  function updateStatistics(){
+    if($('#hideNetworkStatistics').is(':checked')) return;
+    tagClusters();
+    let llinks = Lazy(app.data.links).filter(e => e.visible);
+    $('#numberOfNodes').text(app.data.nodes.length.toLocaleString());
+    $('#numberOfSelectedNodes').text(app.data.nodes.filter(d => d.selected).length.toLocaleString());
+    $('#visibilityThreshold').text(math.toPrecision($('#default-link-threshold').val(), 3));
+    $('#numberOfVisibleLinks').text(llinks.size().toLocaleString());
+    $('#numberOfPossibleLinks').text((app.data.nodes.length * (app.data.nodes.length - 1) / 2).toLocaleString());
+    let singletons = app.data.nodes.length - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
+    $('#numberOfSingletonNodes').text(singletons.toLocaleString());
+    $('#numberOfDisjointComponents').text((app.data.clusters.length - singletons).toLocaleString());
+  }
+
+  function tagClusters(){
+    app.data.clusters = [];
+    app.data.nodes.forEach(node => delete node.cluster);
+    app.data.nodes.forEach(node => {
+      if(typeof node.cluster === 'undefined'){
+        app.data.clusters.push({
+          index: app.data.clusters.length - 1,
+          id: app.data.clusters.length,
+          size: 0,
+          visible: true
+        });
+        DFS(node);
+      }
+    });
+    ipcRenderer.send('update-node-cluster', app.data.nodes);
+  }
+
   function DFS(node){
     if(typeof node.cluster !== 'undefined') return;
     node.cluster = app.data.clusters.length;
@@ -307,22 +324,6 @@ $(function(){
         if(!l.source.cluster) DFS(l.source);
         if(!l.target.cluster) DFS(l.target);
       });
-  }
-
-  function tagClusters(){
-    app.data.clusters = [];
-    app.data.nodes.forEach(node => delete node.cluster);
-    app.data.nodes.forEach(node => {
-      if(typeof node.cluster === 'undefined'){
-        app.data.clusters.push({
-          id: app.data.clusters.length,
-          size: 0,
-          visible: true
-        });
-        DFS(node);
-      }
-    });
-    ipcRenderer.send('update-node-cluster', app.data.nodes);
   }
 
   function setNodeVisibility(){
@@ -421,42 +422,9 @@ $(function(){
     node = node.merge(node);
     // E voila! node now refers to all the g.node elements in the network,
     // and they all have path and text elements, so we can confidently...
+    node.select('path').attr('fill', $('#default-node-color').val());
 
-    let type = d3[$('#default-node-symbol').val()];
-    let symbolVariable = $('#nodeSymbolVariable').val();
-    let o = (b => d3[$('#default-node-symbol').val()]);
-    if(symbolVariable !== 'none'){
-      let map = {};
-      let values = Lazy(app.data.nodes).pluck($('#nodeSymbolVariable').val()).uniq().sort().toArray();
-      $('#nodeShapes select').each(function(i, el){ map[values[i]] = $(this).val() });
-      o = (v => map[v]);
-    }
-
-    let defaultSize = $('#default-node-radius').val();
-    let size = defaultSize;
-    let sizeVariable = $('#nodeRadiusVariable').val();
-    if(sizeVariable !== 'none'){
-      let values = Lazy(app.data.nodes).pluck(sizeVariable).without(undefined).uniq().sort().toArray();
-      var min = math.min(values);
-      var max = math.max(values);
-      var oldrng = max - min;
-      var med = oldrng / 2;
-    }
-    node.select('path').each(function(d){
-      if(symbolVariable !== 'none'){
-        type = d3[o(d[$('#nodeSymbolVariable').val()])];
-      }
-      if(sizeVariable !== 'none'){
-        size = med;
-        if(typeof d[sizeVariable] !== 'undefined'){
-          size = d[sizeVariable];
-        }
-        size = (size - min + 1) / oldrng
-        size = size * size * defaultSize;
-      }
-      d3.select(this).attr('d', d3.symbol().type(type).size(size));
-    })
-    .attr('fill', $('#default-node-color').val());
+    redrawNodes();
 
     // And also!
     node.select('text')
@@ -476,6 +444,11 @@ $(function(){
       .on('mouseenter', showLinkToolTip)
       .on('mouseout', hideTooltip);
 
+    setLinkPattern();
+    setLinkColor();
+    scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
+    scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
+
     app.network.force.nodes(vnodes).on('tick', () => {
       d3.select('g#links').selectAll('line')
         .attr('x1', d => d.source.x)
@@ -494,10 +467,7 @@ $(function(){
 
     app.network.force.force('link').links(vlinks);
 
-    setLinkPattern();
-    setLinkColor();
-    // scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
-    // scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
+    updateStatistics();
   }
 
   function dragstarted(d) {
@@ -566,7 +536,7 @@ $(function(){
       });
     } else {
       $('#isolateCluster').text('Isolate Cluster').click(e => {
-        app.data.clusters.forEach(c => c.visible = c.id == d.cluster);
+        app.data.clusters.forEach(c => c.visible = (c.id == d.cluster));
         renderNetwork();
         hideContextMenu();
       });
@@ -614,31 +584,48 @@ $(function(){
       .on('end', () => tooltip.style('left', '-40px').style('top', '-40px'));
   }
 
-  function makeHIVTraceOutput(){
-    return JSON.stringify({
-      trace_results: {
-        'HIV Stages': {},
-        'Degrees': {},
-        'Multiple sequences': {},
-        'Edge Stages': {},
-        'Cluster sizes': app.data.clusters.map(c => c.size),
-        'Settings': {
-          'contaminant-ids': ['HXB2_prrt'],
-          'contaminants': 'remove',
-          'edge-filtering': 'remove',
-          'threshold': $('#default-link-threshold').val()
-        },
-        'Network Summary': {
-          'Sequences used to make links': 0,
-          'Clusters': app.data.clusters.length,
-          'Edges': app.data.links.filter(l => l.visible).length,
-          'Nodes': app.data.nodes.length
-        },
-        'Directed Edges': {},
-        'Edges': [],
-        'Nodes': []
+  function redrawNodes(){
+    //Things to track in the function:
+    //* Symbols:
+    let type = d3[$('#default-node-symbol').val()];
+    let symbolVariable = $('#nodeSymbolVariable').val();
+    let o = (b => d3[$('#default-node-symbol').val()]);
+    if(symbolVariable !== 'none'){
+      let map = {};
+      let values = Lazy(app.data.nodes).pluck(symbolVariable).uniq().sort().toArray();
+      $('#nodeShapes select').each(function(i, el){
+        map[values[i]] = $(this).val();
+      });
+      o = (v => map[v]);
+    }
+    //* Sizes:
+    let defaultSize = $('#default-node-radius').val();
+    let size = defaultSize;
+    let sizeVariable = $('#nodeRadiusVariable').val();
+    if(sizeVariable !== 'none'){
+      let values = Lazy(app.data.nodes).pluck(sizeVariable).without(undefined).uniq().sort().toArray();
+      var min = math.min(values);
+      var max = math.max(values);
+      var oldrng = max - min;
+      var med = oldrng / 2;
+    }
+    let vnodes = app.data.nodes.filter(n => n.visible);
+    app.network.svg.select('g#nodes').selectAll('path').data(vnodes).each(function(d){
+      if(symbolVariable !== 'none'){
+        type = d3[o(d[$('#nodeSymbolVariable').val()])];
       }
-    }, null, 2);
+      if(sizeVariable !== 'none'){
+        size = med;
+        if(typeof d[sizeVariable] !== 'undefined'){
+          size = d[sizeVariable];
+        }
+        size = (size - min + 1) / oldrng
+        size = size * size * defaultSize;
+      }
+      d3.select(this).attr('d', d3.symbol()
+        .size(size)
+        .type(type));
+    });
   }
 
   ipcRenderer.on('update-node-selection', (e, newNodes) => {
@@ -657,7 +644,7 @@ $(function(){
     }
   });
 
-  $('#default-node-symbol').on('input', renderNetwork);
+  $('#default-node-symbol').on('input', redrawNodes);
   $('#nodeSymbolVariable').change(e => {
     $('#default-node-symbol').fadeOut();
     $('#nodeShapes').fadeOut(function(){$(this).remove()});
@@ -678,12 +665,12 @@ $(function(){
       let row = $('<tr><td>' + v + '</td></tr>').append(cell);
       table.append(row);
     });
-    renderNetwork();
+    redrawNodes();
     table.fadeIn();
   });
 
-  $('#default-node-radius').on('input', renderNetwork);
-  $('#nodeRadiusVariable').change(renderNetwork);
+  $('#default-node-radius').on('input', redrawNodes);
+  $('#nodeRadiusVariable').change(redrawNodes);
 
   function scaleNodeOpacity(){
     let scalar = $('#default-node-opacity').val();
@@ -811,7 +798,7 @@ $(function(){
   $('#linkColorVariable').change(setLinkColor);
 
   function scaleLinkThing(scalar, variable, attribute, floor){
-    let links = app.network.svg.select('g#links').selectAll('line').data(app.data.links);
+    let links = app.network.svg.select('g#links').selectAll('line').data(app.data.links.filter(l => l.visible));
     if(variable === 'none'){
       return links.attr(attribute, scalar);
     }
@@ -903,4 +890,31 @@ $(function(){
       reset();
     }
   });
+
+  function makeHIVTraceOutput(){
+    return JSON.stringify({
+      trace_results: {
+        'HIV Stages': {},
+        'Degrees': {},
+        'Multiple sequences': {},
+        'Edge Stages': {},
+        'Cluster sizes': app.data.clusters.map(c => c.size),
+        'Settings': {
+          'contaminant-ids': ['HXB2_prrt'],
+          'contaminants': 'remove',
+          'edge-filtering': 'remove',
+          'threshold': $('#default-link-threshold').val()
+        },
+        'Network Summary': {
+          'Sequences used to make links': 0,
+          'Clusters': app.data.clusters.length,
+          'Edges': app.data.links.filter(l => l.visible).length,
+          'Nodes': app.data.nodes.length
+        },
+        'Directed Edges': {},
+        'Edges': [],
+        'Nodes': []
+      }
+    }, null, 2);
+  }
 });
