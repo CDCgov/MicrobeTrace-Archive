@@ -14,6 +14,18 @@ import { forceAttract } from 'd3-force-attract';
 window.jquery = window.jQuery = window.$ = require('jquery');
 require('bootstrap');
 
+function dataSkeleton(){
+  return {
+    states: [],
+    messages: [],
+    data: {
+      nodes: [],
+      links: [],
+      clusters: []
+    }
+  }
+}
+
 $(function(){
 
   ipcRenderer.on('deliver-manifest', (e, manifest) => {
@@ -28,8 +40,9 @@ $(function(){
   // flushed. Obviously, this should not happen when the fileinput change
   // callbacks invoke this function.
   function reset(soft){
+    window.app = dataSkeleton();
     function resetDom(){
-      messages = [];
+      app.messages = [];
       $('#loadingInformation').empty();
       $('#network').empty();
       $('#groupKey').find('tbody').empty();
@@ -51,16 +64,11 @@ $(function(){
       $('#button-wrapper, #main_panel').fadeOut(() => resetDom());
     }
     //Trust me, this is necessary. Don't ask why.
-    if(window.network){
-      if(window.network.force){
-        window.network.force.stop();
+    if(typeof app.network !== 'undefined'){
+      if(app.network.force){
+        app.network.force.stop();
       }
     }
-    window.network = undefined;
-    window.nodes = undefined;
-    window.links = undefined;
-    window.distance_matrix = undefined;
-    window.visible_clusters = undefined;
     ipcRenderer.send('reset');
   }
 
@@ -81,11 +89,11 @@ $(function(){
       if (fileName === undefined){
         return alertify.error('File not exported!');
       }
-      var extension = fileName.split('.').pop();
+      let extension = fileName.split('.').pop();
       if(extension === 'fas' || extension === 'fasta'){
-        jetpack.write(fileName, window.nodes.map(n => '>'+n.id+'\n'+n.seq).join('\n'));
+        jetpack.write(fileName, app.data.nodes.map(n => '>'+n.id+'\n'+n.seq).join('\n'));
       } else {
-        jetpack.write(fileName, '#MEGA\nTitle: '+fileName+'\n\n'+window.nodes.map(n => '#'+n.id+'\n'+n.seq).join('\n'));
+        jetpack.write(fileName, '#MEGA\nTitle: '+fileName+'\n\n'+app.data.nodes.map(n => '#'+n.id+'\n'+n.seq).join('\n'));
       }
       alertify.success('File Saved!');
     });
@@ -136,8 +144,8 @@ $(function(){
         header: true,
         preview: 1,
         complete: results => {
-          window.links = results.data;
-          var keys = Object.keys(window.links[0]);
+          app.data.links = results.data;
+          let keys = Object.keys(app.data.links[0]);
           $('.linkVariables').html(
             keys
               .filter(key => !meta.includes(key))
@@ -166,7 +174,7 @@ $(function(){
         header: true,
         preview: 1,
         complete: results => {
-          var keys = Object.keys(results.data[0]);
+          let keys = Object.keys(results.data[0]);
           $('.nodeVariables').html(
             keys
               .filter(key => !meta.includes(key))
@@ -205,7 +213,7 @@ $(function(){
 
     $('#file_panel').fadeOut(() => {
       $('#button-wrapper, #main_panel').fadeIn(() => {
-        if(!window.network){
+        if(!app.network){
           $('#loadingInformationModal').modal({
             keyboard: false,
             backdrop: 'static'
@@ -217,19 +225,17 @@ $(function(){
 
   ipcRenderer.on('tick', (event, msg) => $('.progress-bar').css('width', msg+'%').attr('aria-valuenow', msg));
 
-  var messages = [];
+  app.messages = [];
   ipcRenderer.on('message', (event, msg) => {
-    messages.push(msg);
-    $('#loadingInformation').html(messages.join('<br />'));
+    app.messages.push(msg);
+    $('#loadingInformation').html(app.messages.join('<br />'));
   });
 
   ipcRenderer.on('deliver-data', (e, data) => {
-    window.nodes = data.nodes;
-    window.links = data.links;
+    Object.assign(app.data, data);
     updateNodeVariables();
     updateLinkVariables();
     setupNetwork();
-    updateStatistics();
     $('.hidden').removeClass('hidden');
     $('#loadingInformationModal').modal('hide');
   });
@@ -237,21 +243,21 @@ $(function(){
   function updateStatistics(){
     if($('#hideNetworkStatistics').is(':checked')) return;
     tagClusters();
-    var llinks = Lazy(window.links).filter(e => e.visible);
-    $('#numberOfNodes').text(window.nodes.length.toLocaleString());
-    $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
+    let llinks = Lazy(app.data.links).filter(e => e.visible);
+    $('#numberOfNodes').text(app.data.nodes.length.toLocaleString());
+    $('#numberOfSelectedNodes').text(app.data.nodes.filter(d => d.selected).length.toLocaleString());
     $('#visibilityThreshold').text(math.toPrecision($('#default-link-threshold').val(), 3));
     $('#numberOfVisibleLinks').text(llinks.size().toLocaleString());
-    $('#numberOfPossibleLinks').text((window.nodes.length * (window.nodes.length - 1) / 2).toLocaleString());
-    var singletons = window.nodes.length - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
+    $('#numberOfPossibleLinks').text((app.data.nodes.length * (app.data.nodes.length - 1) / 2).toLocaleString());
+    let singletons = app.data.nodes.length - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
     $('#numberOfSingletonNodes').text(singletons.toLocaleString());
-    $('#numberOfDisjointComponents').text((window.clusters.length - singletons).toLocaleString());
+    $('#numberOfDisjointComponents').text((app.data.clusters.length - singletons).toLocaleString());
   }
 
   const meta = ['seq', 'padding', 'selected', 'orig', 'mst', 'visible', 'index'];
 
   function updateNodeVariables(){
-    var keys = Object.keys(window.nodes[0]);
+    let keys = Object.keys(app.data.nodes[0]);
     $('.nodeVariables.categorical').html(
       '<option value="none">None</option>\n' +
       keys
@@ -262,7 +268,7 @@ $(function(){
     $('.nodeVariables.numeric').html(
       '<option value="none">None</option>\n' +
       keys
-        .filter(key => math.isNumber(window.nodes[0][key]) && !meta.includes(key))
+        .filter(key => math.isNumber(app.data.nodes[0][key]) && !meta.includes(key))
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
@@ -270,7 +276,7 @@ $(function(){
   }
 
   function updateLinkVariables(){
-    var keys = Object.keys(window.links[0]);
+    let keys = Object.keys(app.data.links[0]);
     $('.linkVariables').html(
       '<option value="none">None</option>\n' +
       keys
@@ -280,7 +286,7 @@ $(function(){
     $('.linkVariables.numeric').html(
       '<option value="none">None</option>\n' +
       keys
-        .filter(key => math.isNumber(window.links[0][key]))
+        .filter(key => math.isNumber(app.data.links[0][key]))
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
@@ -292,71 +298,74 @@ $(function(){
 
   function DFS(node){
     if(typeof node.cluster !== 'undefined') return;
-    node.cluster = window.clusters.length;
-    window.clusters[window.clusters.length - 1].size++;
-    window.links
+    node.cluster = app.data.clusters.length;
+    app.data.clusters[app.data.clusters.length - 1].size++;
+    app.data.links
       .filter(l => l.visible && (l.source.id == node.id || l.target.id == node.id))
       .forEach(l => {
-        l.cluster = window.clusters.length;
+        l.cluster = app.data.clusters.length;
         if(!l.source.cluster) DFS(l.source);
         if(!l.target.cluster) DFS(l.target);
       });
   }
 
   function tagClusters(){
-    window.clusters = [];
-    window.nodes.forEach(node => delete node.cluster);
-    window.nodes.forEach(node => {
+    app.data.clusters = [];
+    app.data.nodes.forEach(node => delete node.cluster);
+    app.data.nodes.forEach(node => {
       if(typeof node.cluster === 'undefined'){
-        window.clusters.push({
-          id: window.clusters.length,
-          size: 0
+        app.data.clusters.push({
+          id: app.data.clusters.length,
+          size: 0,
+          visible: true
         });
         DFS(node);
       }
     });
-    ipcRenderer.send('update-node-cluster', window.nodes);
-  }
-
-  function setLinkVisibility(){
-    var metric  = $('#linkSortVariable').val(),
-        threshold = $('#default-link-threshold').val();
-    window.links.forEach(link => link.visible = true);
-    if(metric !== 'none'){
-      window.links.forEach(link => link.visible = link.visible && (link[metric] <= threshold));
-    }
-    if(window.visible_clusters){
-      window.links.forEach(link => link.visible = link.visible && window.visible_clusters.includes(link.cluster));
-    }
-    if($('#showMSTLinks').is(':checked')){
-      window.links.forEach(link => link.visible = link.visible && link.mst);
-    }
-    ipcRenderer.send('update-link-visibility', window.links);
+    ipcRenderer.send('update-node-cluster', app.data.nodes);
   }
 
   function setNodeVisibility(){
-    if(window.visible_clusters){
-      window.nodes.forEach(n => n.visible = window.visible_clusters.includes(n.cluster));
-    } else {
-      window.nodes.forEach(n => n.visible = true);
+    let visible_clusters = app.data.clusters.filter(c => c.visible).map(c => c.id);
+    app.data.nodes.forEach(n => n.visible = true);
+    if(visible_clusters.length < app.data.clusters.length){
+      app.data.nodes.forEach(n => n.visible = n.visible && visible_clusters.includes(n.cluster));
     }
+    ipcRenderer.send('update-node-visibility', app.data.nodes);
+  }
+
+  function setLinkVisibility(){
+    let metric  = $('#linkSortVariable').val(),
+        threshold = $('#default-link-threshold').val(),
+        visible_clusters = app.data.clusters.filter(c => c.visible).map(c => c.id);
+    app.data.links.forEach(link => link.visible = true);
+    if(metric !== 'none'){
+      app.data.links.forEach(link => link.visible = link.visible && (link[metric] <= threshold));
+    }
+    if($('#showMSTLinks').is(':checked')){
+      app.data.links.forEach(link => link.visible = link.visible && link.mst);
+    }
+    if(visible_clusters.length < app.data.clusters.length){
+      app.data.links.forEach(link => link.visible = link.visible && visible_clusters.includes(link.cluster));
+    }
+    ipcRenderer.send('update-link-visibility', app.data.links);
   }
 
   function setupNetwork(){
-    window.network = {};
+    app.network = {};
     let width = $(window).width(),
         height = $(window).height(),
         xScale = d3.scaleLinear().domain([0, width]).range([0, width]),
         yScale = d3.scaleLinear().domain([0, height]).range([0, height]);
 
-    window.network.zoom = d3.zoom().on('zoom', () => window.network.svg.attr('transform', d3.event.transform));
-    window.network.svg = d3.select('svg')
+    app.network.zoom = d3.zoom().on('zoom', () => app.network.svg.attr('transform', d3.event.transform));
+    app.network.svg = d3.select('svg')
       .on('click', hideContextMenu)
       .html('') //Let's make sure the canvas is blank.
-      .call(window.network.zoom)
+      .call(app.network.zoom)
       .append('g');
 
-    window.network.force = d3.forceSimulation()
+    app.network.force = d3.forceSimulation()
       .force('link', d3.forceLink()
         .id(d => d.id)
         .distance($('#default-link-length').val())
@@ -368,23 +377,9 @@ $(function(){
       .force('gravity', forceAttract()
         .target([width/2, height/2])
         .strength($('#network-gravity').val())
-      )
-      .force('center', d3.forceCenter(width / 2, height / 2));
+      );
 
-    renderNetwork();
-  }
-
-  function renderNetwork(){
-    setNodeVisibility();
-    setLinkVisibility();
-
-    window.network.svg = d3.select('svg')
-      .on('click', hideContextMenu)
-      .html('') //Let's make sure the canvas is blank.
-      .call(window.network.zoom)
-      .append('g');
-
-    window.network.svg.append('svg:defs').append('marker')
+    app.network.svg.append('svg:defs').append('marker')
       .attr('id', 'end-arrow')
       .attr('viewBox', '0 0 10 10')
       .attr('refX', 20)
@@ -395,56 +390,99 @@ $(function(){
       .append('svg:path')
         .attr('d', 'M0,0 L0,10 L10,5 z');
 
-    let links = window.links.filter(link => link.visible),
-        nodes = window.nodes.filter(node => node.visible);
+    app.network.svg.append('g').attr('id', 'links');
+    app.network.svg.append('g').attr('id', 'nodes');
 
-    var link = window.network.svg.append('g').attr('id', 'links')
-      .selectAll('line').data(links).enter().append('line').attr('class', 'link')
-        .attr('stroke', $('#default-link-color').val())
-        .attr('stroke-width', $('#default-link-width').val())
-        .attr('opacity', $('#default-link-opacity').val())
-        .on('mouseenter', showLinkToolTip)
-        .on('mouseout', hideTooltip);
+    renderNetwork();
+  }
 
-    var node = window.network.svg.append('g').attr('id', 'nodes')
-      .selectAll('g').data(nodes).enter().append('g').attr('class', 'node')
-        .call(d3.drag()
-          .on('start', dragstarted)
-          .on('drag', dragged)
-          .on('end', dragended))
-        .on('mouseenter', showNodeToolTip)
-        .on('mouseout', hideTooltip)
-        .on('contextmenu', showContextMenu)
-        .on('click', n => {
-          if(!d3.event.shiftKey){
-            window.nodes
-              .filter(node => node !== n)
-              .forEach(node => node.selected = false);
-          }
-          n.selected = !n.selected;
-          ipcRenderer.send('update-node-selection', window.nodes);
-          window.network.svg.select('g#nodes').selectAll('path').data(nodes).classed('selected', d => d.selected);
-          $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
-        });
+  function renderNetwork(){
+    setNodeVisibility();
+    let vnodes = app.data.nodes.filter(node => node.visible);
 
-    node.append('path')
-      .attr('d', d3.symbol()
-        .size($('#default-node-radius').val())
-        .type(d3[$('#default-node-symbol').val()])
-      )
-      .attr('fill', $('#default-node-color').val());
+    //OK, this is a little bit of expert-level D3 voodoo that deserves some explanation.
+    let node = d3.select('g#nodes').selectAll('g.node').data(vnodes);
+    node.exit().remove(); //Removing nodes with no representation in the dataset.
+    node = node.enter().append('g').attr('class', 'node') //Adding nodes that weren't represented in the dataset before.
+      .call(d3.drag()
+        .on('start', dragstarted)
+        .on('drag', dragged)
+        .on('end', dragended))
+      .on('mouseenter', showNodeToolTip)
+      .on('mouseout', hideTooltip)
+      .on('contextmenu', showContextMenu)
+      .on('click', clickHandler); //A bunch of mouse handlers.
+    // What's this?
+    node.append('path'); // Adding a path?
+    node.append('text'); // And a text? Wouldn't those already be attached to the nodes?
+    // Well, they would for nodes that already existed. The wouldn't for new nodes.
+    // And until we merge the old and new nodes, `node` refers only to the *added* nodes.
+    // Speaking of merging...
+    node = node.merge(node);
+    // E voila! node now refers to all the g.node elements in the network,
+    // and they all have path and text elements, so we can confidently...
 
-    node.append('text')
+    let type = d3[$('#default-node-symbol').val()];
+    let symbolVariable = $('#nodeSymbolVariable').val();
+    let o = (b => d3[$('#default-node-symbol').val()]);
+    if(symbolVariable !== 'none'){
+      let map = {};
+      let values = Lazy(app.data.nodes).pluck($('#nodeSymbolVariable').val()).uniq().sort().toArray();
+      $('#nodeShapes select').each(function(i, el){ map[values[i]] = $(this).val() });
+      o = (v => map[v]);
+    }
+
+    let defaultSize = $('#default-node-radius').val();
+    let size = defaultSize;
+    let sizeVariable = $('#nodeRadiusVariable').val();
+    if(sizeVariable !== 'none'){
+      let values = Lazy(app.data.nodes).pluck(sizeVariable).without(undefined).uniq().sort().toArray();
+      var min = math.min(values);
+      var max = math.max(values);
+      var oldrng = max - min;
+      var med = oldrng / 2;
+    }
+    node.select('path').each(function(d){
+      if(symbolVariable !== 'none'){
+        type = d3[o(d[$('#nodeSymbolVariable').val()])];
+      }
+      if(sizeVariable !== 'none'){
+        size = med;
+        if(typeof d[sizeVariable] !== 'undefined'){
+          size = d[sizeVariable];
+        }
+        size = (size - min + 1) / oldrng
+        size = size * size * defaultSize;
+      }
+      d3.select(this).attr('d', d3.symbol().type(type).size(size));
+    })
+    .attr('fill', $('#default-node-color').val());
+
+    // And also!
+    node.select('text')
       .attr('dy', 5)
-      .attr('dx', 5);
+      .attr('dx', 8);
 
-    window.network.force.nodes(nodes).on('tick', () => {
-      link
+    setLinkVisibility();
+    let vlinks = app.data.links.filter(link => link.visible);
+
+    // Links are considerably simpler.
+    let link = d3.select('g#links').selectAll('line').data(vlinks);
+    link.exit().remove();
+    link.enter().append('line')
+      .attr('stroke', $('#default-link-color').val())
+      .attr('stroke-width', $('#default-link-width').val())
+      .attr('opacity', $('#default-link-opacity').val())
+      .on('mouseenter', showLinkToolTip)
+      .on('mouseout', hideTooltip);
+
+    app.network.force.nodes(vnodes).on('tick', () => {
+      d3.select('g#links').selectAll('line')
         .attr('x1', d => d.source.x)
         .attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y);
-      node
+      d3.select('g#nodes').selectAll('g.node')
         .attr('transform', d => {
           if(d.fixed){
             return 'translate(' + d.fx + ', ' + d.fy + ')';
@@ -454,11 +492,16 @@ $(function(){
         });
     });
 
-    window.network.force.force('link').links(links);
+    app.network.force.force('link').links(vlinks);
+
+    setLinkPattern();
+    setLinkColor();
+    // scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
+    // scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
   }
 
   function dragstarted(d) {
-    if (!d3.event.active) window.network.force.alphaTarget(0.3).restart();
+    if (!d3.event.active) app.network.force.alphaTarget(0.3).restart();
     d.fx = d.x;
     d.fy = d.y;
   }
@@ -469,12 +512,24 @@ $(function(){
   }
 
   function dragended(d) {
-    if (!d3.event.active) window.network.force.alphaTarget(0);
+    if (!d3.event.active) app.network.force.alphaTarget(0);
     if(!d.fixed){
       d.fx = null;
       d.fy = null;
     }
   }
+
+  function clickHandler(n){
+   if(!d3.event.shiftKey){
+     app.data.nodes
+       .filter(node => node !== n)
+       .forEach(node => node.selected = false);
+   }
+   n.selected = !n.selected;
+   ipcRenderer.send('update-node-selection', app.data.nodes);
+   d3.select('g#nodes').selectAll('g.node').data(app.data.nodes).select('path').classed('selected', d => d.selected);
+   $('#numberOfSelectedNodes').text(app.data.nodes.filter(d => d.selected).length.toLocaleString());
+ }
 
   function showContextMenu(d){
     d3.event.preventDefault();
@@ -492,7 +547,7 @@ $(function(){
         d.fx = null;
         d.fy = null;
         d.fixed = false;
-        window.network.force.alpha(0.3).alphaTarget(0).restart();
+        app.network.force.alpha(0.3).alphaTarget(0).restart();
         hideContextMenu();
       });
     } else {
@@ -503,15 +558,15 @@ $(function(){
         hideContextMenu();
       });
     }
-    if(window.visible_clusters){
+    if(app.data.clusters.filter(c => c.visible).length < app.data.clusters.length){
       $('#isolateCluster').text('De-isolate Cluster').click(e => {
-        window.visible_clusters = null;
+        app.data.clusters.forEach(c => c.visible = true);
         renderNetwork();
         hideContextMenu();
       });
     } else {
       $('#isolateCluster').text('Isolate Cluster').click(e => {
-        window.visible_clusters = [d.cluster];
+        app.data.clusters.forEach(c => c.visible = c.id == d.cluster);
         renderNetwork();
         hideContextMenu();
       });
@@ -523,7 +578,7 @@ $(function(){
   }
 
   function hideContextMenu(){
-    var menu = d3.select('#contextmenu');
+    let menu = d3.select('#contextmenu');
     menu
       .transition().duration(100)
       .style('opacity', 0)
@@ -541,7 +596,7 @@ $(function(){
   }
 
   function showLinkToolTip(d){
-    var v = $('#linkTooltipVariable').val();
+    let v = $('#linkTooltipVariable').val();
     if(v === 'none') return;
     d3.select('#tooltip')
       .html((v === 'source' || v === 'target') ? d[v].id : d[v])
@@ -552,7 +607,7 @@ $(function(){
   }
 
   function hideTooltip(){
-    var tooltip = d3.select('#tooltip');
+    let tooltip = d3.select('#tooltip');
     tooltip
       .transition().duration(100)
       .style('opacity', 0)
@@ -566,7 +621,7 @@ $(function(){
         'Degrees': {},
         'Multiple sequences': {},
         'Edge Stages': {},
-        'Cluster sizes': window.clusters.map(c => c.size),
+        'Cluster sizes': app.data.clusters.map(c => c.size),
         'Settings': {
           'contaminant-ids': ['HXB2_prrt'],
           'contaminants': 'remove',
@@ -575,9 +630,9 @@ $(function(){
         },
         'Network Summary': {
           'Sequences used to make links': 0,
-          'Clusters': window.clusters.length,
-          'Edges': window.links.filter(l => l.visible).length,
-          'Nodes': window.nodes.length
+          'Clusters': app.data.clusters.length,
+          'Edges': app.data.links.filter(l => l.visible).length,
+          'Nodes': app.data.nodes.length
         },
         'Directed Edges': {},
         'Edges': [],
@@ -587,109 +642,63 @@ $(function(){
   }
 
   ipcRenderer.on('update-node-selection', (e, newNodes) => {
-    window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
-    window.network.svg.select('g#nodes').selectAll('path').data(window.nodes).classed('selected', d => d.selected);
-    $('#numberOfSelectedNodes').text(window.nodes.filter(d => d.selected).length.toLocaleString());
+    app.data.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
+    app.network.svg.select('g#nodes').selectAll('g.node').data(app.data.nodes).select('path').classed('selected', d => d.selected);
+    $('#numberOfSelectedNodes').text(app.data.nodes.filter(d => d.selected).length.toLocaleString());
   });
-
-  function redrawNodes(){
-    //Things to track in the function:
-    //* Symbols:
-    var type = d3[$('#default-node-symbol').val()];
-    var symbolVariable = $('#nodeSymbolVariable').val();
-    var o = (b => d3[$('#default-node-symbol').val()]);
-    if(symbolVariable !== 'none'){
-      var map = {};
-      var values = Lazy(window.nodes).pluck($('#nodeSymbolVariable').val()).uniq().sort().toArray();
-      $('#nodeShapes select').each(function(i, el){
-        map[values[i]] = $(this).val();
-      });
-      o = (v => map[v]);
-    }
-    //* Sizes:
-    var defaultSize = $('#default-node-radius').val();
-    var size = defaultSize;
-    var sizeVariable = $('#nodeRadiusVariable').val();
-    if(sizeVariable !== 'none'){
-      var values = Lazy(window.nodes).pluck(sizeVariable).without(undefined).uniq().sort().toArray();
-      var min = math.min(values);
-      var max = math.max(values);
-      var oldrng = max - min;
-      var med = oldrng / 2;
-    }
-    window.network.svg.select('g#nodes').selectAll('path').data(window.nodes).each(function(d){
-      if(symbolVariable !== 'none'){
-        type = d3[o(d[$('#nodeSymbolVariable').val()])];
-      }
-      if(sizeVariable !== 'none'){
-        size = med;
-        if(typeof d[sizeVariable] !== 'undefined'){
-          size = d[sizeVariable];
-        }
-        size = (size - min + 1) / oldrng
-        size = size * size * defaultSize;
-      }
-      d3.select(this).attr('d', d3.symbol()
-        .size(size)
-        .type(type));
-    });
-  }
 
   $('#nodeLabelVariable').change(e => {
     if(e.target.value === 'none'){
-      window.network.svg.select('g#nodes')
-        .selectAll('text').text('');
+      app.network.svg.select('g#nodes').selectAll('g.node')
+        .select('text').text('');
     } else {
-      window.network.svg.select('g#nodes')
-        .selectAll('text').data(window.nodes)
-        .text(d => d[e.target.value]);
+      app.network.svg.select('g#nodes').selectAll('g.node').data(app.data.nodes)
+        .select('text').text(d => d[e.target.value]);
     }
   });
 
-  $('#default-node-symbol').on('input', redrawNodes);
+  $('#default-node-symbol').on('input', renderNetwork);
   $('#nodeSymbolVariable').change(e => {
     $('#default-node-symbol').fadeOut();
     $('#nodeShapes').fadeOut(function(){$(this).remove()});
-    var table = $('<tbody id="nodeShapes"></tbody>').appendTo('#groupKey');
+    let table = $('<tbody id="nodeShapes"></tbody>').appendTo('#groupKey');
     if(e.target.value === 'none'){
-      redrawNodes();
+      renderNetwork();
       $('#default-node-symbol').fadeIn();
       return table.fadeOut(e => table.remove());
     }
-    var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
     table.append('<tr><th>'+e.target.value+'</th><th>Shape</th><tr>');
-    var values = Lazy(window.nodes).pluck(e.target.value).uniq().sort().toArray();
-    var symbolKeys = ['symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye'].concat(Object.keys(extraSymbols));
-    var o = d3.scaleOrdinal(symbolKeys).domain(values);
-    var options = $('#default-node-symbol').html();
+    let values = Lazy(app.data.nodes).pluck(e.target.value).uniq().sort().toArray();
+    let symbolKeys = ['symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye'].concat(Object.keys(extraSymbols));
+    let o = d3.scaleOrdinal(symbolKeys).domain(values);
+    let options = $('#default-node-symbol').html();
     values.forEach(v => {
-      var subset = circles.filter(d => d[e.target.value] === v);
-      var selector = $('<select></select>').append(options).val(o(v)).change(redrawNodes);
-      var cell = $('<td></td>').append(selector);
-      var row = $('<tr><td>' + v + '</td></tr>').append(cell);
+      let selector = $('<select></select>').append(options).val(o(v)).change(renderNetwork);
+      let cell = $('<td></td>').append(selector);
+      let row = $('<tr><td>' + v + '</td></tr>').append(cell);
       table.append(row);
     });
-    redrawNodes();
+    renderNetwork();
     table.fadeIn();
   });
 
-  $('#default-node-radius').on('input', redrawNodes);
-  $('#nodeRadiusVariable').change(redrawNodes);
+  $('#default-node-radius').on('input', renderNetwork);
+  $('#nodeRadiusVariable').change(renderNetwork);
 
   function scaleNodeOpacity(){
-    var scalar = $('#default-node-opacity').val();
-    var variable = $('#nodeOpacityVariable').val();
-    var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
+    let scalar = $('#default-node-opacity').val();
+    let variable = $('#nodeOpacityVariable').val();
+    let circles = app.network.svg.select('g#nodes').selectAll('g.node').data(app.data.nodes).select('path');
     if(variable === 'none'){
       return circles.attr('opacity', scalar);
     }
-    var values = Lazy(window.nodes).pluck(variable).without(undefined).sort().uniq().toArray();
-    var min = math.min(values);
-    var max = math.max(values);
-    var rng = max - min;
-    var med = rng / 2 + min;
+    let values = Lazy(app.data.nodes).pluck(variable).without(undefined).sort().uniq().toArray();
+    let min = math.min(values);
+    let max = math.max(values);
+    let rng = max - min;
+    let med = rng / 2 + min;
     circles.attr('opacity', d => {
-      var v = d[variable];
+      let v = d[variable];
       if(typeof v === 'undefined') v = med;
       return scalar * (v - min) / rng + 0.1;
     });
@@ -698,12 +707,12 @@ $(function(){
   $('#default-node-opacity').on('input', scaleNodeOpacity);
   $('#nodeOpacityVariable').change(scaleNodeOpacity);
 
-  $('#default-node-color').on('input', e => window.network.svg.select('g#nodes').selectAll('path').attr('fill', e.target.value));
+  $('#default-node-color').on('input', e => app.network.svg.select('g#nodes').selectAll('g.node').select('path').attr('fill', e.target.value));
   $('#nodeColorVariable').change(e => {
     $('#default-node-color').fadeOut();
-    var circles = window.network.svg.select('g#nodes').selectAll('path').data(window.nodes);
+    let circles = app.network.svg.select('g#nodes').selectAll('g.node').data(app.data.nodes).select('path');
     $('#nodeColors').fadeOut(function(){$(this).remove()});
-    var table = $('<tbody id="nodeColors"></tbody>').appendTo('#groupKey');
+    let table = $('<tbody id="nodeColors"></tbody>').appendTo('#groupKey');
     if(e.target.value == 'none'){
       circles.attr('fill', $('#default-node-color').val());
       $('#default-node-color').fadeIn();
@@ -711,87 +720,88 @@ $(function(){
       return;
     }
     table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
-    var values = Lazy(window.nodes).pluck(e.target.value).uniq().sortBy().toArray();
-    var o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
+    let values = Lazy(app.data.nodes).pluck(e.target.value).uniq().sortBy().toArray();
+    let o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
     circles.attr('fill', d => o(d[e.target.value]));
     values.forEach(value => {
-      var input = $('<input type="color" value="'+o(value)+'" />')
+      let input = $('<input type="color" value="'+o(value)+'" />')
         .on('input', evt => {
           circles
             .filter(d => d[e.target.value] == value)
             .attr('fill', d => evt.target.value);
         });
-      var cell = $('<td></td>').append(input);
-      var row = $('<tr><td>'+value+'</td></tr>').append(cell);
+      let cell = $('<td></td>').append(input);
+      let row = $('<tr><td>'+value+'</td></tr>').append(cell);
       table.append(row);
     });
     table.fadeIn();
   });
 
   $('#default-node-charge').on('input', e => {
-    window.network.force.force('charge').strength(-e.target.value);
-    window.network.force.alpha(0.3).alphaTarget(0).restart();
+    app.network.force.force('charge').strength(-e.target.value);
+    app.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   ipcRenderer.on('deliver-nodes', (e, nodes) => {
-    window.nodes = nodes;
-    window.network.svg.select('g#nodes').selectAll('path')
-      .data(window.nodes)
+    app.data.nodes = nodes;
+    app.network.svg.select('g#nodes').selectAll('g.node')
+      .data(app.data.nodes)
+      .select('path')
       .classed('selected', d => d.selected);
   });
 
   $('#DirectedLinks').parent().click(e => {
-    window.network.svg.select('g#links').selectAll('line').attr('marker-end', 'url(#end-arrow)');
+    app.network.svg.select('g#links').selectAll('line').attr('marker-end', 'url(#end-arrow)');
   });
 
   $('#UndirectedLinks').parent().click(e => {
-    window.network.svg.select('g#links').selectAll('line').attr('marker-end', null);
+    app.network.svg.select('g#links').selectAll('line').attr('marker-end', null);
   });
 
   function setLinkPattern(){
-    var linkWidth = $('#default-link-width').val();
-    var mappings = {
+    let linkWidth = $('#default-link-width').val();
+    let mappings = {
       'None': 'none',
       'Dotted': linkWidth + ',' + 2 * linkWidth,
       'Dashed': linkWidth * 5,
       'Dot-Dashed': linkWidth * 5 + ',' + linkWidth * 5 + ',' + linkWidth  + ',' + linkWidth * 5
     }
-    window.network.svg.select('g#links').selectAll('line').attr('stroke-dasharray', mappings[$('#default-link-pattern').val()]);
+    app.network.svg.select('g#links').selectAll('line').attr('stroke-dasharray', mappings[$('#default-link-pattern').val()]);
   }
 
   $('#default-link-pattern').on('change', setLinkPattern);
 
   $('#default-link-length').on('input', e => {
-    window.network.force.force('link').distance(e.target.value);
-    window.network.force.alpha(0.3).alphaTarget(0).restart();
+    app.network.force.force('link').distance(e.target.value);
+    app.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   function setLinkColor(e){
     if($('#linkColorVariable').val() == 'none'){
-      window.network.svg.select('g#links').selectAll('line').style('stroke', $('#default-link-color').val());
+      app.network.svg.select('g#links').selectAll('line').style('stroke', $('#default-link-color').val());
       $('#default-link-color').fadeIn();
       $('#linkColors').fadeOut();
       return;
     }
     $('#default-link-color').fadeOut();
-    var links = window.network.svg.selectAll('line');
+    let links = app.network.svg.select('g#links').selectAll('line').data(app.data.links);
     $('#linkColors').remove();
     $('#groupKey').append('<tbody id="linkColors"></tbody>');
-    var table = $('#linkColors');
-    var variable = $('#linkColorVariable').val();
+    let table = $('#linkColors');
+    let variable = $('#linkColorVariable').val();
     table.append('<tr><th>'+variable+'</th><th>Color</th><tr>');
-    var values = Lazy(window.links).pluck(variable).uniq().sortBy().toArray();
-    var o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
+    let values = Lazy(app.data.links).pluck(variable).uniq().sort().toArray();
+    let o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
     links.style('stroke', d => o(d[variable]));
     values.forEach(value => {
-      var input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
+      let input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
         .on('input', evt => {
           links
             .filter(d => d[variable] === value)
             .style('stroke', d => evt.target.value);
         });
-      var cell = $('<td></td>').append(input);
-      var row = $('<tr><td>'+value+'</td></tr>').append(cell);
+      let cell = $('<td></td>').append(input);
+      let row = $('<tr><td>'+value+'</td></tr>').append(cell);
       table.append(row);
     });
     table.fadeIn();
@@ -801,18 +811,18 @@ $(function(){
   $('#linkColorVariable').change(setLinkColor);
 
   function scaleLinkThing(scalar, variable, attribute, floor){
-    var links = window.network.svg.selectAll('line');
+    let links = app.network.svg.select('g#links').selectAll('line').data(app.data.links);
     if(variable === 'none'){
       return links.attr(attribute, scalar);
     }
     if(!floor){floor = 1;}
-    var values = Lazy(window.links).pluck(variable).without(undefined).sort().uniq().toArray();
-    var min = math.min(values);
-    var max = math.max(values);
-    var rng = max - min;
-    var recip = $('#reciprocal-link-width').is(':checked');
+    let values = Lazy(app.data.links).pluck(variable).without(undefined).sort().uniq().toArray();
+    let min = math.min(values);
+    let max = math.max(values);
+    let rng = max - min;
+    let recip = $('#reciprocal-link-width').is(':checked');
     links.attr(attribute, d => {
-      var v = d[variable];
+      let v = d[variable];
       if(typeof v === 'undefined') v = rng / 2 + min;
       if(recip && attribute == 'stroke-width'){
         return scalar * (1 - (v - min) / rng) + floor;
@@ -838,9 +848,9 @@ $(function(){
   });
 
   ipcRenderer.on('update-links-mst', (event, newLinks) => {
-    window.links.forEach(ol => {
+    app.data.links.forEach(ol => {
       ol.mst = false;
-      var newlink = newLinks.find(nl => nl.source == ol.source.id && nl.target == ol.target.id);
+      let newlink = newLinks.find(nl => nl.source == ol.source.id && nl.target == ol.target.id);
       if(typeof newlink !== "undefined"){
         ol.mst = newlink.mst;
       }
@@ -856,33 +866,28 @@ $(function(){
 
   $('#showMSTLinks, #showAllLinks').parent().click(e => {
     renderNetwork();
-    window.network.force.alpha(0.3).alphaTarget(0).restart();
+    app.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#default-link-threshold').on('input', e => {
     renderNetwork();
-    setLinkPattern();
-    setLinkColor();
-    scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
-    scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
-    updateStatistics();
-    window.network.force.alpha(0.3).alphaTarget(0).restart();
+    app.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#hideNetworkStatistics').parent().click(() => $('#networkStatistics').fadeOut());
   $('#showNetworkStatistics').parent().click(() => {
     updateStatistics();
-    $('#networkStatistics').fadeIn()
+    $('#networkStatistics').fadeIn();
   });
 
   $('#network-friction').on('input', e => {
-    window.network.force.velocityDecay(e.target.value);
-    window.network.force.alpha(0.3).alphaTarget(0).restart();
+    app.network.force.velocityDecay(e.target.value);
+    app.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#network-gravity').on('input', e => {
-    window.network.force.force('gravity').strength(e.target.value);
-    window.network.force.alpha(0.3).alphaTarget(0).restart();
+    app.network.force.force('gravity').strength(e.target.value);
+    app.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#main_panel').css('background-color', $('#network-color').val());
