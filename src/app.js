@@ -851,7 +851,7 @@ $(function(){
     $('.showForNotMST').fadeOut();
   });
 
-  $('#showMSTLinks, #showAllLinks').parent().click(e => {
+  $('#showMSTLinks, #showAllLinks').change(e => {
     renderNetwork();
     app.network.force.alpha(0.3).alphaTarget(0).restart();
   });
