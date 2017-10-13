@@ -71,7 +71,7 @@
 
   function matchCSV(){
     electron.ipcRenderer.send('message', 'Parsing Node CSV...');
-    var k = 0, l = 0, output = [];
+    var k = 0, l = 0;
 
     var results = Papa.parse(jetpack.read(instructions.supplement), {
       header: true,
@@ -87,7 +87,7 @@
         Object.assign(match, node);
         k++;
       } else {
-        Object.assign({}, defaultNode, node, {index: index++});
+        data.nodes(Object.assign({}, defaultNode, node, {index: index++}));
         l++;
       }
     });
