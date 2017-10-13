@@ -16,14 +16,16 @@ require('bootstrap');
 
 function dataSkeleton(){
   return {
-    states: [],
-    messages: [],
     data: {
       nodes: [],
       links: [],
       clusters: []
-    }
-  }
+    },
+    state: {
+      visible_cluster: null
+    },
+    messages: []
+  };
 }
 
 $(function(){
@@ -293,7 +295,7 @@ $(function(){
     $('#numberOfPossibleLinks').text((app.data.nodes.length * (app.data.nodes.length - 1) / 2).toLocaleString());
     let singletons = app.data.nodes.length - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
     $('#numberOfSingletonNodes').text(singletons.toLocaleString());
-    $('#numberOfDisjointComponents').text((app.data.clusters.length - singletons).toLocaleString());
+    $('#numberOfDisjointComponents').text(app.data.clusters.length - singletons);
   }
 
   function tagClusters(){
@@ -302,7 +304,7 @@ $(function(){
     app.data.nodes.forEach(node => {
       if(typeof node.cluster === 'undefined'){
         app.data.clusters.push({
-          index: app.data.clusters.length - 1,
+          index: app.data.clusters.length,
           id: app.data.clusters.length,
           size: 0,
           visible: true
@@ -327,18 +329,20 @@ $(function(){
   }
 
   function setNodeVisibility(){
-    let visible_clusters = app.data.clusters.filter(c => c.visible).map(c => c.id);
     app.data.nodes.forEach(n => n.visible = true);
-    if(visible_clusters.length < app.data.clusters.length){
-      app.data.nodes.forEach(n => n.visible = n.visible && visible_clusters.includes(n.cluster));
+    if($('#HideSingletons').is(':checked')){
+      let filter_clusters = app.data.clusters.filter(c => c.size > 1).map(c => c.index);
+      app.data.nodes.forEach(n => n.visible = filter_clusters.includes(n.cluster));
+    }
+    if(app.state.visible_cluster){
+      app.data.nodes.forEach(n => n.visible = n.visible && app.state.visible_cluster == n.cluster);
     }
     ipcRenderer.send('update-node-visibility', app.data.nodes);
   }
 
   function setLinkVisibility(){
     let metric  = $('#linkSortVariable').val(),
-        threshold = $('#default-link-threshold').val(),
-        visible_clusters = app.data.clusters.filter(c => c.visible).map(c => c.id);
+        threshold = $('#default-link-threshold').val();
     app.data.links.forEach(link => link.visible = true);
     if(metric !== 'none'){
       app.data.links.forEach(link => link.visible = link.visible && (link[metric] <= threshold));
@@ -346,8 +350,8 @@ $(function(){
     if($('#showMSTLinks').is(':checked')){
       app.data.links.forEach(link => link.visible = link.visible && link.mst);
     }
-    if(visible_clusters.length < app.data.clusters.length){
-      app.data.links.forEach(link => link.visible = link.visible && visible_clusters.includes(link.cluster));
+    if(app.state.visible_cluster){
+      app.data.links.forEach(link => link.visible = link.visible && app.state.visible_cluster == link.cluster);
     }
     ipcRenderer.send('update-link-visibility', app.data.links);
   }
@@ -398,6 +402,24 @@ $(function(){
   }
 
   function renderNetwork(){
+    setLinkVisibility();
+    let vlinks = app.data.links.filter(link => link.visible);
+
+    // Links are considerably simpler.
+    let link = d3.select('g#links').selectAll('line').data(vlinks);
+    link.exit().remove();
+    link.enter().append('line')
+      .attr('stroke', $('#default-link-color').val())
+      .attr('stroke-width', $('#default-link-width').val())
+      .attr('opacity', $('#default-link-opacity').val())
+      .on('mouseenter', showLinkToolTip)
+      .on('mouseout', hideTooltip);
+
+    setLinkPattern();
+    setLinkColor();
+    scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
+    scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
+
     setNodeVisibility();
     let vnodes = app.data.nodes.filter(node => node.visible);
 
@@ -430,24 +452,6 @@ $(function(){
     node.select('text')
       .attr('dy', 5)
       .attr('dx', 8);
-
-    setLinkVisibility();
-    let vlinks = app.data.links.filter(link => link.visible);
-
-    // Links are considerably simpler.
-    let link = d3.select('g#links').selectAll('line').data(vlinks);
-    link.exit().remove();
-    link.enter().append('line')
-      .attr('stroke', $('#default-link-color').val())
-      .attr('stroke-width', $('#default-link-width').val())
-      .attr('opacity', $('#default-link-opacity').val())
-      .on('mouseenter', showLinkToolTip)
-      .on('mouseout', hideTooltip);
-
-    setLinkPattern();
-    setLinkColor();
-    scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
-    scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
 
     app.network.force.nodes(vnodes).on('tick', () => {
       d3.select('g#links').selectAll('line')
@@ -528,15 +532,15 @@ $(function(){
         hideContextMenu();
       });
     }
-    if(app.data.clusters.filter(c => c.visible).length < app.data.clusters.length){
+    if(app.state.visible_cluster){
       $('#isolateCluster').text('De-isolate Cluster').click(e => {
-        app.data.clusters.forEach(c => c.visible = true);
+        app.state.visible_cluster = false;
         renderNetwork();
         hideContextMenu();
       });
     } else {
       $('#isolateCluster').text('Isolate Cluster').click(e => {
-        app.data.clusters.forEach(c => c.visible = (c.id == d.cluster));
+        app.state.visible_cluster = d.cluster;
         renderNetwork();
         hideContextMenu();
       });
@@ -650,7 +654,7 @@ $(function(){
     $('#nodeShapes').fadeOut(function(){$(this).remove()});
     let table = $('<tbody id="nodeShapes"></tbody>').appendTo('#groupKey');
     if(e.target.value === 'none'){
-      renderNetwork();
+      redrawNodes();
       $('#default-node-symbol').fadeIn();
       return table.fadeOut(e => table.remove());
     }
@@ -660,7 +664,7 @@ $(function(){
     let o = d3.scaleOrdinal(symbolKeys).domain(values);
     let options = $('#default-node-symbol').html();
     values.forEach(v => {
-      let selector = $('<select></select>').append(options).val(o(v)).change(renderNetwork);
+      let selector = $('<select></select>').append(options).val(o(v)).change(redrawNodes);
       let cell = $('<td></td>').append(selector);
       let row = $('<tr><td>' + v + '</td></tr>').append(cell);
       table.append(row);
@@ -843,7 +847,7 @@ $(function(){
       }
     });
     $('.showForMST').css('display', 'inline-block');
-    alertify.success('MST successfully computed.', 10);
+    alertify.success('MST successfully computed.', 4);
   });
 
   $('#computeMST').click(e => {
@@ -851,7 +855,7 @@ $(function(){
     $('.showForNotMST').fadeOut();
   });
 
-  $('#showMSTLinks, #showAllLinks').change(e => {
+  $('#showMSTLinks, #showAllLinks, #ShowSingletons, #HideSingletons').change(e => {
     renderNetwork();
     app.network.force.alpha(0.3).alphaTarget(0).restart();
   });
