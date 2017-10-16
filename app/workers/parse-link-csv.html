@@ -49,7 +49,6 @@
     });
     electron.ipcRenderer.send('message', ' - Parsed ' + data.links.length + ' Links.');
 
-    electron.ipcRenderer.send('message', 'Inferring Nodes...');
     var llinks = Lazy(data.links);
     data.nodes = Lazy(
         llinks.pluck(instructions.sourceColumn).union(
@@ -62,9 +61,7 @@
         seq: ''
       })).toArray();
     electron.ipcRenderer.send('message', ' - Inferred ' + data.nodes.length + ' distinct nodes.');
-    if(instructions.supplement){
-      matchCSV();
-    }
+    if(instructions.supplement) matchCSV();
     electron.ipcRenderer.send('update-data', data);
     electron.remote.getCurrentWindow().close();
   });
@@ -73,7 +70,7 @@
     electron.ipcRenderer.send('message', 'Parsing Node CSV...');
     var k = 0, l = 0;
 
-    var results = Papa.parse(jetpack.read(instructions.supplement), {
+    let results = Papa.parse(jetpack.read(instructions.supplement), {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true
@@ -82,17 +79,17 @@
 
     electron.ipcRenderer.send('message', 'Matching to Inferred nodes...');
     results.data.forEach(node => {
-      var match = data.nodes.find(n => n.id == node[instructions.identifierColumn]);
+      let match = data.nodes.find(n => n.id == node[instructions.identifierColumn]);
       if(match){
         Object.assign(match, node);
         k++;
       } else {
-        data.nodes(Object.assign({}, defaultNode, node, {index: index++}));
+        data.nodes.push(Object.assign({}, defaultNode, node, {index: index++}));
         l++;
       }
     });
     electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.')
-    electron.ipcRenderer.send('message', ' - Identified ' + l + ' singleton nodes.');
+    electron.ipcRenderer.send('message', ' - Identified ' + l + ' additional singleton nodes.');
   }
 
   </script>
