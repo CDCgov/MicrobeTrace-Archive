@@ -25,7 +25,9 @@
     index: -1,
     padding: 0,
     selected: false,
-    seq: ''
+    seq: '',
+    cluster: 1,
+    visible: true
   };
 
   var instructions = {
@@ -112,12 +114,12 @@
     }
     for(var i = 0; i < data.nodes.length; i++){
       for(var j = 0; j < i; j++){
-        var dist = tn93(
+        let dist = tn93(
           data.nodes[j]['seq'],
           data.nodes[i]['seq'],
           'AVERAGE'
         );
-        var snps = hamming(data.nodes[j]['seq'], data.nodes[i]['seq']);
+        let snps = hamming(data.nodes[j]['seq'], data.nodes[i]['seq']);
         data.links.push({
           'index': k++,
           'source': data.nodes[j].id,
@@ -125,7 +127,8 @@
           'visible': (dist < 0.015),
           'selected': false,
           'distance': dist,
-          'snps': snps
+          'snps': snps,
+          'cluster': 1
         });
         data.distance_matrix[i][j] = data.distance_matrix[j][i] = dist;
         if(k / z * 100 > lastTick + 1){

@@ -17,7 +17,9 @@
     index: -1,
     padding: 0,
     selected: false,
-    seq: ''
+    seq: '',
+    cluster: 1,
+    visible: true
   };
 
   var instructions = {
@@ -45,6 +47,8 @@
       link.orig = true;
       link.source = link[instructions.sourceColumn];
       link.target = link[instructions.targetColumn];
+      link.cluster = 1;
+      link.visible = true;
       return link;
     });
     electron.ipcRenderer.send('message', ' - Parsed ' + data.links.length + ' Links.');
@@ -58,7 +62,9 @@
         index: i,
         padding: 0,
         selected: false,
-        seq: ''
+        seq: '',
+        cluster: 1,
+        visible: true
       })).toArray();
     electron.ipcRenderer.send('message', ' - Inferred ' + data.nodes.length + ' distinct nodes.');
     if(instructions.supplement) matchCSV();
