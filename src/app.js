@@ -408,11 +408,21 @@ $(function(){
         yScale = d3.scaleLinear().domain([0, height]).range([0, height]);
 
     app.network.zoom = d3.zoom().on('zoom', () => app.network.svg.attr('transform', d3.event.transform));
+
     app.network.svg = d3.select('svg')
       .on('click', hideContextMenu)
       .html('') //Let's make sure the canvas is blank.
       .call(app.network.zoom)
       .append('g');
+
+    app.network.fit = function(){
+      d3.select('svg')
+        .transition()
+        .duration(750)
+        .call(app.network.zoom.transform, d3.zoomIdentity
+          .translate(0, 0)
+          .scale(.5));
+    };
 
     app.network.force = d3.forceSimulation()
       .force('link', d3.forceLink()
@@ -426,7 +436,8 @@ $(function(){
       .force('gravity', forceAttract()
         .target([width/2, height/2])
         .strength($('#network-gravity').val())
-      );
+      )
+      .force('center', d3.forceCenter(width / 2, height / 2));
 
     app.network.svg.append('svg:defs').append('marker')
       .attr('id', 'end-arrow')
