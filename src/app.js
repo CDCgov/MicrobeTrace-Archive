@@ -77,11 +77,24 @@ $(function(){
   }
 
   $('body').prepend(ipcRenderer.sendSync('get-component', 'nav.html'));
+  //Since the navbar is a reused component, we can only change it per view by injecting elements, like so:
   $('#FileTab').click(() => reset());
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
-  $('#FileTab').append('<li role="separator" class="divider"></li>');
+  $('<li id="ExportHIVTraceTab" class="hidden"><a href="#">Export HIVTRACE File</a></li>').click(() => {
+    remote.dialog.showSaveDialog({
+      filters: [
+        {name: 'JSON', extensions: ['json']}
+      ]
+    }, (fileName) => {
+      if (fileName === undefined){
+        return alertify.error('File not exported!');
+      }
+      jetpack.write(fileName, makeHIVTraceOutput());
+      alertify.success('File Saved!');
+    });
+  }).insertAfter('#FileTab');
 
   $('<li id="ExportTab" class="hidden"><a href="#">Export Data</a></li>').click(e => {
     remote.dialog.showSaveDialog({
@@ -103,19 +116,7 @@ $(function(){
     });
   }).insertAfter('#FileTab');
 
-  $('<li id="ExportHIVTraceTab" class="hidden"><a href="#">Export HIVTRACE File</a></li>').click(() => {
-    remote.dialog.showSaveDialog({
-      filters: [
-        {name: 'JSON', extensions: ['json']}
-      ]
-    }, (fileName) => {
-      if (fileName === undefined){
-        return alertify.error('File not exported!');
-      }
-      jetpack.write(fileName, makeHIVTraceOutput());
-      alertify.success('File Saved!');
-    });
-  }).insertAfter('#FileTab');
+  $('<li role="separator" class="divider"></li>').insertAfter('#FileTab');
 
   $('<li id="RevealAllTab" class="hidden"><a href="#">Reveal All</a></li>').click(e => {
     app.state.visible_clusters = app.data.clusters.map(c => c.id);
