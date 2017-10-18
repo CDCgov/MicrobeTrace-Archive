@@ -117,6 +117,18 @@ $(function(){
     });
   }).insertAfter('#FileTab');
 
+  $('<li id="RevealAllTab" class="hidden"><a href="#">Reveal All</a></li>').click(e => {
+    app.state.visible_clusters = app.data.clusters.map(c => c.id);
+    $('#HideSingletons').prop('checked', false).parent().removeClass('active');
+    $('#ShowSingletons').prop('checked', true).parent().addClass('active');
+    setLinkVisibility();
+    setNodeVisibility();
+    renderNetwork();
+    app.network.force.alpha(0.3).alphaTarget(0).restart();
+  }).insertBefore('#SettingsTab');
+
+  $('<li role="separator" class="divider"></li>').insertBefore('#SettingsTab');
+
   reset();
 
   // Before anything else gets done, ask the user to accept the legal agreement
@@ -365,8 +377,8 @@ $(function(){
       app.data.nodes.forEach(n => n.visible = n.visible && app.state.visible_clusters.includes(n.cluster));
     }
     if($('#HideSingletons').is(':checked')){
-      let clusters = app.data.clusters.filter(c => c.size > 1).map(c => c.index);
-      app.data.nodes.forEach(n => n.visible = n.visible && clusters.includes(n.cluster));
+      let clusters = app.data.clusters.map(c => c.size);
+      app.data.nodes.forEach(n => n.visible = n.visible && clusters[n.cluster-1] > 1);
     }
     ipcRenderer.send('update-node-visibility', app.data.nodes);
   }
