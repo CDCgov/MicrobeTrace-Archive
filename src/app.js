@@ -45,18 +45,19 @@ $(function(){
   function reset(soft){
     window.app = dataSkeleton();
     function resetDom(){
+      $('.showForSequence, .showForMST, .showForLinkCSV, .showForNodeFile').slideUp();
+      $('#alignerColumn').removeClass('col-sm-offset-6');
+      $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
+      $('#align').prop('checked', false).parent().removeClass('active');
+      $('#FastaOrLinkFileName').text('').hide();
+      $('#NodeCSVFileColumn, #main-submit').hide();
+      $('#NodeCSVFile').val('');
+      $('#file_panel').fadeIn();
       app.messages = [];
       $('#loadingInformation').empty();
       $('#network').empty();
-      $('#groupKey').find('tbody').empty();
-      $('.showForSequence, .showForMST, .showForLinkCSV, .showForNodeFile').slideUp();
       $('.showForNotMST').css('display', 'inline-block');
-      $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
-      $('#align').prop('checked', false).parent().removeClass('active');
-      $('#file_panel').fadeIn();
-      $('#FastaOrLinkFileName').text('').hide();
-      $('#main-submit').hide();
-      $('#NodeCSVFile').val('').parent().parent().parent().hide();
+      $('#groupKey').find('tbody').empty();
     }
     if(soft){
       resetDom();
@@ -142,7 +143,7 @@ $(function(){
 
     $('#FastaOrLinkFileName').text(e.target.files[0].name).slideDown();
 
-    if(e.target.files[0].name.slice(-3) == 'csv'){
+    if(e.target.files[0].name.slice(-3).toLowerCase() == 'csv'){
       Papa.parse(e.target.files[0], {
         header: true,
         preview: 1,
@@ -158,15 +159,18 @@ $(function(){
           $('#LinkTargetColumn').val(keys.includes('target') ? 'target' : keys[1]);
         }
       });
-      $('.showForLinkCSV').slideDown().filter('tr').css('display', 'table-row');
       $('.showForSequence').slideUp();
+      $('.showForLinkCSV').slideDown();
     } else {
-      $('.showForSequence').slideDown().filter('tr').css('display', 'table-row');
       $('.showForLinkCSV').slideUp();
+      $('.showForSequence').slideDown();
     }
 
+    $('#NodeCSVFile').val('');
+    $('#NodeCSVFileName').text('');
+    $('.showForNodeFile').slideUp();
+    $('#NodeCSVFileColumn').slideDown();
     $('#main-submit').slideDown();
-    $('#NodeCSVFile').parent().parent().parent().slideDown();
   });
 
   $('#NodeCSVFile').on('change', e => {
@@ -182,21 +186,46 @@ $(function(){
               .map(key => '<option value="' + key + '">' + key + '</option>')
               .join('\n')
           );
-          $('#NodeSequenceColumn').prepend('<option value="none" selected>None</option>\n');
+          if($('#FastaOrLinkFile')[0].files[0].name.slice(-3).toLowerCase() == 'csv'){
+            $('#NodeSequenceColumn').prepend('<option selected>None</option>\n');
+            $('#NodeSequenceColumnRow').slideDown();
+          }
           $('#NodeIDColumn').val(keys[0]);
           $('.showForNodeFile').slideDown();
         }
       });
     } else {
+      $('#NodeCSVFileName').text('');
+      $('#sequenceAlignmentRow').slideUp();
+      $('#NodeSequenceColumnRow').slideUp();
       $('.showForNodeFile').slideUp();
     }
   });
 
   $('#NodeSequenceColumn').on('change', e => {
     if(e.target.value === 'None'){
-      $('#showForSequence').slideDown().filter('tr').css('display', 'table-row');
+      $('.showForSequence').slideUp(e => {
+        $('#alignerColumn').removeClass('col-sm-offset-6');
+      });
     } else {
-      $('#showForSequence').slideUp();
+      $('#alignerColumn').addClass('col-sm-offset-6');
+      $('.showForSequence').slideDown();
+    }
+  });
+
+  $('[name="shouldAlign"]').change(e => {
+    if(e.target.id == 'align'){
+      $('#alignerRow').slideDown();
+    } else {
+      $('#alignerRow, #referenceRow').slideUp();
+    }
+  });
+
+  $('[name="referenceSequence"]').change(e => {
+    if(e.target.id == 'refSeqFirst'){
+      $('#referenceRow').slideUp();
+    } else {
+      $('#referenceRow').slideDown();
     }
   });
 
@@ -205,11 +234,11 @@ $(function(){
       file: $('#FastaOrLinkFile')[0].files[0].path,
       supplement: $('#NodeCSVFile')[0].files.length > 0 ? $('#NodeCSVFile')[0].files[0].path : '',
       align: $('#align').is(':checked'),
+      reference: $('[name="referenceSequence"]:checked')[0].id == 'refSeqFirst' ? 'first' : $('#reference').text(),
       identifierColumn: $('#NodeIDColumn').val(),
       sequenceColumn: $('#NodeSequenceColumn').val(),
       sourceColumn: $('#LinkSourceColumn').val(),
-      targetColumn: $('#LinkTargetColumn').val(),
-      penalties: [-5, -1.7]
+      targetColumn: $('#LinkTargetColumn').val()
     });
 
     $('#file_panel').fadeOut(() => {

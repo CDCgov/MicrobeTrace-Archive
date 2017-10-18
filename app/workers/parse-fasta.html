@@ -12,8 +12,6 @@
   const math     = require('bettermath');
   const hamming  = require('plain-hamming');
 
-  var reference = electron.ipcRenderer.sendSync('get-component', 'HXB2.txt');
-
   var data = {
     nodes: [],
     links: [],
@@ -31,32 +29,36 @@
   };
 
   var instructions = {
-    align: true,
-    penalties: [-5, -1.7]
+    identifierColumn: 'id',
+    sequenceColumn: 'seq',
+    align: false,
+    reference: 'first'
   };
 
   var index = 0;
 
   electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
     Object.assign(instructions, i);
-    var message = 'Parsing FASTA file';
-    if(instructions.align){
-      message += ' and aligning sequences';
-    }
-    electron.ipcRenderer.send('message', message + '...');
-    var filesize = fs.statSync(instructions.file).size;
-    var covered = 0;
-    var parser = fasta()
+    electron.ipcRenderer.send('message', 'Parsing FASTA file' + (instructions.align ? ' and aligning sequences' : '') + '...');
+    let reference = instructions.reference;
+    let filesize = fs.statSync(instructions.file).size;
+    let covered = 0;
+    let parser = fasta()
       .on('data', d => {
-        var node = d.toString();
+        let node = d.toString();
         covered += node.length;
         node = JSON.parse(node);
         node.padding = 0;
         if(instructions.align){
-          var rst = bioseq.align(reference, node.seq, true, [1, -1], instructions.penalties);
-          var fmt = bioseq.cigar2gaps(reference, node.seq, rst.position, rst.CIGAR);
-          node.padding = rst.position;
-          node.seq = fmt[1];
+          if(index === 0 && reference === 'first'){
+            reference = node.seq;
+            node.padding = 0;
+          } else {
+            let rst = bioseq.align(reference, node.seq, true, [1, -1], [-5, -1.7]);
+            let fmt = bioseq.cigar2gaps(reference, node.seq, rst.position, rst.CIGAR);
+            node.padding = rst.position;
+            node.seq = fmt[1];
+          }
         }
         node.selected = false;
         node.index = index++;
@@ -64,7 +66,7 @@
         electron.ipcRenderer.send('tick', covered / filesize * 100);
       })
       .on('end', () => {
-        var minPadding = math.min(data.nodes, 'padding');
+        let minPadding = math.min(data.nodes, 'padding');
         data.nodes.forEach(d => d.seq = "-".repeat(d.padding - minPadding) + d.seq);
         electron.ipcRenderer.send('tick', 100);
         electron.ipcRenderer.send('message', ' - Parsed ' + data.nodes.length + ' nodes.');
@@ -79,9 +81,9 @@
 
   function matchCSV(){
     electron.ipcRenderer.send('message', 'Parsing Node CSV...');
-    var k = 0, l = 0;
+    let k = 0, l = 0;
 
-    var results = Papa.parse(jetpack.read(instructions.supplement), {
+    let results = Papa.parse(jetpack.read(instructions.supplement), {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true
@@ -90,7 +92,7 @@
 
     electron.ipcRenderer.send('message', 'Matching to Inferred nodes...');
     results.data.forEach(node => {
-      var match = data.nodes.find(n => n.id == node[instructions.identifierColumn]);
+      let match = data.nodes.find(n => n.id == node[instructions.identifierColumn]);
       if(match){
         Object.assign(match, node);
         k++;
@@ -105,14 +107,14 @@
 
   function computeLinks(){
     electron.ipcRenderer.send('message', 'Computing Links...');
-    var z = (data.nodes.length * (data.nodes.length - 1) / 2),
+    let z = (data.nodes.length * (data.nodes.length - 1) / 2),
         k = 0,
         lastTick = 0;
     data.distance_matrix = Array(data.nodes.length);
-    for(var i = 0; i < data.nodes.length; i++){
+    for(let i = 0; i < data.nodes.length; i++){
       data.distance_matrix[i] = math.repeat(0, data.nodes.length);
     }
-    for(var i = 0; i < data.nodes.length; i++){
+    for(let i = 0; i < data.nodes.length; i++){
       for(var j = 0; j < i; j++){
         let dist = tn93(
           data.nodes[j]['seq'],

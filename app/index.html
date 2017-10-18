@@ -35,8 +35,9 @@
       <div class="panel-heading">
         <h3 class="panel-title">Load Data</h3>
       </div>
-      <div class="panel-body row">
-          <div class="col-sm-6" style="border-right: 1px solid lightgray">
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-sm-6" style="border-right: 1px solid lightgray; border-left: 1px solid lightgray">
             <div class="row text-center" style="margin-bottom: 15px">
               <a href="#" data-toggle="tooltip" title="Provide a CSV file containing information about links, or a FASTA file with a sequence for each node.">
                 <label class="btn btn-default btn-file">
@@ -67,20 +68,9 @@
                 <select id="LinkTargetColumn" class="linkVariables"></select>
               </div>
             </div>
-            <div class="row showForSequence">
-              <div class="col-sm-12 text-center">
-                <a href="#" data-toggle="tooltip" title="If this file contains sequences that are already aligned, uncheck this box.">
-                  <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-default">
-                      <input type="checkbox" autocomplete="off" id="align"> Align?
-                    </label>
-                  </div>
-                </a>
-              </div>
-            </div>
           </div>
-          <div class="col-sm-6">
-            <div class="row" style="margin-bottom: 15px; text-align: center; display: none;">
+          <div class="col-sm-6" id="NodeCSVFileColumn" style="border-right: 1px solid lightgray; border-left: 1px solid lightgray">
+            <div class="row text-center" style="margin-bottom: 15px;">
               <a href="#" data-toggle="tooltip" title="Optionally, provide a CSV file containing additional information about nodes.">
                 <label class="btn btn-default btn-file">
                   <input id="NodeCSVFile" type="file" class="file-loading" title="Please select a Network CSV or FASTA File First" />
@@ -89,7 +79,7 @@
                 </label>
               </a>
             </div>
-            <div class="row" style="margin-bottom: 5px">
+            <div class="row showForNodeFile" style="margin-bottom: 5px">
               <div class="col-sm-12 text-center">
                 <pre id="NodeCSVFileName" style="display:none"></pre>
               </div>
@@ -102,15 +92,63 @@
                 <select id="NodeIDColumn" class="nodeVariables"></select>
               </div>
             </div>
-            <!--div class="row showForNodeFile">
+            <div class="row" id="NodeSequenceColumnRow">
               <div class="col-sm-4">
                 <a href="#" data-toggle="tooltip" title="Does Your Node file contain a sequence field?">Sequence Column</a>
               </div>
               <div class="col-sm-8">
                 <select id="NodeSequenceColumn" class="nodeVariables"></select>
               </div>
-            </div-->
+            </div>
           </div>
+        </div>
+        <div class="row showForSequence" id="sequenceAlignmentRow">
+          <div class="col-sm-6 text-center" id="alignerColumn" style="border-right: 1px solid lightgray; border-left: 1px solid lightgray">
+            <div class="row" style="margin-bottom: 5px">
+              <div class="col-sm-4">
+                <a href="#" data-toggle="tooltip" title="Should MicrobeTrace align your sequences?">Align</a>
+              </div>
+              <div class="col-sm-8">
+                <div class="btn-group btn-group-xs" data-toggle="buttons">
+                  <label class="btn btn-default active">
+                    <a href="#" data-toggle="tooltip" title="Recommended. Results will be better if input sequences are already aligned.">
+                      <input type="radio" name="shouldAlign" id="doNotAlign" autocomplete="off" checked> No
+                    </a>
+                  </label>
+                  <label class="btn btn-default">
+                    <a href="#" data-toggle="tooltip" title="Not Recommended. MicrobeTrace will do the best it can, but can't guarantee the quality of the alignment.">
+                      <input type="radio" name="shouldAlign" id="align" autocomplete="off"> Yes
+                    </a>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="row" id="alignerRow" style="margin-bottom: 5px">
+              <div class="col-sm-4">
+                <a href="#" data-toggle="tooltip" title="What sequence should MicrobeTrace align your sequences against?">Reference</a>
+              </div>
+              <div class="col-sm-8">
+                <div class="btn-group btn-group-xs" data-toggle="buttons">
+                  <label class="btn btn-default active">
+                    <a href="#" data-toggle="tooltip" title="Should MicrobeTrace align against the first sequence in your file?">
+                      <input type="radio" name="referenceSequence" id="refSeqFirst" autocomplete="off" checked> First
+                    </a>
+                  </label>
+                  <label class="btn btn-default">
+                    <a href="#" data-toggle="tooltip" title="Would you like to paste in an alignment reference sequence?">
+                      <input type="radio" name="referenceSequence" id="refSeqPaste" autocomplete="off"> Paste
+                    </a>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="row" id="referenceRow" style="margin-bottom: 5px; display: none">
+              <div class="col-sm-12 text-left">
+                <pre id="reference" contenteditable="true">CCTCAGGTCACTCTTTGGCAACGACCCCTCGTCACAATAAAGATAGGGGGGCAACTAAAGGAAGCTCTATTAGATACAGGAGCAGATGATACAGTATTAGAAGAAATGAGTTTGCCAGGAAGATGGAAACCAAAAATGATAGGGGGAATTGGAGGTTTTATCAAAGTAAGACAGTATGATCAGATACTCATAGAAATCTGTGGACATAAAGCTATAGGTACAGTATTAGTAGGACCTACACCTGTCAACATAATTGGAAGAAATCTGTTGACTCAGATTGGTTGCACTTTAAATTTTCCCATTAGCCCTATTGAGACTGTACCAGTAAAATTAAAGCCAGGAATGGATGGCCCAAAAGTTAAACAATGGCCATTGACAGAAGAAAAAATAAAAGCATTAGTAGAAATTTGTACAGAGATGGAAAAGGAAGGGAAAATTTCAAAAATTGGGCCTGAAAATCCATACAATACTCCAGTATTTGCCATAAAGAAAAAAGACAGTACTAAATGGAGAAAATTAGTAGATTTCAGAGAACTTAATAAGAGAACTCAAGACTTCTGGGAAGTTCAATTAGGAATACCACATCCCGCAGGGTTAAAAAAGAAAAAATCAGTAACAGTACTGGATGTGGGTGATGCATATTTTTCAGTTCCCTTAGATGAAGACTTCAGGAAGTATACTGCATTTACCATACCTAGTATAAACAATGAGACACCAGGGATTAGATATCAGTACAATGTGCTTCCACAGGGATGGAAAGGATCACCAGCAATATTCCAAAGTAGCATGACAAAAATCTTAGAGCCTTTTAGAAAACAAAATCCAGACATAGTTATCTATCAATACATGGATGATTTGTATGTAGGATCTGACTTAGAAATAGGGCAGCATAGAACAAAAATAGAGGAGCTGAGACAACATCTGTTGAGGTGGGGACTTACCACACCAGACAAAAAACATCAGAAAGAACCTCCATTCCTTTGGATGGGTTATGAACTCCATCCTGATAAATGGACAGTACAGCCTATAGTGCTGCCAGAAAAAGACAGCTGGACTGTCAATGACATACAGAAGTTAGTGGGGAAATTGAATTGGGCAAGTCAGATTTACCCAGGGATTAAAGTAAGGCAATTATGTAAACTCCTTAGAGGAACCAAAGCACTAACAGAAGTAATACCACTAACAGAAGAAGCAGAGCTAGAACTGGCAGAAAACAGAGAGATTCTAAAAGAACCAGTACATGGAGTGTATTATGACCCATCAAAAGACTTAATAGCAGAAATACAGAAGCAGGGGCAAGGCCAATGGACATATCAAATTTATCAAGAGCCATTTAAAAATCTGAAAACAGGAAAATATGCAAGAATGAGGGGTGCCCACACTAATGATGTAAAACAATTAACAGAGGCAGTGCAAAAAATAACCACAGAAAGCATAGTAATATGGGGAAAGACTCCTAAATTTAAACTGCCCATACAAAAGGAAACATGGGAAACATGGTGGACAGAGTATTGGCAAGCCACCTGGATTCCTGAGTGGGAGTTTGTTAATACCCCTCCCTTAGTGAAATTATGGTACCAGTTAGAGAAAGAACCCATAGTAGGAGCAGAAACCTTC</pre>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="panel-footer clearfix">
         <button type="submit" id="main-submit" class="btn btn-primary pull-right" title="Please select a Network CSV or FASTA File">Submit</button>
