@@ -561,6 +561,7 @@ $(function(){
       setLinkVisibility();
       setNodeVisibility();
       renderNetwork();
+      app.network.force.alpha(0.3).alphaTarget(0).restart();
       hideContextMenu();
     });
     if(app.state.visible_clusters < app.data.clusters.length){
@@ -569,6 +570,7 @@ $(function(){
         setNodeVisibility();
         setLinkVisibility();
         renderNetwork();
+        app.network.force.alpha(0.3).alphaTarget(0).restart();
         hideContextMenu();
       });
     } else {
@@ -577,6 +579,7 @@ $(function(){
         setLinkVisibility();
         setNodeVisibility();
         renderNetwork();
+        app.network.force.alpha(0.3).alphaTarget(0).restart();
         hideContextMenu();
       });
     }
