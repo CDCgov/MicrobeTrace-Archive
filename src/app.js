@@ -23,7 +23,8 @@ function dataSkeleton(){
       clusters: []
     },
     state: {
-      visible_clusters: []
+      visible_clusters: [],
+      alpha: 0.3
     },
     messages: []
   };
@@ -127,6 +128,10 @@ $(function(){
     renderNetwork();
     app.network.force.alpha(0.3).alphaTarget(0).restart();
   }).insertBefore('#SettingsTab');
+
+  $('<li id="ZoomToFitTab" class="hidden"><a href="#">Zoom To Fit</a></li>')
+    .click(e => app.network.fit())
+    .insertBefore('#SettingsTab');
 
   $('<li role="separator" class="divider"></li>').insertBefore('#SettingsTab');
 
@@ -286,7 +291,10 @@ $(function(){
     app.state.visible_clusters = app.data.clusters.map(c => c.id);
     updateStatistics();
     $('.hidden').removeClass('hidden');
-    $('#loadingInformationModal').modal('hide');
+    setTimeout(e => {
+      app.network.fit();
+      $('#loadingInformationModal').modal('hide');
+    }, 1500);
   });
 
   function updateNodeVariables(){
@@ -416,12 +424,22 @@ $(function(){
       .append('g');
 
     app.network.fit = function(){
+      var bounds = app.network.svg.node().getBBox();
+      var parent = app.network.svg.node().parentElement;
+      var fullWidth = parent.clientWidth,
+          fullHeight = parent.clientHeight;
+      var width = bounds.width,
+          height = bounds.height;
+      if (width == 0 || height == 0) return; // nothing to fit
+      var midX = bounds.x + width / 2,
+          midY = bounds.y + height / 2;
+      let scale = 0.95 / Math.max(width / fullWidth, height / fullHeight);
       d3.select('svg')
         .transition()
         .duration(750)
         .call(app.network.zoom.transform, d3.zoomIdentity
-          .translate(0, 0)
-          .scale(.5));
+          .translate(fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY)
+          .scale(scale));
     };
 
     app.network.force = d3.forceSimulation()
@@ -438,6 +456,10 @@ $(function(){
         .strength($('#network-gravity').val())
       )
       .force('center', d3.forceCenter(width / 2, height / 2));
+
+    app.network.force.on('end', e => {
+      $('#playbutton').data('state', 'paused').html('<i class="fa fa-play" aria-hidden="true"></i>');
+    });
 
     app.network.svg.append('svg:defs').append('marker')
       .attr('id', 'end-arrow')
@@ -503,6 +525,8 @@ $(function(){
       .attr('dy', 5)
       .attr('dx', 8);
 
+    let pb = $('#playbutton');
+
     app.network.force.nodes(vnodes).on('tick', () => {
       d3.select('g#links').selectAll('line')
         .attr('x1', d => d.source.x)
@@ -517,6 +541,10 @@ $(function(){
             return 'translate(' + d.x + ', ' + d.y + ')';
           }
         });
+      if(pb.data('state', 'paused')){
+        pb.data('state', 'playing');
+        pb.html('<i class="fa fa-pause" aria-hidden="true"></i>');
+      }
     });
 
     app.network.force.force('link').links(vlinks);
@@ -966,6 +994,31 @@ $(function(){
   $('#main_panel').css('background-color', $('#network-color').val());
 
   $('#network-color').on('input', e => $('#main_panel').css('background-color', e.target.value));
+
+  $('#playtools').css('left', ($('body').width()-$('#playtools').width())/2+'px');
+
+  $('#faster').click(e => {
+    app.state.alpha += 0.2;
+    app.network.force.alphaTarget(app.state.alpha).restart();
+  });
+  $('#slower').click(e => {
+    app.state.alpha = Math.max(app.state.alpha - 0.2, 0.1);
+    app.network.force.alphaTarget(app.state.alpha).restart();
+  });
+
+  $('#playbutton')
+    .data('state', 'paused')
+    .click(function(e){
+      if($(this).data('state') === 'paused'){
+        $(this).data('state', 'playing')
+          .html('<i class="fa fa-pause" aria-hidden="true"></i>');
+        app.network.force.alphaTarget(app.state.alpha).restart();
+      } else {
+        $(this).data('state', 'paused')
+          .html('<i class="fa fa-play" aria-hidden="true"></i>');
+        app.network.force.alpha(0).alphaTarget(0);
+      }
+    });
 
   $('[data-toggle="tooltip"]').tooltip();
 
