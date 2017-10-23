@@ -609,7 +609,7 @@ $(function(){
       });
     }
     $('#hideCluster').click(e => {
-      app.state.visible_clusters = app.data.clusters.filter(c => c.id !== d.cluster).map(c => c.id);
+      app.state.visible_clusters = app.state.visible_clusters.filter(cid => cid !== d.cluster);
       setLinkVisibility();
       setNodeVisibility();
       renderNetwork();
