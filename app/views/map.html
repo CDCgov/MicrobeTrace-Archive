@@ -117,7 +117,7 @@
                       <select id="nodeColorField" class="fields">
                         <option selected>None</option>
                       </select>
-                      <input type="color" id="color" value="#0000ff" />
+                      <input type="color" id="color" value="#ff0000" />
                     </td>
                   </tr>
                   <tr>
@@ -467,7 +467,8 @@
       }
       table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
       var values = Lazy(window.nodes).pluck(e.target.value).uniq().sort().toArray();
-      var o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
+      let colors = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'colors.json'));
+      var o = d3.scaleOrdinal(colors).domain(values);
       circles.style('fill', d => o(d[e.target.value]));
       values.forEach(value => {
         var input = $('<input type="color" value="'+o(value)+'" />')

@@ -806,7 +806,8 @@ $(function(){
     }
     table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
     let values = Lazy(app.data.nodes).pluck(e.target.value).uniq().sortBy().toArray();
-    let o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
+    let colors = JSON.parse(ipcRenderer.sendSync('get-component', 'colors.json'));
+    let o = d3.scaleOrdinal(colors).domain(values);
     circles.attr('fill', d => o(d[e.target.value]));
     values.forEach(value => {
       let input = $('<input type="color" value="'+o(value)+'" />')
@@ -876,7 +877,8 @@ $(function(){
     let variable = $('#linkColorVariable').val();
     table.append('<tr><th>'+variable+'</th><th>Color</th><tr>');
     let values = Lazy(app.data.links).pluck(variable).uniq().sort().toArray();
-    let o = d3.scaleOrdinal(d3.schemeCategory10).domain(values);
+    let colors = JSON.parse(ipcRenderer.sendSync('get-component', 'colors.json'));
+    let o = d3.scaleOrdinal(colors).domain(values);
     links.style('stroke', d => o(d[variable]));
     values.forEach(value => {
       let input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
