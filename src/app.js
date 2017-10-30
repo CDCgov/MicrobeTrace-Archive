@@ -119,6 +119,9 @@ $(function(){
 
   $('<li role="separator" class="divider"></li>').insertAfter('#FileTab');
 
+  $('body').append(ipcRenderer.sendSync('get-component', 'search.html'));
+  $('#searchBox').hide();
+
   $('<li id="RevealAllTab" class="hidden"><a href="#">Reveal All</a></li>').click(e => {
     app.state.visible_clusters = app.data.clusters.map(c => c.id);
     $('#HideSingletons').prop('checked', false).parent().removeClass('active');
@@ -424,14 +427,14 @@ $(function(){
       .append('g');
 
     app.network.fit = function(){
-      var bounds = app.network.svg.node().getBBox();
-      var parent = app.network.svg.node().parentElement;
-      var fullWidth = parent.clientWidth,
+      let bounds = app.network.svg.node().getBBox();
+      let parent = app.network.svg.node().parentElement;
+      let fullWidth = parent.clientWidth,
           fullHeight = parent.clientHeight;
-      var width = bounds.width,
+      let width = bounds.width,
           height = bounds.height;
       if (width == 0 || height == 0) return; // nothing to fit
-      var midX = bounds.x + width / 2,
+      let midX = bounds.x + width / 2,
           midY = bounds.y + height / 2;
       let scale = 0.95 / Math.max(width / fullWidth, height / fullHeight);
       d3.select('svg')
@@ -500,19 +503,19 @@ $(function(){
     let node = d3.select('g#nodes').selectAll('g.node').data(vnodes);
     node.exit().remove(); //Removing nodes with no representation in the dataset.
     node = node.enter().append('g').attr('class', 'node').attr('tabindex', '0') //Adding nodes that weren't represented in the dataset before.
-      .call(d3.drag()
+      .call(d3.drag() //A bunch of mouse handlers.
         .on('start', dragstarted)
         .on('drag', dragged)
         .on('end', dragended))
-      .on('mouseenter', showNodeToolTip)
-      .on('mouseout', hideTooltip)
+      .on('mouseenter focusin', showNodeToolTip)
+      .on('mouseout focusout', hideTooltip)
       .on('contextmenu', showContextMenu)
       .on('click', clickHandler)
       .on('keydown', n => {
-        if(d3.event.code === 'Space'){
-          clickHandler(n)
-        }
-      }); //A bunch of mouse handlers.
+        if(d3.event.code === 'Space') clickHandler(n);
+        if(d3.event.shiftKey && d3.event.key === 'F10') showContextMenu(n);
+      });
+
     // What's this?
     node.append('path'); // Adding a path?
     node.append('text'); // And a text? Wouldn't those already be attached to the nodes?
@@ -592,7 +595,7 @@ $(function(){
     d3.select('#copyID').on('click', e => {
       clipboard.writeText(d.id);
       hideContextMenu();
-    });
+    }).node().focus();
     d3.select('#copySeq').on('click', e => {
       clipboard.writeText(d.seq);
       hideContextMenu();
@@ -1025,13 +1028,33 @@ $(function(){
       }
     });
 
+  $('#search').on('input', e => {
+    if(e.target.value === '') {
+      app.data.nodes.forEach(n => n.selected = false);
+    } else {
+      app.data.nodes.forEach(n => n.selected = (n.id.indexOf(e.target.value)>-1));
+      if(app.data.nodes.filter(n => n.selected).length === 0) alertify.warning('No matches!');
+    }
+    d3.select('g#nodes')
+      .selectAll('g.node')
+      .select('path')
+      .data(app.data.nodes)
+      .classed('selected', d => d.selected);
+    ipcRenderer.send('update-node-selection', app.data.nodes);
+    $('#numberOfSelectedNodes').text(app.data.nodes.filter(d => d.selected).length.toLocaleString());
+  });
+
   $('[data-toggle="tooltip"]').tooltip();
 
   $(document).on('keydown', e => {
-    if (e.which === 123) {
-      remote.getCurrentWindow().toggleDevTools();
-    } else if (e.which === 116) {
+    if(e.key === 'Escape'){
+      $('#searchBox').slideUp();
+    }
+    if(e.key === 'F5'){
       reset();
+    }
+    if(e.key === 'F12'){
+      remote.getCurrentWindow().toggleDevTools();
     }
   });
 

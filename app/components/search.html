@@ -11,16 +11,13 @@
 </div>
 
 <script>
-
   $('<li id="FindTab"><a href="#">Find</a></li>')
     .click(e => $('#search').focus())
     .append('<li role="separator" class="divider"></li>')
     .insertBefore('#SettingsTab');
 
   $(document).on('keydown', e => {
-    if(e.ctrlKey){
-      if(e.which === 70) $('#search').focus(); // ctrl+f
-    }
+    if(e.ctrlKey && e.key === 'f') $('#searchBox').slideDown().find('#search').focus();
   });
 
 </script>
