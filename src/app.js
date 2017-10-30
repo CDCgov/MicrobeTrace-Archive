@@ -499,7 +499,7 @@ $(function(){
     //OK, this is a little bit of expert-level D3 voodoo that deserves some explanation.
     let node = d3.select('g#nodes').selectAll('g.node').data(vnodes);
     node.exit().remove(); //Removing nodes with no representation in the dataset.
-    node = node.enter().append('g').attr('class', 'node') //Adding nodes that weren't represented in the dataset before.
+    node = node.enter().append('g').attr('class', 'node').attr('tabindex', '0') //Adding nodes that weren't represented in the dataset before.
       .call(d3.drag()
         .on('start', dragstarted)
         .on('drag', dragged)
@@ -507,7 +507,12 @@ $(function(){
       .on('mouseenter', showNodeToolTip)
       .on('mouseout', hideTooltip)
       .on('contextmenu', showContextMenu)
-      .on('click', clickHandler); //A bunch of mouse handlers.
+      .on('click', clickHandler)
+      .on('keydown', n => {
+        if(d3.event.code === 'Space'){
+          clickHandler(n)
+        }
+      }); //A bunch of mouse handlers.
     // What's this?
     node.append('path'); // Adding a path?
     node.append('text'); // And a text? Wouldn't those already be attached to the nodes?
