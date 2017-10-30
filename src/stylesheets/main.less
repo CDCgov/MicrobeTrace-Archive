@@ -181,30 +181,35 @@ td {
   .modal-dialog, .modal-content {
     background-color: rgba(255, 255, 255, .5);
   }
+
   .tab-pane {
     border: 1px solid #ddd;
     border-top: none;
   }
-  #accordion {
-    margin-bottom: 0;
-    .panel {
-      background-color: transparent;
 
-      #default-link-threshold {
-        width: 5em;
-        visibility: hidden;
-      }
-
-      #computeMST {
-        display: inline-block;
-        margin: 0 1em;
-      }
-
-      .showForMST {
-        display: none;
-        margin: 0 1em
+  #nodeConfigurations > .panel-body {
+    padding: 0px 15px;
+    .row {
+      border-bottom: 1px solid lightgray;
+      div {
+        padding: 8px;
       }
     }
+  }
+
+  #default-link-threshold {
+    width: 5em;
+    visibility: hidden;
+  }
+
+  #computeMST {
+    display: inline-block;
+    margin: 0 1em;
+  }
+
+  .showForMST {
+    display: none;
+    margin: 0 1em
   }
 }
 
