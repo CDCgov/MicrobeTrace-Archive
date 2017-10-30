@@ -997,8 +997,6 @@ $(function(){
 
   $('#network-color').on('input', e => $('#main_panel').css('background-color', e.target.value));
 
-  $('#playtools').css('left', ($('body').width()-$('#playtools').width())/2+'px');
-
   $('#faster').click(e => {
     app.state.alpha += 0.2;
     app.network.force.alphaTarget(app.state.alpha).restart();
