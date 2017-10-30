@@ -35,6 +35,8 @@
               <li id="SequencesTab" class="showForSequence"><a href="#">Sequences</a></li>
               <li id="TreeTab" class="showForSequence"><a href="#">Phylogenetic Tree</a></li>
               <li id="MapTab"><a href="#">Map</a></li>
+              <li role="separator" class="divider"></li>
+              <li id="FullScreenTab"><a href="#">Toggle Full Screen</a></li>
             </ul>
           </li>
           <li class="dropdown">
@@ -145,6 +147,19 @@
       alertify.warning('Please load some data first!');
     }
   });
+
+  function toggleFullScreen(){
+    let win = electron.remote.getCurrentWindow();
+    win.setFullScreen(!win.isFullScreen());
+  }
+
+  $(document).on('keydown', e => {
+    if (e.key === 'F11') {
+      toggleFullScreen();
+    }
+  });
+
+  $('#FullScreenTab').click(toggleFullScreen);
 
   $('#HelpTab').click(() => {
     electron.ipcRenderer.send('launch-view', 'components/help/index.html');
