@@ -92,7 +92,30 @@ $(function(){
       if (fileName === undefined){
         return alertify.error('File not exported!');
       }
-      jetpack.write(fileName, makeHIVTraceOutput());
+      jetpack.write(fileName, JSON.stringify({
+        trace_results: {
+          'HIV Stages': {},
+          'Degrees': {},
+          'Multiple sequences': {},
+          'Edge Stages': {},
+          'Cluster sizes': app.data.clusters.map(c => c.size),
+          'Settings': {
+            'contaminant-ids': [],
+            'contaminants': 'remove',
+            'edge-filtering': 'remove',
+            'threshold': $('#default-link-threshold').val()
+          },
+          'Network Summary': {
+            'Sequences used to make links': 0,
+            'Clusters': app.data.clusters.length,
+            'Edges': app.data.links.filter(l => l.visible).length,
+            'Nodes': app.data.nodes.length
+          },
+          'Directed Edges': {},
+          'Edges': window.data.links,
+          'Nodes': window.data.nodes
+        }
+      }, null, 2));
       alertify.success('File Saved!');
     });
   }).insertAfter('#FileTab');
@@ -1056,31 +1079,4 @@ $(function(){
       remote.getCurrentWindow().toggleDevTools();
     }
   });
-
-  function makeHIVTraceOutput(){
-    return JSON.stringify({
-      trace_results: {
-        'HIV Stages': {},
-        'Degrees': {},
-        'Multiple sequences': {},
-        'Edge Stages': {},
-        'Cluster sizes': app.data.clusters.map(c => c.size),
-        'Settings': {
-          'contaminant-ids': ['HXB2_prrt'],
-          'contaminants': 'remove',
-          'edge-filtering': 'remove',
-          'threshold': $('#default-link-threshold').val()
-        },
-        'Network Summary': {
-          'Sequences used to make links': 0,
-          'Clusters': app.data.clusters.length,
-          'Edges': app.data.links.filter(l => l.visible).length,
-          'Nodes': app.data.nodes.length
-        },
-        'Directed Edges': {},
-        'Edges': [],
-        'Nodes': []
-      }
-    }, null, 2);
-  }
 });
