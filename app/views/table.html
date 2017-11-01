@@ -116,7 +116,7 @@
 
   <script type="text/javascript">
   const electron = require('electron');
-  var jetpack = require('fs-jetpack');
+  const jetpack = require('fs-jetpack');
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
   require('datatables.net')(window, $);
@@ -180,7 +180,7 @@
     function updateTable(){
       updateData();
       window.table.destroy();
-      var options = {
+      let options = {
         dom: 'lrtip',
         data: window.data,
         columns: window.columns,
@@ -190,19 +190,18 @@
           style: 'multi'
         }
       };
-      var selectedColumn = window.columns.findIndex(d => d.data === 'selected');
+      let selectedColumn = window.columns.findIndex(d => d.data === 'selected');
       if(selectedColumn >= 0){
         options.orderFixed = [selectedColumn, 'desc'];
       }
       window.table = $('#table').empty().DataTable(options);
-      var colsToKeep = [];
-      var nodelink = $('input[name=nodelink]:checked')[0].id;
-      colsToKeep = $('#'+nodelink+'-columns').val().map(parseFloat);
+      let nodelink = $('input[name=nodelink]:checked')[0].id;
+      let colsToKeep = $('#'+nodelink+'-columns').val().map(parseFloat);
       Object.keys(window.data[0]).forEach((col, i) => {
         window.table.column(i).visible(colsToKeep.includes(i));
       });
       window.table.on('user-select', (e, dt, type, cell) => {
-        var index = cell.index().row;
+        let index = cell.index().row;
         window.data[index].selected = !window.data[index].selected;
         window.table.row(index).data(window.data[index]);
         if(nodelink === 'node'){
@@ -238,7 +237,7 @@
             .join('\n')
         ).change(e => {
           if($('input[name=nodelink]:checked')[0].id === thing){
-            var colsToKeep = $('#'+thing+'-columns').val().map(parseFloat);
+            let colsToKeep = $('#'+thing+'-columns').val().map(parseFloat);
             Object
               .keys(window[thing+'s'][0])
               .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
