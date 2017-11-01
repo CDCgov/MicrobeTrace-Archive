@@ -44,69 +44,61 @@
           <h4 class="modal-title">Table Options</h4>
         </div>
         <div class="modal-body">
-          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-            <div class="panel panel-default">
-              <div class="panel-heading" role="tab" id="headingZero">
-                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseZero" aria-expanded="true" aria-controls="collapseZero">
-                  Table
-                </a>
-              </div>
-              <div id="collapseZero" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingZero">
-                <table class="table">
-                  <tbody>
-                    <tr>
-                      <td>Content</td>
-                      <td>
-                        <div class="btn-group btn-group-xs" data-toggle="buttons">
-                          <label class="btn btn-default active">
-                            <input type="radio" name="nodelink" id="node" autocomplete="off" checked="checked"> Nodes
-                          </label>
-                          <label class="btn btn-default">
-                            <input type="radio" name="nodelink" id="link" autocomplete="off"> Links
-                          </label>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Text Size</td>
-                      <td><input type="range" id="font-size-slider" min="6" value="14" max="72" step="1" /></td>
-                    </tr>
-                  </tbody>
-                </table>
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#nodeConfigurations" aria-controls="nodeConfigurations" role="tab" data-toggle="tab">Nodes</a></li>
+            <li role="presentation"><a href="#linkConfigurations" aria-controls="profile" role="tab" data-toggle="tab">Links</a></li>
+            <li role="presentation"><a href="#clusterConfigurations" aria-controls="messages" role="tab" data-toggle="tab">Clusters</a></li>
+            <li role="presentation"><a href="#tableConfigurations" aria-controls="messages" role="tab" data-toggle="tab">Table</a></li>
+          </ul>
+          <!-- Tab panes -->
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade in active" id="nodeConfigurations">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-sm-3">Columns to Include</div>
+                  <div class="col-sm-9"><select id="node-columns" multiple></select></div>
+                </div>
               </div>
             </div>
-            <div class="panel panel-default">
-              <div class="panel-heading" role="tab" id="headingOne">
-                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                  Node
-                </a>
-              </div>
-              <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
-                <table class="table">
-                  <tbody>
-                    <tr>
-                      <td>Columns to Include</td>
-                      <td><select id="node-columns" multiple></select></td>
-                    </tr>
-                  </tbody>
-                </table>
+            <div role="tabpanel" class="tab-pane" id="linkConfigurations">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-sm-3">Columns to Include</div>
+                  <div class="col-sm-9"><select id="link-columns" multiple></select></div>
+                </div>
               </div>
             </div>
-            <div class="panel panel-default">
-              <div class="panel-heading" role="tab" id="headingTwo">
-                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                  Link
-                </a>
+            <div role="tabpanel" class="tab-pane" id="clusterConfigurations">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-sm-3">Columns to Include</div>
+                  <div class="col-sm-9"><select id="cluster-columns" multiple></select></div>
+                </div>
               </div>
-              <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
-                <table class="table">
-                  <tbody>
-                    <tr>
-                      <td>Columns to Include</td>
-                      <td><select id="link-columns" multiple></select></td>
-                    </tr>
-                  </tbody>
-                </table>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="tableConfigurations">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-sm-3">Content</div>
+                  <div class="col-sm-9">
+                    <div class="btn-group btn-group-xs" data-toggle="buttons">
+                      <label class="btn btn-default active">
+                        <input type="radio" name="nodelink" id="node" autocomplete="off" checked="checked"> Nodes
+                      </label>
+                      <label class="btn btn-default">
+                        <input type="radio" name="nodelink" id="link" autocomplete="off"> Links
+                      </label>
+                      <label class="btn btn-default">
+                        <input type="radio" name="nodelink" id="cluster" autocomplete="off"> Clusters
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-sm-6">Text Size</div>
+                  <div class="col-sm-6"><input type="range" id="font-size-slider" min="6" value="14" max="72" step="1" /></div>
+                </div>
               </div>
             </div>
           </div>
