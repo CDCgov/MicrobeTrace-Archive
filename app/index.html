@@ -184,10 +184,35 @@
   <div id="main_panel" class="pane-container pane-horizontal" style="display:none;">
     <svg id="network"></svg>
 
+    <span id="tooltip"></span>
+
+    <ul id="contextmenu" class="dropdown-menu">
+      <li><a href="#" id="copyID">Copy ID</a></li>
+      <li class="showForSequence"><a href="#" id="copySeq">Copy Sequence</a></li>
+      <li><a href="#" id="pinNode">Pin Node</a></li>
+      <li role="separator" class="divider"></li>
+      <li><a href="#" id="isolateCluster">Isolate Cluster</a></li>
+      <li><a href="#" id="hideCluster">Hide Cluster</a></li>
+    </ul>
+
     <table id="groupKey">
       <tbody id="nodeGroupKey"></tbody>
       <tbody id="linkGroupKey"></tbody>
     </table>
+
+    <div id="playtools">
+      <div class="btn-group" role="group">
+        <button id="slower" type="button" class="btn btn-default">
+          <i class="fa fa-backward" aria-hidden="true"></i>
+        </button>
+        <button id="playbutton" type="button" class="btn btn-default">
+          <i class="fa fa-pause" aria-hidden="true"></i>
+        </button>
+        <button id="faster" type="button" class="btn btn-default">
+          <i class="fa fa-forward" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
 
     <table id="networkStatistics">
       <tbody>
@@ -212,31 +237,6 @@
         </tr>
       </tbody>
     </table>
-
-    <div id="playtools">
-      <div class="btn-group" role="group">
-        <button id="slower" type="button" class="btn btn-default">
-          <i class="fa fa-backward" aria-hidden="true"></i>
-        </button>
-        <button id="playbutton" type="button" class="btn btn-default">
-          <i class="fa fa-pause" aria-hidden="true"></i>
-        </button>
-        <button id="faster" type="button" class="btn btn-default">
-          <i class="fa fa-forward" aria-hidden="true"></i>
-        </button>
-      </div>
-    </div>
-
-    <span id="tooltip"></span>
-
-    <ul id="contextmenu" class="dropdown-menu">
-      <li><a href="#" id="copyID">Copy ID</a></li>
-      <li class="showForSequence"><a href="#" id="copySeq">Copy Sequence</a></li>
-      <li><a href="#" id="pinNode">Pin Node</a></li>
-      <li role="separator" class="divider"></li>
-      <li><a href="#" id="isolateCluster">Isolate Cluster</a></li>
-      <li><a href="#" id="hideCluster">Hide Cluster</a></li>
-    </ul>
   </div>
 
   <div id="settingsModal" class="modal fade" tabindex="-1" role="dialog" data-backdrop="false">
