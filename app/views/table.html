@@ -248,19 +248,14 @@
       updateTable();
     });
 
-    electron.ipcRenderer.send('get-data');
-
-    function hide_search(){
-      $('#searchBox').slideUp();
-      window.table.search('').draw();
-    }
-
     $('#search').on('input', e => {
       window.table.search(e.target.value).draw();
     });
 
     $('#font-size-slider').on('input', resetTextsize);
     $('input[name=nodelink]').on('change', updateTable);
+
+    electron.ipcRenderer.send('get-data');
   });
 
   $.fn.dataTable.ext.errMode = 'none';
