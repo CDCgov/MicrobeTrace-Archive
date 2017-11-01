@@ -342,12 +342,11 @@ $(function(){
   function updateStatistics(){
     if($('#hideNetworkStatistics').is(':checked')) return;
     let llinks = Lazy(app.data.links).filter(e => e.visible);
-    $('#numberOfNodes').text(app.data.nodes.length.toLocaleString());
-    $('#numberOfSelectedNodes').text(app.data.nodes.filter(d => d.selected).length.toLocaleString());
-    $('#visibilityThreshold').text(math.toPrecision($('#default-link-threshold').val(), 3));
+    let lnodes = Lazy(app.data.nodes).filter(e => e.visible);
+    let singletons = lnodes.size() - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
+    $('#numberOfSelectedNodes').text(lnodes.filter(d => d.selected).size().toLocaleString());
+    $('#numberOfNodes').text(lnodes.size().toLocaleString());
     $('#numberOfVisibleLinks').text(llinks.size().toLocaleString());
-    $('#numberOfPossibleLinks').text((app.data.nodes.length * (app.data.nodes.length - 1) / 2).toLocaleString());
-    let singletons = app.data.nodes.length - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
     $('#numberOfSingletonNodes').text(singletons.toLocaleString());
     $('#numberOfDisjointComponents').text(app.data.clusters.length - singletons);
   }

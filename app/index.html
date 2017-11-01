@@ -192,32 +192,23 @@
     <table id="networkStatistics">
       <tbody>
         <tr>
-          <td id="numberOfNodes" class="text-right"></td>
-          <td>Nodes</td>
+          <td class="text-right">
+            (<span id="numberOfSelectedNodes"></span>)
+            <span id="numberOfNodes"></span>
+          </td>
+          <td>(Selected) Nodes</td>
         </tr>
         <tr>
-          <td id="numberOfSelectedNodes" class="text-right"></td>
-          <td>Selected Nodes</td>
-        </tr>
-        <tr>
-          <td id="numberOfSingletonNodes" class="text-right"></td>
-          <td>Singleton Nodes</td>
+          <td id="numberOfVisibleLinks" class="text-right"></td>
+          <td>Links</td>
         </tr>
         <tr>
           <td id="numberOfDisjointComponents" class="text-right"></td>
           <td>Clusters</td>
         </tr>
-        <tr>
-          <td id="visibilityThreshold" class="text-right"></td>
-          <td>Visibility Threshold</td>
-        </tr>
-        <tr>
-          <td id="numberOfVisibleLinks" class="text-right"></td>
-          <td>Visible Links</td>
-        </tr>
-        <tr>
-          <td id="numberOfPossibleLinks" class="text-right"></td>
-          <td>Possible Links</td>
+        <tr id="singletonsRow">
+          <td id="numberOfSingletonNodes" class="text-right"></td>
+          <td>Singletons</td>
         </tr>
       </tbody>
     </table>
