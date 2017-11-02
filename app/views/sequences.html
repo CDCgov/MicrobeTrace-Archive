@@ -51,8 +51,8 @@
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
 
-    electron.ipcRenderer.on('deliver-nodes', (e, nodes) => {
-      window.nodes = nodes;
+    electron.ipcRenderer.on('deliver-data', (e, data) => {
+      window.nodes = data.nodes;
       var m = new msa.msa({
         el: $('#main_panel')[0],
         vis: {
@@ -79,7 +79,7 @@
       m.render();
       $('.smenubar').detach().appendTo('.modal-body');
     });
-    electron.ipcRenderer.send('get-nodes');
+    electron.ipcRenderer.send('get-data');
 
   });
 

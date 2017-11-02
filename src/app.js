@@ -858,14 +858,6 @@ $(function(){
     app.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
-  ipcRenderer.on('deliver-nodes', (e, nodes) => {
-    app.data.nodes = nodes;
-    app.network.svg.select('g#nodes').selectAll('g.node')
-      .data(app.data.nodes)
-      .select('path')
-      .classed('selected', d => d.selected);
-  });
-
   $('#DirectedLinks').parent().click(e => {
     app.network.svg.select('g#links').selectAll('line').attr('marker-end', 'url(#end-arrow)');
   });
