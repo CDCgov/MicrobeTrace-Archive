@@ -39,8 +39,7 @@
                 </div>
                 <div class="row">
                   <div class="col-md-3"><a href="#" data-toggle="tooltip" title="What color should the nodes be?">Color</a></div>
-                  <div class="col-md-3"><select id="nodeColorVariable" class="nodeVariables triggers"><option value="none">None</option></select></div>
-                  <div class="col-md-6"><input type="color" id="default-node-color" class="triggers" value="#5656ff" /></div>
+                  <div class="col-md-9"><input type="color" id="default-node-color" class="triggers" value="#5656ff" /></div>
                 </div>
                 <div class="row">
                   <div class="col-md-3"><a href="#" data-toggle="tooltip" title="How large should the nodes be?">Size</a></div>
@@ -74,7 +73,7 @@
                 </div>
                 <div class="row">
                   <div class="col-md-3"><a href="#" data-toggle="tooltip" title="What color should the links be?">Color</a></div>
-                  <div class="col-md-9"><input type="color" id="default-link-color" class="triggers" value="#6f6f6f" /></div>
+                  <div class="col-md-9"><input type="color" id="default-link-color" class="triggers" value="#fff" /></div>
                 </div>
                 <div class="row">
                   <div class="col-md-3"><a href="#" data-toggle="tooltip" title="How transparent should the links be?">Transparency</a></div>
@@ -139,7 +138,7 @@
       let nodeColor = $('#default-node-color').val();
       graph
         .nodeRelSize($('#default-node-radius').val())
-        .colorField(d => nodeColor);
+        .colorField(d => nodeColor)
         .lineOpacity($('#default-link-opacity').val())
         .linkColorField(l => lc)
         .graphData({
