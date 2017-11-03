@@ -24,12 +24,24 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title">Distance Matrix Configuration</h4>
         </div>
-        <table class='table'>
-          <tr>
-            <td>Show axis labels?</td>
-            <td><input type="checkbox" id="showAxisLabels" /></td>
-          </tr>
-        </table>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-sm-3">Show axis labels?</div>
+            <div class="col-sm-9"><input type="checkbox" id="showAxisLabels" /></div>
+          </div>
+          <div class="row">
+            <div class="col-sm-3">High Color</div>
+            <div class="col-sm-9"><input type="color" id="highColor" value="#313695" /></div>
+          </div>
+          <div class="row">
+            <div class="col-sm-3">Median Color</div>
+            <div class="col-sm-9"><input type="color" id="medianColor" value="#ffffbf" /></div>
+          </div>
+          <div class="row">
+            <div class="col-sm-3">Low Color</div>
+            <div class="col-sm-9"><input type="color" id="lowColor" value="#a50026" /></div>
+          </div>
+        </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
         </div>
@@ -79,6 +91,11 @@
         y: labels,
         z: window.distance_matrix,
         type: 'heatmap',
+        colorscale: [
+          [0, $('#lowColor').val()],
+          [0.5, $('#medianColor').val()],
+          [1, $('#highColor').val()]
+        ]
       }], {
         xaxis: config,
         yaxis: config
@@ -95,6 +112,7 @@
     electron.ipcRenderer.send('get-data');
 
     $('#showAxisLabels').change(replot);
+    $('input[type="color"]').change(replot);
 
     $(window).on('resize', replot);
   });
