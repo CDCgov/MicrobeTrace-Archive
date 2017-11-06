@@ -58,14 +58,25 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title">Help Configuration</h4>
         </div>
-        <table class="table">
-          <tbody>
-            <tr>
-              <td>Text Size</td>
-              <td><input type="range" id="font-size-slider" min="6" value="14" max="72" step="1" /></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="modal-body">
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#helpConfigurations" aria-controls="helpConfigurations" role="tab" data-toggle="tab">Help</a></li>
+          </ul>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade in active" id="nodeConfigurations">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-3"><strong>Property</strong></div>
+                  <div class="col-md-9"><strong>Value</strong></div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Text Size</div>
+                  <div class="col-md-9"><input type="range" id="font-size-slider" min="6" value="14" max="72" step="1" /></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
         </div>
