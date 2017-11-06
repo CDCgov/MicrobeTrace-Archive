@@ -23,6 +23,9 @@
       white-space: nowrap;
       table-layout: fixed;
     }
+    th {
+      transform-origin:center;
+    }
     td {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -100,9 +103,12 @@
                   </div>
                 </div>
                 <div class="row">
-                  <div class="col-sm-6">Text Size</div>
-                  <div class="col-sm-6"><input type="range" id="font-size-slider" min="6" value="14" max="72" step="1" /></div>
+                  <div class="col-sm-3">Text Size</div>
+                  <div class="col-sm-9"><input type="range" id="font-size-slider" min="6" value="14" max="72" step="1" /></div>
                 </div>
+                <div class="row">
+                  <div class="col-sm-3">Tilt Headers?</div>
+                  <div class="col-sm-9"><input type="range" id="tiltHeaders" min="-90" value="0" max="90" step="1" /></div>
               </div>
             </div>
           </div>
@@ -249,6 +255,19 @@
 
     $('#search').on('input', e => {
       window.table.search(e.target.value).draw();
+    });
+
+    $('#tiltHeaders').on('input', function(e){
+      let theta = $(this).val();
+      let h = $('th:first').width();
+      $('th').css({
+        'transform': 'rotate('+-theta+'deg)',
+        'border-bottom': '0px',
+        'height': h*Math.sin(Math.abs(theta)*Math.PI/180)+'px'
+      });
+      if($(this).val() == 0){
+        $('th').css('border-bottom', '1px solid black');
+      }
     });
 
     $('#font-size-slider').on('input', resetTextsize);
