@@ -29,156 +29,136 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title">Map Options</h4>
         </div>
-        <div class="modal-body panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-          <div class="panel panel-default">
-            <div class="panel-heading" role="tab" id="headingOne">
-              <h4 class="panel-title">
-                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">Data</a>
-              </h4>
+        <div class="modal-body">
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#dataConfigurations" aria-controls="dataConfigurations" role="tab" data-toggle="tab">Data</a></li>
+            <li role="presentation"><a href="#nodeConfigurations" aria-controls="nodeConfigurations" role="tab" data-toggle="tab">Nodes</a></li>
+            <li role="presentation"><a href="#mapConfigurations" aria-controls="nodeConfigurations" role="tab" data-toggle="tab">Map</a></li>
+          </ul>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade in active" id="dataConfigurations">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-3">Latitude</div>
+                  <div class="col-md-9">
+                    <select id="latitudeField" class="fields">
+                      <option selected>None</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Longitude</div>
+                  <div class="col-md-9">
+                    <select id="longitudeField" class="fields">
+                      <option selected>None</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Zipcode</div>
+                  <div class="col-md-9">
+                    <select id="zipcodeField" class="fields">
+                      <option selected>None</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">County</div>
+                  <div class="col-md-9">
+                    <select id="countyField" class="fields">
+                      <option selected>None</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">State</div>
+                  <div class="col-md-9">
+                    <select id="stateField" class="fields">
+                      <option selected>None</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Country</div>
+                  <div class="col-md-9">
+                    <select id="countryField" class="fields">
+                      <option selected>None</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
-              <table class="table">
-                <tbody>
-                  <tr>
-                    <td>Latitude</td>
-                    <td>
-                      <select id="latitudeField" class="fields">
-                        <option selected>None</option>
-                      </select>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Longitude</td>
-                    <td>
-                      <select id="longitudeField" class="fields">
-                        <option selected>None</option>
-                      </select>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Zipcode</td>
-                    <td>
-                      <select id="zipcodeField" class="fields">
-                        <option selected>None</option>
-                      </select>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>County</td>
-                    <td>
-                      <select id="countyField" class="fields">
-                        <option selected>None</option>
-                      </select>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>State</td>
-                    <td>
-                      <select id="stateField" class="fields">
-                        <option selected>None</option>
-                      </select>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Country</td>
-                    <td>
-                      <select id="countryField" class="fields">
-                        <option selected>None</option>
-                      </select>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div role="tabpanel" class="tab-pane fade" id="nodeConfigurations">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-3">Radius</div>
+                  <!--td>
+                    <select id="radiusField" class="fields">
+                      <option selected>None</option>
+                    </select>
+                  </td-->
+                  <div class="col-md-9">
+                    <input type="range" id="radius" min="1" max="30" step="0.1" value="6" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Color</div>
+                  <div class="col-md-9">
+                    <select id="nodeColorField" class="fields">
+                      <option selected>None</option>
+                    </select>
+                    <input type="color" id="color" value="#5656ff" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Transparency</div>
+                  <div class="col-md-9">
+                    <!--select id="opacityField" class="fields">
+                      <option selected>None</option>
+                    </select-->
+                    <input type="range" id="opacity" min="0.00" max="1.00" step="0.01" value="1.00" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Jitter</div>
+                  <div class="col-md-9">
+                    <input type="range" id="jitter" min="0.00" max="30" step="0.1" value="0.00" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Tooltip</div>
+                  <div class="col-md-9">
+                    <select id="nodeTooltipVariable" class="fields">
+                      <option selected>None</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="panel panel-default">
-            <div class="panel-heading" role="tab" id="headingTwo">
-              <h4 class="panel-title">
-                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Nodes</a>
-              </h4>
-            </div>
-            <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
-              <table class="table">
-                <tbody>
-                  <tr>
-                    <td>Radius</td>
-                    <!--td>
-                      <select id="radiusField" class="fields">
-                        <option selected>None</option>
-                      </select>
-                    </td-->
-                    <td>
-                      <input type="range" id="radius" min="1" max="30" step="0.1" value="6" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Color</td>
-                    <td>
-                      <select id="nodeColorField" class="fields">
-                        <option selected>None</option>
-                      </select>
-                      <input type="color" id="color" value="#ff0000" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Transparency</td>
-                    <td>
-                      <!--select id="opacityField" class="fields">
-                        <option selected>None</option>
-                      </select-->
-                      <input type="range" id="opacity" min="0.00" max="1.00" step="0.01" value="1.00" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Jitter</td>
-                    <td>
-                      <input type="range" id="jitter" min="0.00" max="30" step="0.1" value="0.00" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Tooltip</td>
-                    <td>
-                      <select id="nodeTooltipVariable" class="fields">
-                        <option selected>None</option>
-                      </select>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="panel panel-default">
-            <div class="panel-heading" role="tab" id="headingThree">
-              <h4 class="panel-title">
-                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseTwo">Map</a>
-              </h4>
-            </div>
-            <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
-              <table class="table">
-                <tbody>
-                  <tr>
-                    <td>Layers</td>
-                    <td>
-                      <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showStates" aria-pressed="false" autocomplete="off">States</button>
-                      <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showCounties" aria-pressed="false" autocomplete="off">Counties</button>
-                      <button type="button" class="btn btn-default btn-xs active" data-toggle="button" id="showCities" aria-pressed="true" autocomplete="off">Cities</button>
-                      <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showLinks" aria-pressed="false" autocomplete="off">Links</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Land Color</td>
-                    <td>
-                      <input type="color" id="landColor" value="#bbdaa4" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Water Color</td>
-                    <td>
-                      <input type="color" id="waterColor" value="#9bbff4" />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div role="tabpanel" class="tab-pane fade" id="mapConfigurations">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-3">Layers</div>
+                  <div class="col-md-9">
+                    <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showStates" aria-pressed="false" autocomplete="off">States</button>
+                    <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showCounties" aria-pressed="false" autocomplete="off">Counties</button>
+                    <button type="button" class="btn btn-default btn-xs active" data-toggle="button" id="showCities" aria-pressed="true" autocomplete="off">Cities</button>
+                    <button type="button" class="btn btn-default btn-xs" data-toggle="button" id="showLinks" aria-pressed="false" autocomplete="off">Links</button>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Land Color</div>
+                  <div class="col-md-9">
+                    <input type="color" id="landColor" value="#bbdaa4" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Water Color</div>
+                  <div class="col-md-9">
+                    <input type="color" id="waterColor" value="#9bbff4" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -465,7 +445,7 @@
         table.fadeOut();
         return;
       }
-      table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
+      table.append('<tr><th>'+e.target.value+'</th><th>Color</th></tr>');
       var values = Lazy(window.nodes).pluck(e.target.value).uniq().sort().toArray();
       let colors = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'colors.json'));
       var o = d3.scaleOrdinal(colors).domain(values);
