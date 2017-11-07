@@ -211,7 +211,12 @@
 
     function matchCoordinates(){
       if($('#latitudeField').val() !== 'None' && $('#longitudeField').val() !== 'None'){
-        //We don't actually need to do anything in this case.
+        let lat = $('#latitudeField').val(),
+            lon = $('#longitudeField').val();
+        window.nodes.forEach(n => {
+          n.lat = n[lat];
+          n.lon = n[lon];
+        });
       } else if($('#zipcodeField').val() !== 'None'){
         if(!zipcodes){
           zipcodes = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'zipcodes.csv'), d => ({
@@ -389,7 +394,7 @@
         .attr('y2', d => projection([d.target.lon, d.target.lat])[1]);
     }
 
-    $('#longitudeField, #latitudeField, #countyField, #stateField, #countryField, #zipcodeField').change(drawNodes);
+    $('#longitudeField, #latitudeField, #countyField, #stateField, #countryField, #zipcodeField').change(matchCoordinates);
 
     $('#showStates').click(function(e){
       if(!$(this).hasClass('active')){
