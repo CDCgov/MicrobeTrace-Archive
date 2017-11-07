@@ -112,13 +112,13 @@ $(function(){
             'Nodes': app.data.nodes.length
           },
           'Directed Edges': {},
-          'Edges': window.data.links,
-          'Nodes': window.data.nodes
+          'Edges': app.data.links,
+          'Nodes': app.data.nodes
         }
       }, null, 2));
       alertify.success('File Saved!');
     });
-  }).insertAfter('#FileTab');
+  })//.insertAfter('#FileTab');
 
   $('<li id="ExportTab" class="hidden"><a href="#">Export Data</a></li>').click(e => {
     remote.dialog.showSaveDialog({
