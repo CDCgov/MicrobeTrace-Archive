@@ -36,24 +36,17 @@
                   <div class="col-xs-9">
                     <div class="btn-group btn-group-xs" data-toggle="buttons">
                       <label class="btn btn-default active">
-                        <input type="radio" name="set" id="alllinks" autocomplete="off" checked> All Links
+                        <input type="radio" name="set" id="vislinks" autocomplete="off" checked> Visible Links
                       </label>
                       <label class="btn btn-default">
-                        <input type="radio" name="set" id="vislinks" autocomplete="off"> Visible Links
-                      </label>
-                      <label class="btn btn-default">
-                        <input type="radio" name="set" id="mstlinks" autocomplete="off"> MST Links
+                        <input type="radio" name="set" id="alllinks" autocomplete="off"> All Links
                       </label>
                     </div>
                   </div>
                 </div>
                 <div class="row">
                   <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="Which variable should the histogram be drawn from?">Variable</a></div>
-                  <div class="col-xs-9">
-                    <select id="variable">
-                      <option>distance</option>
-                    </select>
-                  </div>
+                  <div class="col-xs-9"><select id="variable"><option selected>distance</option></select></div>
                 </div>
                 <div class="row">
                   <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="Should the y-axis show a linear or logarithmic scale?">Scale</a></div>
@@ -138,11 +131,6 @@
     $('#vislinks').parent().click(e => {
       let varName = $('#variable').val();
       Plotly.restyle('main_panel', {x: [window.links.filter(l => l.visible).map(l => l[varName])]});
-    });
-
-    $('#mstlinks').parent().click(e => {
-      let varName = $('#variable').val();
-      Plotly.restyle('main_panel', {x: [window.links.filter(l => l.mst).map(l => l[varName])]});
     });
 
     $('#logScale, #linearScale').parent().click(e => Plotly.relayout('main_panel', {yaxis: e.target.outerText === 'Log' ? {type: 'log'} : {}}));
