@@ -14,6 +14,11 @@
     .showForSequence {
       display: list-item;
     }
+    .smenubar .smenubar_alink {
+      border-radius: 0px !important;
+      background-image: none !important;
+      background-color: #777777 !important;
+    }
   </style>
 </head>
 <body>
@@ -58,26 +63,27 @@
         vis: {
           conserv: false,
           overviewbox: true,
-          seqlogo: true,
-          bootstrapMenu: true
+          seqlogo: false,
+          bootstrapMenu: true,
+          labelId: false
         },
         zoomer: {
           menuFontsize: "12px",
-          autoResize: true
+          autoResize: true,
+          currentSize: -20
         },
         seqs: window.nodes.map((node, i) => ({
           'details': {'en': node.id},
-          'id': i,
+          'id': node.id,
           'name': node.id,
           'seq': node.seq
         }))
       });
-      var defMenu = new msa.menu.defaultmenu({
-        msa: m
-      });
-      m.addView("menu", defMenu);
+      m.addView("menu", new msa.menu.defaultmenu({msa: m}));
       m.render();
-      $('.smenubar').detach().appendTo('.modal-body');
+      $('.smenubar').detach().appendTo('#settingsModal .modal-body');
+      let menubuttons = $('.smenubar > div');
+      [0,2,3,6,7,8].forEach(i => $(menubuttons.get(i)).hide());
     });
     electron.ipcRenderer.send('get-data');
 
