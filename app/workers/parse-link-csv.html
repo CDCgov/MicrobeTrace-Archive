@@ -12,14 +12,17 @@
     links: []
   };
 
-  var defaultNode = {
-    id: '',
-    index: -1,
-    padding: 0,
-    selected: false,
-    seq: '',
-    cluster: 1,
-    visible: true
+  var defaultNode = function(){
+    return {
+      id: '',
+      index: -1,
+      padding: 0,
+      selected: false,
+      seq: '',
+      cluster: 1,
+      visible: true,
+      degree: 0
+    }
   };
 
   var instructions = {
@@ -57,14 +60,9 @@
     data.nodes = Lazy(
         llinks.pluck(instructions.sourceColumn).union(
         llinks.pluck(instructions.targetColumn))
-      ).map((e, i) => ({
+      ).map((e, i) => Object.assign(defaultNode(), {
         id: e,
-        index: i,
-        padding: 0,
-        selected: false,
-        seq: '',
-        cluster: 1,
-        visible: true
+        index: i
       })).toArray();
     electron.ipcRenderer.send('message', ' - Inferred ' + data.nodes.length + ' distinct nodes.');
     if(instructions.supplement) matchCSV();
@@ -90,7 +88,7 @@
         Object.assign(match, node);
         k++;
       } else {
-        data.nodes.push(Object.assign({}, defaultNode, node, {index: index++}));
+        data.nodes.push(Object.assign(defaultNode(), node, {index: index++}));
         l++;
       }
     });

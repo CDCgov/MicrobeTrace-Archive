@@ -18,14 +18,17 @@
     distance_matrix: []
   };
 
-  var defaultNode = {
-    id: '',
-    index: -1,
-    padding: 0,
-    selected: false,
-    seq: '',
-    cluster: 1,
-    visible: true
+  var defaultNode = function(){
+    return {
+      id: '',
+      index: -1,
+      padding: 0,
+      selected: false,
+      seq: '',
+      cluster: 1,
+      visible: true,
+      degree: 0
+    }
   };
 
   var instructions = {
@@ -47,12 +50,10 @@
       .on('data', d => {
         let node = d.toString();
         covered += node.length;
-        node = JSON.parse(node);
-        node.padding = 0;
+        node = Object.assign(defaultNode(), JSON.parse(node));
         if(instructions.align){
           if(index === 0 && reference === 'first'){
             reference = node.seq;
-            node.padding = 0;
           } else {
             let rst = bioseq.align(reference, node.seq, true, [1, -1], [-5, -1.7]);
             let fmt = bioseq.cigar2gaps(reference, node.seq, rst.position, rst.CIGAR);
@@ -60,7 +61,6 @@
             node.seq = fmt[1];
           }
         }
-        node.selected = false;
         node.index = index++;
         data.nodes.push(node);
         electron.ipcRenderer.send('tick', covered / filesize * 100);
@@ -97,7 +97,7 @@
         Object.assign(match, node);
         k++;
       } else {
-        data.nodes.push(Object.assign({}, defaultNode, node, {index: index++}));
+        data.nodes.push(Object.assign(defaultNode(), node, {index: index++}));
         l++;
       }
     });
