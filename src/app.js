@@ -267,8 +267,20 @@ $(function(){
 
   $('[name="referenceSequence"]').change(e => {
     if(e.target.id == 'refSeqFirst'){
-      $('#referenceRow').slideUp();
+      $('#referenceRow #refSeqFile').slideUp();
     } else {
+      if(e.target.id == 'refSeqLoad'){
+        remote.dialog.showOpenDialog({
+          filters: [{name: 'FASTA Files', extensions:['fas', 'fasta', 'txt']}]
+        }, paths => {
+          if(paths.length > 0){
+            $('#refSeqFile').text(paths[0]).slideDown();
+            $('#reference').val(jetpack.read(paths[0]).split(/[\n>]/)[2]);
+          }
+        });
+      } else {
+        $('#refSeqFile').slideUp();
+      }
       $('#referenceRow').slideDown();
     }
   });

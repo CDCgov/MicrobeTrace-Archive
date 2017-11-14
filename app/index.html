@@ -114,54 +114,76 @@ performance of this software.</pre>
         </div>
         <div class="row showForSequence" id="sequenceAlignmentRow">
           <div class="col-sm-6 text-center" id="alignerColumn" style="border-right: 1px solid lightgray; border-left: 1px solid lightgray">
-            <div class="row" style="margin-bottom: 5px">
-              <div class="col-sm-4">
-                <a href="#" data-toggle="tooltip" title="Should MicrobeTrace align your sequences?">Align</a>
-              </div>
-              <div class="col-sm-8">
-                <div class="btn-group btn-group-xs" data-toggle="buttons">
-                  <label class="btn btn-default active">
-                    <a href="#" data-toggle="tooltip" title="Recommended. Results will be better if input sequences are already aligned.">
-                      <input type="radio" name="shouldAlign" id="doNotAlign" autocomplete="off" checked> No
-                    </a>
-                  </label>
-                  <label class="btn btn-default">
-                    <a href="#" data-toggle="tooltip" title="Not Recommended. MicrobeTrace will do the best it can, but can't guarantee the quality of the alignment.">
-                      <input type="radio" name="shouldAlign" id="align" autocomplete="off"> Yes
-                    </a>
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div class="row" id="alignerRow" style="margin-bottom: 5px">
-              <div class="col-sm-4">
-                <a href="#" data-toggle="tooltip" title="What sequence should MicrobeTrace align your sequences against?">Reference</a>
-              </div>
-              <div class="col-sm-8">
-                <div class="btn-group btn-group-xs" data-toggle="buttons">
-                  <label class="btn btn-default active">
-                    <a href="#" data-toggle="tooltip" title="Should MicrobeTrace align against the first sequence in your file?">
-                      <input type="radio" name="referenceSequence" id="refSeqFirst" autocomplete="off" checked> First
-                    </a>
-                  </label>
-                  <label class="btn btn-default">
-                    <a href="#" data-toggle="tooltip" title="Would you like to paste in an alignment reference sequence?">
-                      <input type="radio" name="referenceSequence" id="refSeqPaste" autocomplete="off"> Paste
-                    </a>
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div class="row" id="referenceRow" style="margin-bottom: 5px; display: none">
-              <div class="col-sm-12 text-left">
-                <pre id="reference" contenteditable="true">CCTCAGGTCACTCTTTGGCAACGACCCCTCGTCACAATAAAGATAGGGGGGCAACTAAAGGAAGCTCTATTAGATACAGGAGCAGATGATACAGTATTAGAAGAAATGAGTTTGCCAGGAAGATGGAAACCAAAAATGATAGGGGGAATTGGAGGTTTTATCAAAGTAAGACAGTATGATCAGATACTCATAGAAATCTGTGGACATAAAGCTATAGGTACAGTATTAGTAGGACCTACACCTGTCAACATAATTGGAAGAAATCTGTTGACTCAGATTGGTTGCACTTTAAATTTTCCCATTAGCCCTATTGAGACTGTACCAGTAAAATTAAAGCCAGGAATGGATGGCCCAAAAGTTAAACAATGGCCATTGACAGAAGAAAAAATAAAAGCATTAGTAGAAATTTGTACAGAGATGGAAAAGGAAGGGAAAATTTCAAAAATTGGGCCTGAAAATCCATACAATACTCCAGTATTTGCCATAAAGAAAAAAGACAGTACTAAATGGAGAAAATTAGTAGATTTCAGAGAACTTAATAAGAGAACTCAAGACTTCTGGGAAGTTCAATTAGGAATACCACATCCCGCAGGGTTAAAAAAGAAAAAATCAGTAACAGTACTGGATGTGGGTGATGCATATTTTTCAGTTCCCTTAGATGAAGACTTCAGGAAGTATACTGCATTTACCATACCTAGTATAAACAATGAGACACCAGGGATTAGATATCAGTACAATGTGCTTCCACAGGGATGGAAAGGATCACCAGCAATATTCCAAAGTAGCATGACAAAAATCTTAGAGCCTTTTAGAAAACAAAATCCAGACATAGTTATCTATCAATACATGGATGATTTGTATGTAGGATCTGACTTAGAAATAGGGCAGCATAGAACAAAAATAGAGGAGCTGAGACAACATCTGTTGAGGTGGGGACTTACCACACCAGACAAAAAACATCAGAAAGAACCTCCATTCCTTTGGATGGGTTATGAACTCCATCCTGATAAATGGACAGTACAGCCTATAGTGCTGCCAGAAAAAGACAGCTGGACTGTCAATGACATACAGAAGTTAGTGGGGAAATTGAATTGGGCAAGTCAGATTTACCCAGGGATTAAAGTAAGGCAATTATGTAAACTCCTTAGAGGAACCAAAGCACTAACAGAAGTAATACCACTAACAGAAGAAGCAGAGCTAGAACTGGCAGAAAACAGAGAGATTCTAAAAGAACCAGTACATGGAGTGTATTATGACCCATCAAAAGACTTAATAGCAGAAATACAGAAGCAGGGGCAAGGCCAATGGACATATCAAATTTATCAAGAGCCATTTAAAAATCTGAAAACAGGAAAATATGCAAGAATGAGGGGTGCCCACACTAATGATGTAAAACAATTAACAGAGGCAGTGCAAAAAATAACCACAGAAAGCATAGTAATATGGGGAAAGACTCCTAAATTTAAACTGCCCATACAAAAGGAAACATGGGAAACATGGTGGACAGAGTATTGGCAAGCCACCTGGATTCCTGAGTGGGAGTTTGTTAATACCCCTCCCTTAGTGAAATTATGGTACCAGTTAGAGAAAGAACCCATAGTAGGAGCAGAAACCTTC</pre>
-              </div>
-            </div>
+            <button class="btn btn-default" data-toggle="modal" data-target="#alignerControlsModal">Alignment Options</button>
           </div>
         </div>
       </div>
       <div class="panel-footer clearfix">
         <button type="submit" id="main-submit" class="btn btn-primary pull-right" title="Please select a Network CSV or FASTA File">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="alignerControlsModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header"><h4 class="modal-title">Alignment Configuration</h4></div>
+        <div class="modal-body">
+          <div class="row" style="margin-bottom: 5px">
+            <div class="col-sm-2">
+              <a href="#" data-toggle="tooltip" title="Should MicrobeTrace align your sequences?">Align</a>
+            </div>
+            <div class="col-sm-10">
+              <div class="btn-group btn-group-xs" data-toggle="buttons">
+                <label class="btn btn-default active">
+                  <a href="#" data-toggle="tooltip" title="Recommended. Results will be better if input sequences are already aligned.">
+                    <input type="radio" name="shouldAlign" id="doNotAlign" autocomplete="off" checked> No
+                  </a>
+                </label>
+                <label class="btn btn-default">
+                  <a href="#" data-toggle="tooltip" title="Not Recommended. MicrobeTrace will do the best it can, but can't guarantee the quality of the alignment.">
+                    <input type="radio" name="shouldAlign" id="align" autocomplete="off"> Yes
+                  </a>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="row" id="alignerRow" style="margin-bottom: 5px">
+            <div class="col-sm-2">
+              <a href="#" data-toggle="tooltip" title="What sequence should MicrobeTrace align your sequences against?">Reference</a>
+            </div>
+            <div class="col-sm-4">
+              <div class="btn-group btn-group-xs" data-toggle="buttons">
+                <label class="btn btn-default active">
+                  <a href="#" data-toggle="tooltip" title="Should MicrobeTrace align against the first sequence in your file?">
+                    <input type="radio" name="referenceSequence" id="refSeqFirst" autocomplete="off" checked> First
+                  </a>
+                </label>
+                <label class="btn btn-default">
+                  <a href="#" data-toggle="tooltip" title="Would you like to paste in an alignment reference sequence?">
+                    <input type="radio" name="referenceSequence" id="refSeqPaste" autocomplete="off"> Paste
+                  </a>
+                </label>
+                <label class="btn btn-default">
+                  <a href="#" data-toggle="tooltip" title="Would you like to paste in an alignment reference sequence?">
+                    <input type="radio" name="referenceSequence" id="refSeqLoad" autocomplete="off"> Load From File
+                  </a>
+                </label>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <pre id="refSeqFile"></pre>
+            </div>
+          </div>
+          <div class="row" id="referenceRow">
+            <div class="col-sm-12">
+              <textarea id="reference">CCTCAGGTCACTCTTTGGCAACGACCCCTCGTCACAATAAAGATAGGGGGGCAACTAAAGGAAGCTCTATTAGATACAGGAGCAGATGATACAGTATTAGAAGAAATGAGTTTGCCAGGAAGATGGAAACCAAAAATGATAGGGGGAATTGGAGGTTTTATCAAAGTAAGACAGTATGATCAGATACTCATAGAAATCTGTGGACATAAAGCTATAGGTACAGTATTAGTAGGACCTACACCTGTCAACATAATTGGAAGAAATCTGTTGACTCAGATTGGTTGCACTTTAAATTTTCCCATTAGCCCTATTGAGACTGTACCAGTAAAATTAAAGCCAGGAATGGATGGCCCAAAAGTTAAACAATGGCCATTGACAGAAGAAAAAATAAAAGCATTAGTAGAAATTTGTACAGAGATGGAAAAGGAAGGGAAAATTTCAAAAATTGGGCCTGAAAATCCATACAATACTCCAGTATTTGCCATAAAGAAAAAAGACAGTACTAAATGGAGAAAATTAGTAGATTTCAGAGAACTTAATAAGAGAACTCAAGACTTCTGGGAAGTTCAATTAGGAATACCACATCCCGCAGGGTTAAAAAAGAAAAAATCAGTAACAGTACTGGATGTGGGTGATGCATATTTTTCAGTTCCCTTAGATGAAGACTTCAGGAAGTATACTGCATTTACCATACCTAGTATAAACAATGAGACACCAGGGATTAGATATCAGTACAATGTGCTTCCACAGGGATGGAAAGGATCACCAGCAATATTCCAAAGTAGCATGACAAAAATCTTAGAGCCTTTTAGAAAACAAAATCCAGACATAGTTATCTATCAATACATGGATGATTTGTATGTAGGATCTGACTTAGAAATAGGGCAGCATAGAACAAAAATAGAGGAGCTGAGACAACATCTGTTGAGGTGGGGACTTACCACACCAGACAAAAAACATCAGAAAGAACCTCCATTCCTTTGGATGGGTTATGAACTCCATCCTGATAAATGGACAGTACAGCCTATAGTGCTGCCAGAAAAAGACAGCTGGACTGTCAATGACATACAGAAGTTAGTGGGGAAATTGAATTGGGCAAGTCAGATTTACCCAGGGATTAAAGTAAGGCAATTATGTAAACTCCTTAGAGGAACCAAAGCACTAACAGAAGTAATACCACTAACAGAAGAAGCAGAGCTAGAACTGGCAGAAAACAGAGAGATTCTAAAAGAACCAGTACATGGAGTGTATTATGACCCATCAAAAGACTTAATAGCAGAAATACAGAAGCAGGGGCAAGGCCAATGGACATATCAAATTTATCAAGAGCCATTTAAAAATCTGAAAACAGGAAAATATGCAAGAATGAGGGGTGCCCACACTAATGATGTAAAACAATTAACAGAGGCAGTGCAAAAAATAACCACAGAAAGCATAGTAATATGGGGAAAGACTCCTAAATTTAAACTGCCCATACAAAAGGAAACATGGGAAACATGGTGGACAGAGTATTGGCAAGCCACCTGGATTCCTGAGTGGGAGTTTGTTAATACCCCTCCCTTAGTGAAATTATGGTACCAGTTAGAGAAAGAACCCATAGTAGGAGCAGAAACCTTC</textarea>
+            </div>
+          </div>
+        </div>
+        <div class="panel-footer clearfix">
+          <button type="submit" class="btn btn-primary pull-right" data-dismiss="modal" title="Confirm Alignment Configurations are All Properly Set">Confirm</button>
+        </div>
       </div>
     </div>
   </div>
