@@ -313,6 +313,7 @@ $(function(){
     setLinkVisibility();
     setupNetwork();
     renderNetwork();
+    computeDegree();
     tagClusters();
     app.state.visible_clusters = app.data.clusters.map(c => c.id);
     updateStatistics();
@@ -403,6 +404,16 @@ $(function(){
         if(!l.target.cluster) DFS(l.target);
       }
     });
+  }
+
+  function computeDegree(){
+    app.data.nodes.forEach(d => d.degree = 0);
+    app.data.links
+      .filter(l => l.visible)
+      .forEach(l => {
+        l.source.degree++;
+        l.target.degree++;
+      });
   }
 
   function setNodeVisibility(){
@@ -977,6 +988,8 @@ $(function(){
   $('#showMSTLinks, #showAllLinks').change(e => {
     setLinkVisibility();
     tagClusters();
+    computeDegree();
+    if($('#HideSingletons').is(':checked')) setNodeVisibility();
     renderNetwork();
     updateStatistics();
     app.network.force.alpha(0.3).alphaTarget(0).restart();
@@ -984,6 +997,7 @@ $(function(){
 
   $('#ShowSingletons, #HideSingletons').change(e => {
     tagClusters();
+    computeDegree();
     setNodeVisibility();
     renderNetwork();
     updateStatistics();
@@ -993,6 +1007,7 @@ $(function(){
   $('#default-link-threshold').on('input', e => {
     setLinkVisibility();
     tagClusters();
+    computeDegree();
     if($('#HideSingletons').is(':checked')) setNodeVisibility();
     renderNetwork();
     updateStatistics();
