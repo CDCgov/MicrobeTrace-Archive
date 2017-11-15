@@ -26,8 +26,32 @@
         </div>
         <div class="modal-body">
           <div class="row">
-            <div class="col-xs-3">Show axis labels?</div>
-            <div class="col-xs-9"><input type="checkbox" id="showAxisLabels" /></div>
+            <div class="col-xs-3">Axis Labels</div>
+            <div class="col-xs-9">
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default btn-xs">
+                  <input type="radio" name="axisLabels" id="showAxisLabels" autocomplete="off"> Show
+                </label>
+                <label class="btn btn-default btn-xs active">
+                  <input type="radio" name="axisLabels" id="hideAxisLabels" autocomplete="off" checked> Hide
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-3">Invert Axes</div>
+            <div class="col-xs-9">
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default btn-xs">
+                  <input id="invertX" type="checkbox"> X
+                </label>
+              </div>
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default btn-xs">
+                  <input id="invertY" type="checkbox"> Y
+                </label>
+              </div>
+            </div>
           </div>
           <div class="row">
             <div class="col-xs-3">High Color</div>
@@ -76,20 +100,33 @@
 
       if(window.plot) Plotly.purge('main_panel');
 
-      var labels = window.nodes.map(d => 'N' + d.id);
+      let xLabels = window.nodes.map(d => 'N' + d.id);
+      let yLabels = xLabels.slice();
+      let data = window.distance_matrix.map(l => l.slice());
 
-      var config = {
+      if($('#invertX').is(':checked')){
+        data.forEach(l => l.reverse());
+        xLabels.reverse();
+      }
+
+      if($('#invertY').is(':checked')){
+        data.reverse();
+        yLabels.reverse();
+      }
+
+      let config = {
         autotick: false,
         showticklabels: $('#showAxisLabels').is(':checked')
       };
+
       if(!$('#showAxisLabels').is(':checked')){
         config.ticks = '';
       }
 
       window.plot = Plotly.newPlot('main_panel', [{
-        x: labels,
-        y: labels,
-        z: window.distance_matrix,
+        x: xLabels,
+        y: yLabels,
+        z: data,
         type: 'heatmap',
         colorscale: [
           [0, $('#lowColor').val()],
@@ -111,8 +148,9 @@
     });
     electron.ipcRenderer.send('get-data');
 
-    $('#showAxisLabels').change(replot);
+    $('input[name="axisLabels"]').change(replot);
     $('input[type="color"]').change(replot);
+    $('#invertX, #invertY').change(replot);
 
     $(window).on('resize', replot);
   });
