@@ -155,6 +155,23 @@ $(function(){
     app.network.force.alpha(0.3).alphaTarget(0).restart();
   }).insertBefore('#SettingsTab');
 
+  // $('<li id="ZoomToSelectedTab" class="hidden"><a href="#">Zoom To Selected</a></li>')
+  //   .click(e => {
+  //     let nodes = app.data.nodes.filter(d => d.selected);
+  //     let maxX = math.max(nodes, 'x'),
+  //         minX = math.min(nodes, 'x'),
+  //         maxY = math.max(nodes, 'y'),
+  //         minY = math.min(nodes, 'y');
+  //     let bbox = app.network.svg.node().getBBox();
+  //     app.network.fit({
+  //       height: (maxY - minY) * 1.2,
+  //       width:  (maxX - minX) * 1.2,
+  //       x: (maxX-minX)/2 + bbox.x,
+  //       y: (maxY-minY)/2 - bbox.y
+  //     });
+  //   })
+  //   .insertBefore('#SettingsTab');
+
   $('<li id="ZoomToFitTab" class="hidden"><a href="#">Zoom To Fit</a></li>')
     .click(e => app.network.fit())
     .insertBefore('#SettingsTab');
@@ -471,22 +488,18 @@ $(function(){
       .call(app.network.zoom)
       .append('g');
 
-    app.network.fit = function(){
-      let bounds = app.network.svg.node().getBBox();
-      let parent = app.network.svg.node().parentElement;
-      let fullWidth = parent.clientWidth,
-          fullHeight = parent.clientHeight;
-      let width = bounds.width,
-          height = bounds.height;
-      if (width == 0 || height == 0) return; // nothing to fit
-      let midX = bounds.x + width / 2,
-          midY = bounds.y + height / 2;
-      let scale = 0.95 / Math.max(width / fullWidth, height / fullHeight);
+    app.network.fit = function(bounds){
+      if(!bounds) bounds = app.network.svg.node().getBBox();
+      if (bounds.width == 0 || bounds.height == 0) return; // nothing to fit
+      let parent = app.network.svg.node().parentElement,
+          midX = bounds.x + bounds.width / 2,
+          midY = bounds.y + bounds.height / 2;
+      let scale = 0.95 / Math.max(bounds.width / parent.clientWidth, bounds.height / parent.clientHeight);
       d3.select('svg')
         .transition()
         .duration(750)
         .call(app.network.zoom.transform, d3.zoomIdentity
-          .translate(fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY)
+          .translate(parent.clientWidth / 2 - scale * midX, parent.clientHeight / 2 - scale * midY)
           .scale(scale));
     };
 
