@@ -342,8 +342,8 @@ $(function(){
     setLinkVisibility();
     setupNetwork();
     renderNetwork();
-    computeDegree();
     tagClusters();
+    computeDegree();
     app.state.visible_clusters = app.data.clusters.map(c => c.id);
     updateStatistics();
     $('.hidden').removeClass('hidden');
@@ -412,7 +412,9 @@ $(function(){
         app.data.clusters.push({
           index: app.data.clusters.length,
           id: app.data.clusters.length,
-          size: 0,
+          nodes: 0,
+          links: 0,
+          sum_distances: 0,
           visible: true
         });
         DFS(node);
@@ -424,11 +426,14 @@ $(function(){
 
   function DFS(node){
     if(typeof node.cluster !== 'undefined') return;
+    let lsv = $('#linkSortVariable').val();
     node.cluster = app.data.clusters.length;
-    app.data.clusters[app.data.clusters.length - 1].size++;
+    app.data.clusters[app.data.clusters.length - 1].nodes++;
     app.data.links.forEach(l => {
       if(l.visible && (l.source.id == node.id || l.target.id == node.id)){
         l.cluster = app.data.clusters.length;
+        app.data.clusters[app.data.clusters.length - 1].links++;
+        app.data.clusters[app.data.clusters.length - 1].sum_distances += l[lsv];
         if(!l.source.cluster) DFS(l.source);
         if(!l.target.cluster) DFS(l.target);
       }
@@ -443,6 +448,12 @@ $(function(){
         l.source.degree++;
         l.target.degree++;
       });
+    app.data.clusters.forEach(c => {
+      c.links = c.links/2;
+      c.links_per_node = c.links/c.nodes;
+      c.mean_genetic_distance = c.sum_distances/c.links;
+    });
+    ipcRenderer.send('update-clusters', app.data.clusters);
   }
 
   function setNodeVisibility(){
@@ -1013,18 +1024,18 @@ $(function(){
   $('#showMSTLinks, #showAllLinks').change(e => {
     setLinkVisibility();
     tagClusters();
-    computeDegree();
     if($('#HideSingletons').is(':checked')) setNodeVisibility();
     renderNetwork();
+    computeDegree();
     updateStatistics();
     app.network.force.alpha(0.3).alphaTarget(0).restart();
   })
 
   $('#ShowSingletons, #HideSingletons').change(e => {
     tagClusters();
-    computeDegree();
     setNodeVisibility();
     renderNetwork();
+    computeDegree();
     updateStatistics();
     app.network.force.alpha(0.3).alphaTarget(0).restart();
   });
@@ -1032,9 +1043,9 @@ $(function(){
   $('#default-link-threshold').on('input', e => {
     setLinkVisibility();
     tagClusters();
-    computeDegree();
     if($('#HideSingletons').is(':checked')) setNodeVisibility();
     renderNetwork();
+    computeDegree();
     updateStatistics();
     app.network.force.alpha(0.3).alphaTarget(0).restart();
   });

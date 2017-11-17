@@ -171,6 +171,12 @@
       reorder();
     });
 
+    electron.ipcRenderer.on('update-clusters', (e, clusters) => {
+      window.clusters = clusters;
+      if($('input[name=nodelink]:checked')[0].id !== 'cluster') return;
+      updateTable();
+    });
+
     function updateData(){
       window.data = window[$('input[name=nodelink]:checked')[0].id + 's'].slice();
       window.columns = Object
@@ -229,7 +235,7 @@
 
     electron.ipcRenderer.on('deliver-data', (e, data) => {
       Object.assign(window, data);
-      ['node', 'link'].forEach(thing => {
+      ['node', 'link', 'cluster'].forEach(thing => {
         $('#'+thing+'-columns').html(
           Object
             .keys(window[thing+'s'][0])

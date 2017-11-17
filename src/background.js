@@ -109,6 +109,11 @@ ipcMain.on('update-link-visibility', (event, newLinks) => {
   distribute('update-link-visibility', data.links, event.sender.id);
 });
 
+ipcMain.on('update-clusters', (event, clusters) => {
+  data.clusters = clusters;
+  distribute('update-clusters', data.clusters);
+});
+
 ipcMain.on('update-links-mst', (event, newLinks) => {
   data.links = newLinks;
   distribute('update-links-mst', data.links);
