@@ -336,6 +336,7 @@ $(function(){
 
   ipcRenderer.on('deliver-data', (e, data) => {
     Object.assign(app.data, data);
+    setReferences();
     updateNodeVariables();
     updateLinkVariables();
     setNodeVisibility();
@@ -352,6 +353,13 @@ $(function(){
       $('#loadingInformationModal').modal('hide');
     }, 1500);
   });
+
+  function setReferences(){
+    app.data.links.forEach(l => {
+      l.source = app.data.nodes.find(d => d.id == l.source);
+      l.target = app.data.nodes.find(d => d.id == l.target);
+    })
+  }
 
   function updateNodeVariables(){
     let keys = Object.keys(app.data.nodes[0]);
@@ -462,7 +470,7 @@ $(function(){
       app.data.nodes.forEach(n => n.visible = n.visible && app.state.visible_clusters.includes(n.cluster));
     }
     if($('#HideSingletons').is(':checked')){
-      let clusters = app.data.clusters.map(c => c.size);
+      let clusters = app.data.clusters.map(c => c.nodes);
       app.data.nodes.forEach(n => n.visible = n.visible && clusters[n.cluster-1] > 1);
     }
     ipcRenderer.send('update-node-visibility', app.data.nodes);
