@@ -26,14 +26,14 @@
         </div>
         <div class="modal-body">
           <div class="row">
-            <div class="col-xs-3">Axis Labels</div>
+            <div class="col-xs-3">Distance Metric</div>
             <div class="col-xs-9">
               <div class="btn-group" data-toggle="buttons">
-                <label class="btn btn-default btn-xs">
-                  <input type="radio" name="axisLabels" id="showAxisLabels" autocomplete="off"> Show
-                </label>
                 <label class="btn btn-default btn-xs active">
-                  <input type="radio" name="axisLabels" id="hideAxisLabels" autocomplete="off" checked> Hide
+                  <input type="radio" name="distanceMetric" id="tn93" autocomplete="off" checked> TN93
+                </label>
+                <label class="btn btn-default btn-xs">
+                  <input type="radio" name="distanceMetric" id="snps" autocomplete="off"> SNPs
                 </label>
               </div>
             </div>
@@ -54,16 +54,25 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-xs-3">High Color</div>
-            <div class="col-xs-9"><input type="color" id="highColor" value="#313695" /></div>
+            <div class="col-xs-3">Color Scheme</div>
+            <div class="col-xs-9">
+              <input type="color" id="lowColor" value="#313695" />
+              <input type="color" id="medianColor" value="#ffffbf" />
+              <input type="color" id="highColor" value="#a50026" />
+            </div>
           </div>
           <div class="row">
-            <div class="col-xs-3">Median Color</div>
-            <div class="col-xs-9"><input type="color" id="medianColor" value="#ffffbf" /></div>
-          </div>
-          <div class="row">
-            <div class="col-xs-3">Low Color</div>
-            <div class="col-xs-9"><input type="color" id="lowColor" value="#a50026" /></div>
+            <div class="col-xs-3">Axis Labels</div>
+            <div class="col-xs-9">
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default btn-xs">
+                  <input type="radio" name="axisLabels" id="showAxisLabels" autocomplete="off"> Show
+                </label>
+                <label class="btn btn-default btn-xs active">
+                  <input type="radio" name="axisLabels" id="hideAxisLabels" autocomplete="off" checked> Hide
+                </label>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -94,7 +103,7 @@
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
     function replot(){
-      if(!window.distance_matrix){
+      if(!window.distance_matrix.tn93 && !window.distance_matrix.snps){
         return alertify.error('No distance matrix could be found!');
       }
 
@@ -102,7 +111,7 @@
 
       let xLabels = window.nodes.map(d => 'N' + d.id);
       let yLabels = xLabels.slice();
-      let data = window.distance_matrix.map(l => l.slice());
+      let data = window.distance_matrix[$('[name="distanceMetric"]:checked')[0].id].map(l => l.slice());
 
       if($('#invertX').is(':checked')){
         data.forEach(l => l.reverse());
@@ -148,6 +157,7 @@
     });
     electron.ipcRenderer.send('get-data');
 
+    $('input[name="distanceMetric"]').change(replot);
     $('input[name="axisLabels"]').change(replot);
     $('input[type="color"]').change(replot);
     $('#invertX, #invertY').change(replot);

@@ -15,7 +15,10 @@
   var data = {
     nodes: [],
     links: [],
-    distance_matrix: []
+    distance_matrix: {
+      tn93: [],
+      snps: []
+    }
   };
 
   var defaultNode = function(){
@@ -110,9 +113,11 @@
     let z = (data.nodes.length * (data.nodes.length - 1) / 2),
         k = 0,
         lastTick = 0;
-    data.distance_matrix = Array(data.nodes.length);
+    data.distance_matrix.tn93 = Array(data.nodes.length);
+    data.distance_matrix.snps = Array(data.nodes.length);
     for(let i = 0; i < data.nodes.length; i++){
-      data.distance_matrix[i] = math.repeat(0, data.nodes.length);
+      data.distance_matrix.tn93[i] = math.repeat(0, data.nodes.length);
+      data.distance_matrix.snps[i] = math.repeat(0, data.nodes.length);
     }
     for(let i = 0; i < data.nodes.length; i++){
       for(var j = 0; j < i; j++){
@@ -132,7 +137,8 @@
           'snps': snps,
           'cluster': 1
         });
-        data.distance_matrix[i][j] = data.distance_matrix[j][i] = dist;
+        data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = dist;
+        data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = snps;
         if(k / z * 100 > lastTick + 1){
           electron.ipcRenderer.send('tick', ++lastTick);
         }

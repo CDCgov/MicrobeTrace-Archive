@@ -35,51 +35,79 @@ body{
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title">Distance Matrix Configuration</h4>
+          <h4 class="modal-title">Phylogenetic Tree Configuration</h4>
         </div>
         <div class="modal-body">
-          <div class="btn-group">
-            <button type="button" class="btn btn-default btn-sm" data-direction="vertical" data-amount="1" title="Expand vertical spacing">
-                <i class="fa fa-arrows-v"></i>
-            </button>
-             <button type="button" class="btn btn-default btn-sm" data-direction="vertical" data-amount="-1" title="Compress vertical spacing">
-                <i class="fa fa-compress fa-rotate-135"></i>
-            </button>
-            <button type="button" class="btn btn-default btn-sm" data-direction="horizontal" data-amount="1" title="Expand horizonal spacing">
-                <i class="fa fa-arrows-h"></i>
-            </button>
-             <button type="button" class="btn btn-default btn-sm" data-direction="horizontal" data-amount="-1" title="Compress horizonal spacing">
-                <i class="fa fa-compress fa-rotate-45"></i>
-            </button>
-             <button type="button" class="btn btn-default btn-sm" id="sort_ascending" title="Sort deepest clades to the bottom">
-                <i class="fa fa-sort-amount-asc"></i>
-            </button>
-             <button type="button" class="btn btn-default btn-sm" id="sort_descending" title="Sort deepsest clades to the top">
-                <i class="fa fa-sort-amount-desc"></i>
-            </button>
-             <button type="button" class="btn btn-default btn-sm" id="sort_original" title="Restore original order">
-                <i class="fa fa-sort"></i>
-            </button>
+          <div class="row">
+            <div class="col-xs-3">Distance Metric</div>
+            <div class="col-xs-9">
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default btn-xs active">
+                  <input type="radio" name="distanceMetric" id="tn93" autocomplete="off" checked> TN93
+                </label>
+                <label class="btn btn-default btn-xs">
+                  <input type="radio" name="distanceMetric" id="snps" autocomplete="off"> SNPs
+                </label>
+              </div>
+            </div>
           </div>
-          <div class="btn-group" data-toggle="buttons">
-            <label class="btn btn-default active btn-sm">
-              <input type="radio" name="options" class="phylotree-layout-mode" data-mode="linear" autocomplete="off" checked title="Layout left-to-right"> Linear
-            </label>
-            <label class="btn btn-default  btn-sm">
-              <input type="radio" name="options" class="phylotree-layout-mode" data-mode="radial" autocomplete="off" title="Layout radially"> Radial
-            </label>
+          <div class="row">
+            <div class="col-xs-3">Layout Tweaks</div>
+            <div class="col-xs-9">
+              <div class="btn-group">
+                <button type="button" class="btn btn-default btn-sm" data-direction="vertical" data-amount="1" title="Expand vertical spacing">
+                    <i class="fa fa-arrows-v"></i>
+                </button>
+                 <button type="button" class="btn btn-default btn-sm" data-direction="vertical" data-amount="-1" title="Compress vertical spacing">
+                    <i class="fa fa-compress fa-rotate-135"></i>
+                </button>
+                <button type="button" class="btn btn-default btn-sm" data-direction="horizontal" data-amount="1" title="Expand horizonal spacing">
+                    <i class="fa fa-arrows-h"></i>
+                </button>
+                 <button type="button" class="btn btn-default btn-sm" data-direction="horizontal" data-amount="-1" title="Compress horizonal spacing">
+                    <i class="fa fa-compress fa-rotate-45"></i>
+                </button>
+                 <button type="button" class="btn btn-default btn-sm" id="sort_ascending" title="Sort deepest clades to the bottom">
+                    <i class="fa fa-sort-amount-asc"></i>
+                </button>
+                 <button type="button" class="btn btn-default btn-sm" id="sort_descending" title="Sort deepsest clades to the top">
+                    <i class="fa fa-sort-amount-desc"></i>
+                </button>
+                 <button type="button" class="btn btn-default btn-sm" id="sort_original" title="Restore original order">
+                    <i class="fa fa-sort"></i>
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="btn-group" data-toggle="buttons">
-            <label class="btn btn-default active btn-sm">
-              <input type="radio" class="phylotree-align-toggler" data-align="left" name="options-align" autocomplete="off" checked title="Align tips labels to branches">
-                  <i class="fa fa-align-left"></i>
-              </input>
-            </label>
-            <label class="btn btn-default btn-sm">
-             <input type="radio" class="phylotree-align-toggler" data-align="right" name="options-align" autocomplete="off" title="Align tips labels to the edge of the plot">
-                  <i class="fa fa-align-right"></i>
-              </input>
-            </label>
+          <div class="row">
+            <div class="col-xs-3">Layout</div>
+            <div class="col-xs-9">
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default active btn-sm">
+                  <input type="radio" name="options" class="phylotree-layout-mode" data-mode="linear" autocomplete="off" checked title="Layout left-to-right"> Linear
+                </label>
+                <label class="btn btn-default  btn-sm">
+                  <input type="radio" name="options" class="phylotree-layout-mode" data-mode="radial" autocomplete="off" title="Layout radially"> Radial
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-3">Label Alignment</div>
+            <div class="col-xs-9">
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default active btn-sm">
+                  <input type="radio" class="phylotree-align-toggler" data-align="left" name="options-align" autocomplete="off" checked title="Align tips labels to branches">
+                      <i class="fa fa-align-left"></i>
+                  </input>
+                </label>
+                <label class="btn btn-default btn-sm">
+                 <input type="radio" class="phylotree-align-toggler" data-align="right" name="options-align" autocomplete="off" title="Align tips labels to the edge of the plot">
+                      <i class="fa fa-align-right"></i>
+                  </input>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -140,11 +168,31 @@ body{
 
     electron.ipcRenderer.send('get-data');
     electron.ipcRenderer.on('deliver-data', (e, data) => {
-      var taxa = data.nodes.map(d => ({
+      window.data = data;
+      let maxsnps = 0,
+          minsnps = Number.INFINITY;
+      window.data.distance_matrix.snps.forEach(row => {
+        row.forEach(cell => {
+          if(cell > maxsnps) maxsnps = cell;
+          if(cell < minsnps) minsnps = cell;
+        });
+      });
+      let range = maxsnps - minsnps;
+      window.data.distance_matrix.snps.forEach(row => {
+        row.forEach(cell => {
+          cell = (cell-minsnps)/(maxsnps-minsnps);
+        });
+      });
+      drawTree();
+    });
+
+    function drawTree(){
+      svg.html(null);
+      var taxa = window.data.nodes.map(d => ({
         name: d.id,
         genotype: d.id
       }));
-      var RNJ = new nj.RapidNeighborJoining(data.distance_matrix, taxa);
+      var RNJ = new nj.RapidNeighborJoining(window.data.distance_matrix[$('[name="distanceMetric"]:checked')[0].id], taxa);
       RNJ.run();
       window.newick = RNJ.getAsNewick();
       tree(window.newick).svg(svg).layout();
@@ -153,7 +201,7 @@ body{
       tree.node_span('equal');
       tree.options({'draw-size-bubbles' : false}, false);
       tree.selection_label(current_selection_name);
-    });
+    }
 
     var width  = $('#main_panel').width(),
         height = $('#main_panel').height(),
@@ -224,6 +272,8 @@ body{
       });
       tree.resort_children((a, b) => (a['count_depth'] - b['count_depth']) * (asc ? 1 : -1));
     }
+
+    $('input[name="distanceMetric"]').change(drawTree);
 
     $('#sort_original').click(e => tree.resort_children((a,b) => a['original_child_order'] - b['original_child_order']));
     $('#sort_ascending, #sort_descending').click(e => sort_nodes(e.target.id === 'sort_ascending'));
