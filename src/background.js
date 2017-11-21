@@ -23,7 +23,7 @@ function reset(){
     nodes: [],
     links: [],
     clusters: [],
-    distance_matrix: []
+    distance_matrix: {}
   };
 };
 
@@ -104,9 +104,11 @@ ipcMain.on('update-node-cluster', (event, newNodes) => {
   distribute('update-node-cluster', data.nodes, event.sender.id);
 });
 
-ipcMain.on('update-link-visibility', (event, newLinks) => {
-  data.links.forEach((l, i) => l.visible = newLinks[i].visible);
-  distribute('update-link-visibility', data.links, event.sender.id);
+ipcMain.on('update-visibility', (event, newData) => {
+  data.links.forEach((l, i) => l.visible = newData.links[i].visible);
+  data.nodes.forEach((d, i) => d.visible = newData.nodes[i].visible);
+  data.clusters = newData.clusters;
+  distribute('update-visibility', data, event.sender.id);
 });
 
 ipcMain.on('update-clusters', (event, clusters) => {

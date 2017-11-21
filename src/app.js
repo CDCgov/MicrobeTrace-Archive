@@ -19,8 +19,8 @@ function dataSkeleton(){
     data: {
       nodes: [],
       links: [],
-      distance_matrix: [],
-      clusters: []
+      clusters: [],
+      distance_matrix: {}
     },
     state: {
       visible_clusters: [],
@@ -336,7 +336,10 @@ $(function(){
 
   ipcRenderer.on('deliver-data', (e, data) => {
     Object.assign(app.data, data);
-    setReferences();
+    app.data.links.forEach(l => {
+      l.source = app.data.nodes.find(d => d.id === l.source);
+      l.target = app.data.nodes.find(d => d.id === l.target);
+    });
     updateNodeVariables();
     updateLinkVariables();
     setNodeVisibility();
@@ -353,13 +356,6 @@ $(function(){
       $('#loadingInformationModal').modal('hide');
     }, 1500);
   });
-
-  function setReferences(){
-    app.data.links.forEach(l => {
-      l.source = app.data.nodes.find(d => d.id == l.source);
-      l.target = app.data.nodes.find(d => d.id == l.target);
-    })
-  }
 
   function updateNodeVariables(){
     let keys = Object.keys(app.data.nodes[0]);
@@ -473,7 +469,6 @@ $(function(){
       let clusters = app.data.clusters.map(c => c.nodes);
       app.data.nodes.forEach(n => n.visible = n.visible && clusters[n.cluster-1] > 1);
     }
-    ipcRenderer.send('update-node-visibility', app.data.nodes);
   }
 
   function setLinkVisibility(){
@@ -489,7 +484,6 @@ $(function(){
     if(app.state.visible_clusters.length < app.data.clusters.length){
       app.data.links.forEach(link => link.visible = link.visible && app.state.visible_clusters.includes(link.cluster));
     }
-    ipcRenderer.send('update-link-visibility', app.data.links);
   }
 
   function setupNetwork(){
@@ -633,6 +627,8 @@ $(function(){
     });
 
     app.network.force.force('link').links(vlinks);
+
+    ipcRenderer.send('update-visibility', app.data);
   }
 
   function dragstarted(d) {
