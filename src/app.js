@@ -665,10 +665,13 @@ $(function(){
   function showContextMenu(d){
     d3.event.preventDefault();
     hideTooltip();
+    d3.select('#viewAttributes').on('click', e => {
+      showAttributeModal(d);
+    }).node().focus();
     d3.select('#copyID').on('click', e => {
       clipboard.writeText(d.id);
       hideContextMenu();
-    }).node().focus();
+    });
     d3.select('#copySeq').on('click', e => {
       clipboard.writeText(d.seq);
       hideContextMenu();
@@ -727,7 +730,15 @@ $(function(){
     menu
       .transition().duration(100)
       .style('opacity', 0)
-      .on('end', () =>  menu.style('left', '0px').style('top', '0px'));
+      .on('end', () =>  menu.style('right', '0px').style('top', '0px'));
+  }
+
+  function showAttributeModal(d){
+    let target = $('#attributeModal tbody').empty();
+    for(const attribute in d){
+      target.append('<tr><td><strong>' + attribute + '</strong></td><td>' + d[attribute] + '</td></tr>');
+    }
+    $('#attributeModal').modal('show');
   }
 
   function showNodeToolTip(d){
