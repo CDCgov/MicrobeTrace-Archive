@@ -121,8 +121,16 @@ ipcMain.on('update-links-mst', (event, newLinks) => {
   distribute('update-links-mst', data.links);
 });
 
-ipcMain.on('get-data',     e => e.sender.send('deliver-data',     data));
-ipcMain.on('get-manifest', e => e.sender.send('deliver-manifest', manifest));
+ipcMain.on('get-data', e => {
+  e.returnValue = data;
+  e.sender.send('deliver-data', data);
+});
+
+ipcMain.on('get-manifest', e => {
+  e.returnValue = manifest;
+  e.sender.send('deliver-manifest', manifest);
+});
+
 ipcMain.on('get-component', (e, component) => {
   e.returnValue = jetpack.cwd(app.getAppPath()).read('app/components/'+component, 'utf8');
   e.sender.send('deliver-component', e.returnValue);
