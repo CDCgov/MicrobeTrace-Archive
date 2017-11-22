@@ -47,6 +47,7 @@
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Help</a>
             <ul class="dropdown-menu">
               <li id="HelpTab"><a href="#">Help</a></li>
+              <li id="UpdateTab"><a href="#">Check For Update</a></li>
               <li role="separator" class="divider"></li>
               <li id="AboutTab"><a href="#" data-toggle="modal" data-target="#aboutModal">About</a></li>
             </ul>
@@ -75,6 +76,7 @@
 
   <script>
   if(!window.electron) window.electron = require('electron');
+  const {shell} = require('electron');
   if(!window.alertify){
     window.alertify = require('alertifyjs');
     //override alertify defaults
@@ -83,6 +85,7 @@
     alertify.defaults.theme.cancel = 'btn btn-danger';
     alertify.defaults.theme.input = 'form-control';
   }
+  const isOnline = require('is-online');
 
   $('#CloseTab').click(() => electron.remote.getCurrentWindow().close());
 
@@ -176,4 +179,15 @@
   $('#HelpTab').click(() => {
     electron.ipcRenderer.send('launch-view', 'components/help/index.html');
   });
+
+  isOnline().then(online => {
+    if(online) electron.ipcRenderer.send('get-manifest');
+    electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
+      $('#UpdateTab')
+        .click(e => shell.openExternal('https://aaboyles.github.io/MicrobeTrace/checkVersion.html?version='+manifest.version))
+        .show();
+    });
+  });
+
+
   </script>
