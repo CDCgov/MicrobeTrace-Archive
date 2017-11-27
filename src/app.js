@@ -3,6 +3,7 @@ import Lazy from 'lazy.js';
 import math from 'bettermath';
 import jetpack from 'fs-jetpack';
 import Papa from 'papaparse';
+import _ from 'underscore';
 import './helpers/window.js';
 
 import d3 from 'd3';
@@ -16,6 +17,7 @@ require('bootstrap');
 
 function dataSkeleton(){
   return {
+    files: [],
     data: {
       nodes: [],
       links: [],
@@ -197,81 +199,70 @@ $(function(){
     });
   }
 
-  $('#FastaOrLinkFile').change(e => {
-    reset(true);
-
-    if(e.target.files.length < 1) return
-
-    $('#FastaOrLinkFileName').text(e.target.files[0].name).slideDown();
-
-    if(e.target.files[0].name.slice(-3).toLowerCase() == 'csv'){
-      Papa.parse(e.target.files[0], {
-        header: true,
-        preview: 1,
-        complete: results => {
-          app.data.links = results.data;
-          let keys = Object.keys(app.data.links[0]);
-          $('.linkVariables').html(
-            keys
-              .map(key => '<option value="' + key + '">' + key + '</option>')
-              .join('\n')
-          );
-          $('#LinkSourceColumn').val(keys.includes('source') ? 'source' : keys[0]);
-          $('#LinkTargetColumn').val(keys.includes('target') ? 'target' : keys[1]);
-        }
-      });
-      $('.showForSequence').slideUp();
-      $('.showForLinkCSV').slideDown();
-    } else {
-      $('.showForLinkCSV').slideUp();
-      $('.showForSequence').slideDown();
-    }
-
-    $('#NodeCSVFile').val('');
-    $('#NodeCSVFileName').text('');
-    $('.showForNodeFile').slideUp();
-    $('#NodeCSVFileColumn').slideDown();
-    $('#main-submit').slideDown();
-  });
-
-  $('#NodeCSVFile').on('change', e => {
-    if(e.target.files.length > 0){
-      $('#NodeCSVFileName').text(e.target.files[0].name).slideDown();
-      Papa.parse(e.target.files[0], {
-        header: true,
-        preview: 1,
-        complete: results => {
-          let keys = Object.keys(results.data[0]);
-          $('.nodeVariables').html(
-            keys
-              .map(key => '<option value="' + key + '">' + key + '</option>')
-              .join('\n')
-          );
-          if($('#FastaOrLinkFile')[0].files[0].name.slice(-3).toLowerCase() == 'csv'){
-            $('#NodeSequenceColumn').prepend('<option selected>None</option>\n');
-            $('#NodeSequenceColumnRow').slideDown();
+  $('#addFiles').click(e => {
+    remote.dialog.showOpenDialog({
+      filters: [{name: 'Allowed Files', extensions: ['csv', 'tsv', 'tab', 'txt', 'fas', 'fasta']}],
+      properties: ['multiSelections']
+    }, paths => {
+      reset(true);
+      if(paths.length > 0){
+        Array.prototype.push.apply(app.files, paths);
+        paths.forEach(path => {
+          let filename = path.split('\\').pop();
+          let extension = filename.split('.').pop().slice(0,3).toLowerCase();
+          let isNode = filename.toLowerCase().includes('node');
+          let root = $('<div class="row" style="display:none; margin-bottom:5px"></div>');
+          let killLink = $('<a href="#" class="fa fa-times"></a>').click(e => {
+            app.files.splice(app.files.indexOf(path),1);
+            root.slideUp(e => root.remove());
+          });
+          $('<div class="col-xs-4 filename"></div>')
+            .append(killLink)
+            .append(' ' + filename)
+            .appendTo(root);
+          let toggleColumn = $('<div class="col-xs-2 text-right"><div>').appendTo(root);
+          if(extension === 'fas'){
+            toggleColumn.append('<div class="btn-group btn-group-xs" data-toggle="buttons"><label class="btn btn-success active"><input type="radio" name="options-'+filename+'" data-state="fasta" checked>FASTA</input></label></div>');
+          } else {
+            toggleColumn.append(
+              '<div class="btn-group btn-group-xs" data-toggle="buttons">' +
+              '  <label class="btn btn-primary'+(isNode?'':' active')+'"><input type="radio" name="options-'+filename+'" data-state="link" autocomplete="off"'+(isNode?'':' checked')+'>Link</input></label>' +
+              '  <label class="btn btn-primary'+(isNode?' active':'')+'"><input type="radio" name="options-'+filename+'" data-state="node" autocomplete="off"'+(isNode?' checked':'')+'>Node</input></label>' +
+              '</div>');
+            let tag1 = $(`<div class='col-xs-1'>${isNode?'ID':'Source'}</div>`),
+                tag2 = $(`<div class='col-xs-1'>${isNode?'Sequence':'Target'}</div>`);
+            $('[name="options-'+filename+'"]').change(e => {
+              if($(e.target).data('state') == 'node'){
+                tag1.html('ID');
+                tag2.html('Sequence');
+              } else {
+                tag1.html('Source');
+                tag2.html('Target');
+              }
+            });
+            let data = '', options = '';
+            let stream = jetpack.createReadStream(path);
+            stream.on('data', chunk => {
+              data += chunk;
+              if(chunk.includes('\n')){
+                options = data.substring(0, data.indexOf('\n')).split(',').map(h => {
+                  if(['"', "'"].includes(h[0])) h = h.substring(1, h.length-1);
+                  return '<option>'+h+'</option>';
+                }).join('');
+                root
+                  .append(tag1)
+                  .append(`<div class='col-xs-2'><select style="width:100%">${options}</select></div>`)
+                  .append(tag2)
+                  .append(`<div class='col-xs-2'><select style="width:100%">${options}</select></div>`);
+                stream.pause();
+              }
+            });
           }
-          $('#NodeIDColumn').val(keys[0]);
-          $('.showForNodeFile').slideDown();
-        }
-      });
-    } else {
-      $('#NodeCSVFileName').text('');
-      $('#sequenceAlignmentRow').slideUp();
-      $('#NodeSequenceColumnRow').slideUp();
-      $('.showForNodeFile').slideUp();
-    }
-  });
-
-  $('#NodeSequenceColumn').on('change', e => {
-    if(e.target.value === 'None'){
-      $('.showForSequence').slideUp(e => {
-        $('#alignerColumn').removeClass('col-sm-offset-6');
-      });
-    } else {
-      $('#alignerColumn').addClass('col-sm-offset-6');
-      $('.showForSequence').slideDown();
-    }
+          root.appendTo('#fileTable').slideDown();
+        });
+        $('#main-submit').slideDown();
+      }
+    });
   });
 
   $('[name="shouldAlign"]').change(e => {
@@ -303,15 +294,20 @@ $(function(){
   });
 
   $('#main-submit').click(function(e){
-    ipcRenderer.send('parse-file', {
-      file: $('#FastaOrLinkFile')[0].files[0].path,
-      supplement: $('#NodeCSVFile')[0].files.length > 0 ? $('#NodeCSVFile')[0].files[0].path : '',
+    let files = [];
+    $('#fileTable .row').each((i, el) => {
+      files[i] = {
+        path: app.files[i],
+        type: $(el).find('input[type="radio"]:checked').data('state'),
+        field1: $(el).find('select:first').val(),
+        field2: $(el).find('select:last').val()
+      };
+    });
+
+    ipcRenderer.send('parse-files', {
+      files: files,
       align: $('#align').is(':checked'),
-      reference: $('[name="referenceSequence"]:checked')[0].id == 'refSeqFirst' ? 'first' : $('#reference').text(),
-      identifierColumn: $('#NodeIDColumn').val(),
-      sequenceColumn: $('#NodeSequenceColumn').val(),
-      sourceColumn: $('#LinkSourceColumn').val(),
-      targetColumn: $('#LinkTargetColumn').val()
+      reference: $('[name="referenceSequence"]:checked')[0].id == 'refSeqFirst' ? 'first' : $('#reference').text()
     });
 
     $('#file_panel').fadeOut(() => {

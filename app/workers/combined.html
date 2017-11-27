@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+<head>
+  <script>
+  const electron = require('electron');
+  const fasta    = require('fasta-parser');
+  const jetpack  = require('fs-jetpack');
+  const bioseq   = require('bioseq');
+  const fs       = require('fs');
+  const tn93     = require('tn93');
+  const Papa     = require('papaparse');
+  const math     = require('bettermath');
+  const hamming  = require('plain-hamming');
+
+  var data = {
+    nodes: [],
+    links: [],
+    distance_matrix: {
+      tn93: [],
+      snps: []
+    }
+  };
+
+  var defaultNode = function(){
+    return {
+      id: '',
+      index: -1,
+      padding: 0,
+      selected: false,
+      seq: '',
+      cluster: 1,
+      visible: true,
+      degree: 0
+    }
+  };
+
+  var instructions = {
+    identifierColumn: 'id',
+    sequenceColumn: 'seq',
+    align: false,
+    reference: 'first'
+  };
+
+  var index = 0;
+
+  electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
+    i.files.forEach(file => {
+      //Do the thing!
+    });
+    Object.assign(instructions, i);
+    electron.ipcRenderer.send('message', 'Parsing FASTA file' + (instructions.align ? ' and aligning sequences' : '') + '...');
+    let reference = instructions.reference;
+    let filesize = fs.statSync(instructions.file).size;
+    let covered = 0;
+    let parser = fasta()
+      .on('data', d => {
+        let node = d.toString();
+        covered += node.length;
+        node = Object.assign(defaultNode(), JSON.parse(node));
+        if(instructions.align){
+          if(index === 0 && reference === 'first'){
+            reference = node.seq;
+          } else {
+            let rst = bioseq.align(reference, node.seq, true, [1, -1], [-5, -1.7]);
+            let fmt = bioseq.cigar2gaps(reference, node.seq, rst.position, rst.CIGAR);
+            node.padding = rst.position;
+            node.seq = fmt[1];
+          }
+        }
+        node.index = index++;
+        data.nodes.push(node);
+        electron.ipcRenderer.send('tick', covered / filesize * 100);
+      })
+      .on('end', () => {
+        let minPadding = math.min(data.nodes, 'padding');
+        data.nodes.forEach(d => d.seq = "-".repeat(d.padding - minPadding) + d.seq);
+        electron.ipcRenderer.send('tick', 100);
+        electron.ipcRenderer.send('message', ' - Parsed ' + data.nodes.length + ' nodes.');
+        if(instructions.supplement){
+          matchCSV();
+        }
+        computeLinks();
+      });
+    parser.write(jetpack.read(instructions.file));
+    parser.end();
+  });
+
+  function matchCSV(){
+    electron.ipcRenderer.send('message', 'Parsing Node CSV...');
+    let k = 0, l = 0;
+
+    let results = Papa.parse(jetpack.read(instructions.supplement), {
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true
+    });
+    electron.ipcRenderer.send('message', ' - Parsed ' + results.data.length + ' nodes from Supplement CSV.');
+
+    electron.ipcRenderer.send('message', 'Matching to Inferred nodes...');
+    results.data.forEach(node => {
+      let match = data.nodes.find(n => n.id == node[instructions.identifierColumn]);
+      if(match){
+        Object.assign(match, node);
+        k++;
+      } else {
+        data.nodes.push(Object.assign(defaultNode(), node, {index: index++}));
+        l++;
+      }
+    });
+    electron.ipcRenderer.send('message', ' - Matched ' + k + ' nodes.');
+    electron.ipcRenderer.send('message', ' - Identified ' + l + ' singletons.');
+  }
+
+  function computeLinks(){
+    electron.ipcRenderer.send('message', 'Computing Links...');
+    let z = (data.nodes.length * (data.nodes.length - 1) / 2),
+        k = 0,
+        lastTick = 0;
+    data.distance_matrix.tn93 = Array(data.nodes.length);
+    data.distance_matrix.snps = Array(data.nodes.length);
+    for(let i = 0; i < data.nodes.length; i++){
+      data.distance_matrix.tn93[i] = math.repeat(0, data.nodes.length);
+      data.distance_matrix.snps[i] = math.repeat(0, data.nodes.length);
+    }
+    for(let i = 0; i < data.nodes.length; i++){
+      for(var j = 0; j < i; j++){
+        let dist = tn93(
+          data.nodes[j]['seq'],
+          data.nodes[i]['seq'],
+          'AVERAGE'
+        );
+        let snps = hamming(data.nodes[j]['seq'], data.nodes[i]['seq']);
+        data.links.push({
+          'index': k++,
+          'source': data.nodes[j].id,
+          'target': data.nodes[i].id,
+          'visible': (dist < 0.015),
+          'selected': false,
+          'distance': dist,
+          'snps': snps,
+          'cluster': 1
+        });
+        data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = dist;
+        data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = snps;
+        if(k / z * 100 > lastTick + 1){
+          electron.ipcRenderer.send('tick', ++lastTick);
+        }
+      }
+    }
+    electron.ipcRenderer.send('message', ' - ' + z + ' links computed.');
+    electron.ipcRenderer.send('update-data', data);
+    electron.remote.getCurrentWindow().close();
+  }
+
+  </script>
+</head>
+</html>

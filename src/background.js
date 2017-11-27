@@ -22,10 +22,10 @@ function reset(){
   session = {
     files: [],
     data: {
-    nodes: [],
-    links: [],
-    clusters: [],
-    distance_matrix: {}
+      nodes: [],
+      links: [],
+      clusters: [],
+      distance_matrix: {}
     }
   };
 };
@@ -54,21 +54,37 @@ app.on('ready', () => {
   ipcMain.on('message', (event, msg) => mainWindow.send('message', msg));
 });
 
-ipcMain.on('parse-file', (event, instructions) => {
-  var worker = 'workers/'
-  if(instructions.file.slice(-3) === 'csv'){
-    worker += 'parse-link-csv.html';
-  } else {
-    worker += 'parse-fasta.html';
-  }
+ipcMain.on('parse-files', (event, instructions) => {
   const parserWindow = createWindow('File Parser', {show: false});
   parserWindow.loadURL(url.format({
-    pathname: path.join(__dirname, worker),
+    pathname: path.join(__dirname, 'workers/combined.html'),
     protocol: 'file:',
     slashes: true
   }));
   parserWindow.on('ready-to-show', e => {
     parserWindow.send('deliver-instructions', instructions);
+  });
+});
+
+ipcMain.on('add-nodes', (event, newNodes) => {
+  newNodes.forEach(newNode => {
+    let o = session.data.nodes.find(oldNode => newNode.id == oldNode);
+    if(o){
+      Object.assign(o, newNode);
+    } else {
+      session.data.nodes.push(newNode);
+    }
+  });
+});
+
+ipcMain.on('add-links', (event, newLinks) => {
+  newLinks.forEach(newLink => {
+    let o = session.data.links.find(oldLink => newLink.source == oldLink.source && newLink.target == oldLink.target);
+    if(o){
+      Object.assign(o, newLink);
+    } else {
+      session.data.nodes.push(newLink);
+    }
   });
 });
 
