@@ -71,11 +71,11 @@
       .on('end', () => {
         let minPadding = math.min(data.nodes, 'padding');
         data.nodes.forEach(d => d.seq = "-".repeat(d.padding - minPadding) + d.seq);
+        let maxLength = math.max(data.nodes.map(d => d.seq.length));
+        data.nodes.forEach(d => d.seq = d.seq + "-".repeat(maxLength - d.seq.length));
         electron.ipcRenderer.send('tick', 100);
         electron.ipcRenderer.send('message', ' - Parsed ' + data.nodes.length + ' nodes.');
-        if(instructions.supplement){
-          matchCSV();
-        }
+        if(instructions.supplement) matchCSV();
         computeLinks();
       });
     parser.write(jetpack.read(instructions.file));
