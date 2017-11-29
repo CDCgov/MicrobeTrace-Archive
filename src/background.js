@@ -16,21 +16,24 @@ if (env.name !== 'production') {
   app.setPath('userData', `${userDataPath} (${env.name})`);
 }
 
-var session;
-
-function reset(){
-  session = {
+function dataSkeleton(){
+  return {
     files: [],
     data: {
       nodes: [],
       links: [],
       clusters: [],
       distance_matrix: {}
-    }
+    },
+    state: {
+      visible_clusters: [],
+      alpha: 0.3
+    },
+    messages: []
   };
 };
 
-reset();
+var session = dataSkeleton();
 
 const manifest = jetpack.cwd(app.getAppPath()).read('package.json', 'json');
 
@@ -171,6 +174,6 @@ ipcMain.on('launch-view', (event, view) => {
   }
 });
 
-ipcMain.on('reset', reset);
+ipcMain.on('reset', () => session = dataSkeleton());
 
 app.on('window-all-closed', app.quit);
