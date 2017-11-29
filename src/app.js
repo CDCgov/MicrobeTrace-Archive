@@ -50,9 +50,8 @@ $(function(){
       $('#alignerColumn').removeClass('col-sm-offset-6');
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
       $('#align').prop('checked', false).parent().removeClass('active');
-      $('#FastaOrLinkFileName').text('').hide();
-      $('#NodeCSVFileColumn, #main-submit').hide();
-      $('#NodeCSVFile').val('');
+      $('#main-submit').hide();
+      $('#fileTable').empty();
       $('#file_panel').fadeIn();
       app.messages = [];
       $('#loadingInformation').empty();
