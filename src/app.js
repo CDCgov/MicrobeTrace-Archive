@@ -2,8 +2,6 @@ import { clipboard, remote, ipcRenderer } from 'electron';
 import Lazy from 'lazy.js';
 import math from 'bettermath';
 import jetpack from 'fs-jetpack';
-import Papa from 'papaparse';
-import _ from 'underscore';
 import './helpers/window.js';
 
 import d3 from 'd3';
@@ -210,6 +208,7 @@ $(function(){
         paths.forEach(path => {
           let filename = path.split('\\').pop();
           let extension = filename.split('.').pop().slice(0,3).toLowerCase();
+          let isFasta = (extension === 'fas');
           let isNode = filename.toLowerCase().includes('node');
           let root = $('<div class="row" style="display:none; margin-bottom:5px"></div>');
           let killLink = $('<a href="#" class="fa fa-times"></a>').click(e => {
@@ -221,43 +220,46 @@ $(function(){
             .append(' ' + filename)
             .appendTo(root);
           let toggleColumn = $('<div class="col-xs-2 text-right"><div>').appendTo(root);
-          if(extension === 'fas'){
-            toggleColumn.append('<div class="btn-group btn-group-xs" data-toggle="buttons"><label class="btn btn-success active"><input type="radio" name="options-'+filename+'" data-state="fasta" checked>FASTA</input></label></div>');
-          } else {
-            toggleColumn.append(
-              '<div class="btn-group btn-group-xs" data-toggle="buttons">' +
-              '  <label class="btn btn-primary'+(isNode?'':' active')+'"><input type="radio" name="options-'+filename+'" data-state="link" autocomplete="off"'+(isNode?'':' checked')+'>Link</input></label>' +
-              '  <label class="btn btn-primary'+(isNode?' active':'')+'"><input type="radio" name="options-'+filename+'" data-state="node" autocomplete="off"'+(isNode?' checked':'')+'>Node</input></label>' +
-              '</div>');
-            let tag1 = $(`<div class='col-xs-1'>${isNode?'ID':'Source'}</div>`),
-                tag2 = $(`<div class='col-xs-1'>${isNode?'Sequence':'Target'}</div>`);
-            $('[name="options-'+filename+'"]').change(e => {
-              if($(e.target).data('state') == 'node'){
-                tag1.html('ID');
-                tag2.html('Sequence');
-              } else {
-                tag1.html('Source');
-                tag2.html('Target');
-              }
-            });
-            let data = '', options = '';
-            let stream = jetpack.createReadStream(path);
-            stream.on('data', chunk => {
-              data += chunk;
-              if(chunk.includes('\n')){
-                options = data.substring(0, data.indexOf('\n')).split(',').map(h => {
-                  if(['"', "'"].includes(h[0])) h = h.substring(1, h.length-1);
-                  return '<option>'+h+'</option>';
-                }).join('');
-                root
-                  .append(tag1)
-                  .append(`<div class='col-xs-2'><select style="width:100%">${options}</select></div>`)
-                  .append(tag2)
-                  .append(`<div class='col-xs-2'><select style="width:100%">${options}</select></div>`);
-                stream.pause();
-              }
-            });
-          }
+          toggleColumn.append(
+            '<div class="btn-group btn-group-xs" data-toggle="buttons">' +
+            '  <label class="btn btn-primary'+(isNode?'':' active')+'">' +
+            '    <input type="radio" name="options-'+filename+'" data-state="link" autocomplete="off"'+(isNode?'':' checked')+'>Link</input>' +
+            '  </label>' +
+            '  <label class="btn btn-primary'+(!isFasta&&isNode?' active':'')+'">' +
+            '    <input type="radio" name="options-'+filename+'" data-state="node" autocomplete="off"'+(!isFasta&&isNode?' checked':'')+'>Node</input>' +
+            '  </label>' +
+            '  <label class="btn btn-success'+(isFasta?' active':'')+'">' +
+            '    <input type="radio" name="options-'+filename+'" data-state="fasta" autocomplete="off"'+(isFasta?' active':'')+'>FASTA</input>' +
+            '  </label>' +
+            '</div>');
+          let tag1 = $(`<div class='col-xs-1'>${isNode?'ID':'Source'}</div>`),
+              tag2 = $(`<div class='col-xs-1'>${isNode?'Sequence':'Target'}</div>`);
+          let data = '', options = '';
+          let stream = jetpack.createReadStream(path);
+          stream.on('data', chunk => {
+            data += chunk;
+            if(chunk.includes('\n')){
+              options = data.substring(0, data.indexOf('\n')).split(',').map(h => {
+                if(['"', "'"].includes(h[0])) h = h.substring(1, h.length-1);
+                return `<option>${h}</option>`;
+              }).join('');
+              root
+                .append(tag1)
+                .append(`<div class='col-xs-2'><select class='field1' style='width:100%'>${options}</select></div>`)
+                .append(tag2)
+                .append(`<div class='col-xs-2'><select class='field2' style="width:100%">${options}</select></div>`);
+              stream.pause();
+            }
+          });
+          $('[name="options-'+filename+'"]').change(function(e){
+            if($(this).data('state') == 'node'){
+              tag1.html('ID');
+              tag2.html('Sequence');
+            } else {
+              tag1.html('Source');
+              tag2.html('Target');
+            }
+          });
           root.appendTo('#fileTable').slideDown();
         });
         $('#main-submit').slideDown();

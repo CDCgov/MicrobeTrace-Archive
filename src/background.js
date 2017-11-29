@@ -83,7 +83,7 @@ ipcMain.on('add-links', (event, newLinks) => {
     if(o){
       Object.assign(o, newLink);
     } else {
-      session.data.nodes.push(newLink);
+      session.data.links.push(newLink);
     }
   });
 });
