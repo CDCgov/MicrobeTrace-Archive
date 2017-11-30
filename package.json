@@ -53,6 +53,7 @@
     "ntseq": "^1.1.0",
     "papaparse": "^4.3.6",
     "plain-hamming": "^0.1.0",
+    "spinkit": "^1.2.5",
     "tn93": "^0.1.0",
     "underscore": "^1.8.3"
   },
