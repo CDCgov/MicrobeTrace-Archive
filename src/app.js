@@ -44,41 +44,33 @@ $(function(){
   // flushed. Obviously, this should not happen when the fileinput change
   // callbacks invoke this function.
   function reset(soft){
-    window.session = dataSkeleton();
-    function resetDom(){
+    if(!soft){
+      window.session = dataSkeleton();
+      $('#fileTable').empty();
+      ipcRenderer.send('reset');
+    }
+    $('#button-wrapper, #main_panel').fadeOut(() => {
+      $('#network').empty();
+      $('#groupKey').find('tbody').empty();
       $('.showForSequence, .showForMST, .showForLinkCSV, .showForNodeFile').slideUp();
-      $('#alignerColumn').removeClass('col-sm-offset-6');
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
       $('#align').prop('checked', false).parent().removeClass('active');
-      $('#main-submit').hide();
-      $('#fileTable').empty();
-      $('#file_panel').fadeIn();
-      session.messages = [];
-      $('#loadingInformation').empty();
-      $('#network').empty();
       $('.showForNotMST').css('display', 'inline-block');
-      $('#groupKey').find('tbody').empty();
-    }
-    if(soft){
-      resetDom();
-    } else {
-      $('#FastaOrLinkFile').val('');
-      $('#NodeCSVFileName').text('').hide();
+      $('#loadingInformation').empty();
       $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('hidden');
-      $('#button-wrapper, #main_panel').fadeOut(() => resetDom());
-    }
-    //Trust me, this is necessary. Don't ask why.
-    if(typeof session.network !== 'undefined'){
-      if(session.network.force){
-        session.network.force.stop();
-      }
-    }
-    ipcRenderer.send('reset');
+      $('#main-submit').hide();
+      $('#file_panel').fadeIn();
+    });
   }
 
   $('body').prepend(ipcRenderer.sendSync('get-component', 'nav.html'));
   //Since the navbar is a reused component, we can only change it per view by injecting elements, like so:
   $('#FileTab').click(() => reset());
+
+  $('<li id="AddDataTab" class="hidden"><a href="#">Add Data</a></li>').click(() => {
+
+  }).insertAfter('#FileTab');
+
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
@@ -154,22 +146,21 @@ $(function(){
     session.network.force.alpha(0.3).alphaTarget(0).restart();
   }).insertBefore('#SettingsTab');
 
-  // $('<li id="ZoomToSelectedTab" class="hidden"><a href="#">Zoom To Selected</a></li>')
-  //   .click(e => {
-  //     let nodes = session.data.nodes.filter(d => d.selected);
-  //     let maxX = math.max(nodes, 'x'),
-  //         minX = math.min(nodes, 'x'),
-  //         maxY = math.max(nodes, 'y'),
-  //         minY = math.min(nodes, 'y');
-  //     let bbox = session.network.svg.node().getBBox();
-  //     session.network.fit({
-  //       height: (maxY - minY) * 1.2,
-  //       width:  (maxX - minX) * 1.2,
-  //       x: (maxX-minX)/2 + bbox.x,
-  //       y: (maxY-minY)/2 - bbox.y
-  //     });
-  //   })
-  //   .insertBefore('#SettingsTab');
+  $('<li id="ZoomToSelectedTab" class="hidden"><a href="#">Zoom To Selected</a></li>')
+    .click(e => {
+      let nodes = session.data.nodes.filter(d => d.selected);
+      let maxX = math.max(nodes, 'x'),
+          minX = math.min(nodes, 'x'),
+          maxY = math.max(nodes, 'y'),
+          minY = math.min(nodes, 'y');
+      let bbox = session.network.svg.node().getBBox();
+      session.network.fit({
+        height: (maxY - minY) * 1.2,
+        width:  (maxX - minX) * 1.2,
+        x: (maxX-minX)/2 + bbox.x,
+        y: (maxY-minY)/2 - bbox.y
+      });
+    })//.insertBefore('#SettingsTab');
 
   $('<li id="ZoomToFitTab" class="hidden"><a href="#">Zoom To Fit</a></li>')
     .click(e => session.network.fit())
@@ -201,65 +192,80 @@ $(function(){
       filters: [{name: 'Allowed Files', extensions: ['csv', 'tsv', 'tab', 'txt', 'fas', 'fasta']}],
       properties: ['multiSelections']
     }, paths => {
-      reset(true);
-      if(paths.length > 0){
+      if(paths){
         Array.prototype.push.apply(session.files, paths);
         paths.forEach(path => {
-          let filename = path.split('\\').pop();
+          let filename = path.split(/[\\\/]/).pop();
           let extension = filename.split('.').pop().slice(0,3).toLowerCase();
           let isFasta = (extension === 'fas');
           let isNode = filename.toLowerCase().includes('node');
-          let root = $('<div class="row" style="display:none; margin-bottom:5px"></div>');
-          let killLink = $('<a href="#" class="fa fa-times"></a>').click(e => {
-            session.files.splice(session.files.indexOf(path),1);
-            root.slideUp(e => root.remove());
-          });
-          $('<div class="col-xs-4 filename"></div>')
-            .append(killLink)
+          let root = $('<div class="row" style="display:none; margin:2px auto;"></div>');
+          $('<div class="col-xs-3 filename"></div>')
+            .append($('<a href="#" class="fa fa-times killlink"></a>').click(e => {
+              session.files.splice(session.files.indexOf(path),1);
+              root.slideUp(e => root.remove());
+            }))
             .append(' ' + filename)
             .appendTo(root);
-          let toggleColumn = $('<div class="col-xs-2 text-right"><div>').appendTo(root);
-          toggleColumn.append(
-            '<div class="btn-group btn-group-xs" data-toggle="buttons">' +
-            '  <label class="btn btn-primary'+(isNode?'':' active')+'">' +
-            '    <input type="radio" name="options-'+filename+'" data-state="link" autocomplete="off"'+(isNode?'':' checked')+'>Link</input>' +
-            '  </label>' +
-            '  <label class="btn btn-primary'+(!isFasta&&isNode?' active':'')+'">' +
-            '    <input type="radio" name="options-'+filename+'" data-state="node" autocomplete="off"'+(!isFasta&&isNode?' checked':'')+'>Node</input>' +
-            '  </label>' +
-            '  <label class="btn btn-success'+(isFasta?' active':'')+'">' +
-            '    <input type="radio" name="options-'+filename+'" data-state="fasta" autocomplete="off"'+(isFasta?' active':'')+'>FASTA</input>' +
-            '  </label>' +
-            '</div>');
-          let tag1 = $(`<div class='col-xs-1'>${isNode?'ID':'Source'}</div>`),
-              tag2 = $(`<div class='col-xs-1'>${isNode?'Sequence':'Target'}</div>`);
-          let data = '', options = '';
+          root.append(`
+            <div class="col-xs-3 text-right">
+              <div class="btn-group btn-group-xs" data-toggle="buttons">
+                <label class="btn btn-primary${!isFasta&!isNode?' active':''}">
+                  <input type="radio" name="options-${filename}" data-state="link" autocomplete="off"${!isFasta&!isNode?' checked':''}>Link</input>
+                </label>
+                <label class="btn btn-primary${!isFasta&isNode?' active':''}">
+                  <input type="radio" name="options-${filename}" data-state="node" autocomplete="off"${!isFasta&isNode?' checked':''}>Node</input>
+                </label>
+                <label class="btn btn-primary${isFasta?' active':''}">
+                  <input type="radio" name="options-${filename}" data-state="fasta" autocomplete="off"${isFasta?' checked':''}>FASTA</input>
+                </label>
+              </div>
+            </div>
+          `);
+          let data = '', options = '', headers = [];
           let stream = jetpack.createReadStream(path);
           stream.on('data', chunk => {
             data += chunk;
             if(chunk.includes('\n')){
-              options = data.substring(0, data.indexOf('\n')).split(',').map(h => {
+              headers = data.substring(0, data.indexOf('\n')).split(',').map(h => {
                 if(['"', "'"].includes(h[0])) h = h.substring(1, h.length-1);
-                return `<option>${h}</option>`;
-              }).join('');
-              root
-                .append(tag1)
-                .append(`<div class='col-xs-2'><select class='field1' style='width:100%'>${options}</select></div>`)
-                .append(tag2)
-                .append(`<div class='col-xs-2'><select class='field2' style="width:100%">${options}</select></div>`);
+                return h;
+              });
+              options = '<option>None</option>' + headers.map(h => '<option>'+h+'</option>').join('');
+              root.append(`
+                <div class='col-xs-3 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
+                  <label>${isNode?'ID':'Source'}</label>&nbsp;<select>${options}</select>
+                </div>
+                <div class='col-xs-3 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
+                  <label>${isNode?'Sequence':'Target'}</label>&nbsp;<select>${options}</select>
+                </div>
+              `);
               stream.pause();
             }
           });
-          $('[name="options-'+filename+'"]').change(function(e){
-            if($(this).data('state') == 'node'){
-              tag1.html('ID');
-              tag2.html('Sequence');
-            } else {
-              tag1.html('Source');
-              tag2.html('Target');
-            }
-          });
           root.appendTo('#fileTable').slideDown();
+          let refit = function(e){
+            let these = $(`[data-file='${filename}']`),
+                first = $(these.get(0)),
+                second = $(these.get(1));
+            if($(e.target).data('state') === 'node'){
+              first.find('label').text('ID');
+              if(headers.includes('id')) first.find('select').val('id');
+              second.find('label').text('Sequence');
+              if(headers.includes('seq')) second.find('select').val('seq');
+              these.fadeIn();
+            } else if($(e.target).data('state') === 'link'){
+              first.find('label').text('Source');
+              if(headers.includes('source')) first.find('select').val('source');
+              second.find('label').text('Target');
+              if(headers.includes('target')) second.find('select').val('target');
+              these.fadeIn();
+            } else {
+              these.fadeOut();
+            }
+          };
+          $(`[name="options-${filename}"]`).change(refit);
+          refit({target: $('[name="options-'+filename+'"]:checked')[0]});
         });
         $('#main-submit').slideDown();
       }
@@ -325,14 +331,13 @@ $(function(){
 
   ipcRenderer.on('tick', (event, msg) => $('.progress-bar').css('width', msg+'%').attr('aria-valuenow', msg));
 
-  session.messages = [];
   ipcRenderer.on('message', (event, msg) => {
     session.messages.push(msg);
     $('#loadingInformation').html(session.messages.join('<br />'));
   });
 
   ipcRenderer.on('deliver-data', (e, data) => {
-    Object.assign(session.data, data);
+    session.data = data;
     session.data.links.forEach(l => {
       l.source = session.data.nodes.find(d => d.id === l.source);
       l.target = session.data.nodes.find(d => d.id === l.target);
@@ -411,7 +416,6 @@ $(function(){
     session.data.nodes.forEach(node => {
       if(typeof node.cluster === 'undefined'){
         session.data.clusters.push({
-          index: session.data.clusters.length,
           id: session.data.clusters.length,
           nodes: 0,
           links: 0,
@@ -601,15 +605,17 @@ $(function(){
       .attr('dy', 5)
       .attr('dx', 8);
 
-    let pb = $('#playbutton');
+    let pb = $('#playbutton'),
+        allLinks = d3.select('g#links').selectAll('line'),
+        allNodes = d3.select('g#nodes').selectAll('g.node');
 
     session.network.force.nodes(vnodes).on('tick', () => {
-      d3.select('g#links').selectAll('line')
+      allLinks
         .attr('x1', d => d.source.x)
         .attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y);
-      d3.select('g#nodes').selectAll('g.node')
+      allNodes
         .attr('transform', d => {
           if(d.fixed){
             return 'translate(' + d.fx + ', ' + d.fy + ')';
@@ -618,8 +624,8 @@ $(function(){
           }
         });
       if(pb.data('state', 'paused')){
-        pb.data('state', 'playing');
-        pb.html('<i class="fa fa-pause" aria-hidden="true"></i>');
+        pb.data('state', 'playing')
+          .html('<i class="fa fa-pause" aria-hidden="true"></i>');
       }
     });
 
