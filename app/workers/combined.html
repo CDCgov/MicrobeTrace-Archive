@@ -20,7 +20,7 @@
     }
   };
 
-  var nodeFields = ['padding', 'index', 'id', 'selected'];
+  var nodeFields = ['id', 'padding', 'selected'];
   var linkFields = ['source', 'target', 'cluster', 'visible', 'distance', 'snps'];
 
   var instructions = {
@@ -28,25 +28,38 @@
     reference: 'first'
   };
 
-  var index = 0;
-
   var anySequences = false;
 
   electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
     Object.assign(instructions, i);
     instructions.files.forEach(file => {
-      electron.ipcRenderer.send('message', 'Parsing ' + file.path.split(/[\\\/]/g).pop());
+      let filename = file.path.split(/[\\\/]/g).pop();
+      electron.ipcRenderer.send('message', 'Parsing ' + filename);
+
+      nodeFields.push(filename);
+      linkFields.push(filename);
 
       if(file.type === 'fasta'){
 
         electron.ipcRenderer.send('message', 'Parsing as FASTA...');
         anySequences = true;
-        parseFasta(file);
+        fs.readFileSync(file.path, 'utf-8')
+          .replace(/;.*?$/m)
+          .split(/>/m)
+          .slice(1)
+          .forEach(e => {
+            let temp = e.split(/\n/m, 2);
+            if(temp.length === 2){
+              node = {'id': temp[0], 'seq': temp[1].replace(/\n/,"")};
+              node[filename] = true;
+              addNode(node);
+            }
+          });
 
       } else if(file.type === 'link') {
 
         electron.ipcRenderer.send('message', 'Parsing as Link CSV...');
-        let results = Papa.parse(fs.createReadStream(file.path), {
+        let results = Papa.parse(fs.readFileSync(file.path, 'utf-8'), {
           header: true,
           dynamicTyping: true,
           skipEmptyLines: true
@@ -57,6 +70,7 @@
           link.target = link[file.field2];
           link.cluster = 1;
           link.visible = true;
+          link[filename] = true;
           addLink(link);
         });
         electron.ipcRenderer.send('message', ' - Parsed ' + results.data.length + ' Links from Link CSV.');
@@ -70,13 +84,14 @@
 
         electron.ipcRenderer.send('message', 'Parsing as Node CSV...');
 
-        let results = Papa.parse(fs.createReadStream(file.path), {
+        let results = Papa.parse(fs.readFileSync(file.path, 'utf-8'), {
           header: true,
           dynamicTyping: true,
           skipEmptyLines: true
         });
         results.data.forEach(node => {
           node.id = node[file.field1];
+          node[filename] = true;
           if(file.field2 !== 'None') node.seq = node[file.field2];
           addNode(node);
         });
@@ -91,7 +106,6 @@
 
     let reference = instructions.reference;
     data.nodes.forEach((node, i) => {
-      node.index = i;
       nodeFields.forEach(field => {
         if(typeof node[field] === 'undefined'){
           node[field] = '';
@@ -117,9 +131,6 @@
     // Computing Distance Matrices:
     if(anySequences){
       electron.ipcRenderer.send('message', 'Computing Distance Matrices...');
-      let z = (data.nodes.length * (data.nodes.length - 1) / 2),
-          k = 0,
-          lastTick = 0;
       data.distance_matrix.tn93 = Array(data.nodes.length);
       data.distance_matrix.snps = Array(data.nodes.length);
       for(let i = 0; i < data.nodes.length; i++){
@@ -129,7 +140,7 @@
       for(let i = 0; i < data.nodes.length; i++){
         for(var j = 0; j < i; j++){
           let dist = 1,
-          snps = Number.INFINITY;
+              snps = Number.INFINITY;
           if(data.nodes[j]['seq'] !== '' && data.nodes[i]['seq'] !== ''){
             dist = tn93(
               data.nodes[j]['seq'],
@@ -146,27 +157,20 @@
           });
           data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = dist;
           data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = snps;
-          if(k / z * 100 > lastTick + 1){
-            electron.ipcRenderer.send('tick', ++lastTick);
-          }
         }
       }
     }
 
     electron.ipcRenderer.send('message', 'Post-processing links...');
     data.links.forEach((link, i) => {
-      link.index = i;
       linkFields.forEach(field => {
-        if(typeof link[field] === 'undefined'){
-          link[field] = '';
-        }
+        if(typeof link[field] === 'undefined') link[field] = '';
       });
     });
 
     function defaultNode(){
       return {
         id: '',
-        index: -1,
         padding: 0,
         selected: false,
         cluster: 1,
@@ -187,7 +191,6 @@
 
     function defaultLink(){
       return {
-        index: -1,
         source: '',
         target: '',
         distance: 1,
@@ -204,19 +207,6 @@
       } else {
         data.links.push(Object.assign(defaultLink(), newLink));
       }
-    }
-
-    function parseFasta(file){
-      fs.readFileSync(file.path, 'utf-8')
-        .replace(/;.*?$/m)
-        .split(/>/m)
-        .slice(1)
-        .forEach(e => {
-          let temp = e.split(/\n/m, 2);
-          if(temp.length === 2){
-            addNode({'id': temp[0], 'seq': temp[1].replace(/\n/,"")});
-          }
-        });
     }
 
     electron.ipcRenderer.send('update-data', data);
