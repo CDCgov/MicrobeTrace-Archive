@@ -40,87 +40,17 @@ performance of this software.</pre>
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
 
-  <div id="file_panel">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Load Data</h3>
-      </div>
-      <div class="panel-body">
-        <div class="row">
-          <div class="col-sm-6" style="border-right: 1px solid lightgray; border-left: 1px solid lightgray">
-            <div class="row text-center" style="margin-bottom: 15px">
-              <a href="#" data-toggle="tooltip" title="Provide a CSV file containing information about links, or a FASTA file with a sequence for each node.">
-                <label class="btn btn-default btn-file">
-                  <input id="FastaOrLinkFile" type="file" class="file-loading" />
-                  <i class="fa fa-folder-open-o" aria-hidden="true"></i>
-                  <strong>Link CSV or FASTA</strong>
-                </label>
-              </a>
-            </div>
-            <div class="row" style="margin-bottom: 5px">
-              <div class="col-sm-12 text-center">
-                <pre id="FastaOrLinkFileName" style="display:none"></pre>
-              </div>
-            </div>
-            <div class="row showForLinkCSV" style="margin-bottom: 5px">
-              <div class="col-sm-4">
-                <a href="#" data-toggle="tooltip" title="Which column of your Link CSV file contains the first node identifier?">Source Column</a>
-              </div>
-              <div class="col-sm-8">
-                <select id="LinkSourceColumn" class="linkVariables"></select>
-              </div>
-            </div>
-            <div class="row showForLinkCSV">
-              <div class="col-sm-4">
-                <a href="#" data-toggle="tooltip" title="Which column of your Link CSV file contains the second node identifier?">Target Column</a>
-              </div>
-              <div class="col-sm-8">
-                <select id="LinkTargetColumn" class="linkVariables"></select>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-6" id="NodeCSVFileColumn" style="border-right: 1px solid lightgray; border-left: 1px solid lightgray">
-            <div class="row text-center" style="margin-bottom: 15px;">
-              <a href="#" data-toggle="tooltip" title="Optionally, provide a CSV file containing additional information about nodes.">
-                <label class="btn btn-default btn-file">
-                  <input id="NodeCSVFile" type="file" class="file-loading" title="Please select a Network CSV or FASTA File First" />
-                  <i class="fa fa-folder-open-o" aria-hidden="true"></i>
-                  <strong>Node CSV</strong>
-                </label>
-              </a>
-            </div>
-            <div class="row showForNodeFile" style="margin-bottom: 5px">
-              <div class="col-sm-12 text-center">
-                <pre id="NodeCSVFileName" style="display:none"></pre>
-              </div>
-            </div>
-            <div class="row showForNodeFile" style="margin-bottom: 5px">
-              <div class="col-sm-4">
-                <a href="#" data-toggle="tooltip" title="Which column of your node file contains the node identifier?">ID Column</a>
-              </div>
-              <div class="col-sm-8">
-                <select id="NodeIDColumn" class="nodeVariables"></select>
-              </div>
-            </div>
-            <div class="row" id="NodeSequenceColumnRow">
-              <div class="col-sm-4">
-                <a href="#" data-toggle="tooltip" title="Does Your Node file contain a sequence field?">Sequence Column</a>
-              </div>
-              <div class="col-sm-8">
-                <select id="NodeSequenceColumn" class="nodeVariables"></select>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row showForSequence" id="sequenceAlignmentRow">
-          <div class="col-sm-6 text-center" id="alignerColumn" style="border-right: 1px solid lightgray; border-left: 1px solid lightgray">
-            <button class="btn btn-default" data-toggle="modal" data-target="#alignerControlsModal">Alignment Options</button>
-          </div>
-        </div>
-      </div>
-      <div class="panel-footer clearfix">
-        <button type="submit" id="main-submit" class="btn btn-primary pull-right" title="Please select a Network CSV or FASTA File">Submit</button>
-      </div>
+  <div id="file_panel" class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Load Data</h3>
+    </div>
+    <div class="panel-body">
+      <div id="fileTable"></div>
+    </div>
+    <div class="panel-footer clearfix">
+      <button class="btn btn-default" id="addFiles">Add File(s)</button>
+      <button class="btn btn-default" data-toggle="modal" data-target="#alignerControlsModal">Alignment Options</button>
+      <button type="submit" id="main-submit" class="btn btn-primary pull-right" title="Please select a Network CSV or FASTA File">Submit</button>
     </div>
   </div>
 

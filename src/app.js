@@ -2,7 +2,6 @@ import { clipboard, remote, ipcRenderer } from 'electron';
 import Lazy from 'lazy.js';
 import math from 'bettermath';
 import jetpack from 'fs-jetpack';
-import Papa from 'papaparse';
 import './helpers/window.js';
 
 import d3 from 'd3';
@@ -16,6 +15,7 @@ require('bootstrap');
 
 function dataSkeleton(){
   return {
+    files: [],
     data: {
       nodes: [],
       links: [],
@@ -44,42 +44,33 @@ $(function(){
   // flushed. Obviously, this should not happen when the fileinput change
   // callbacks invoke this function.
   function reset(soft){
-    window.app = dataSkeleton();
-    function resetDom(){
+    if(!soft){
+      window.session = dataSkeleton();
+      $('#fileTable').empty();
+      ipcRenderer.send('reset');
+    }
+    $('#button-wrapper, #main_panel').fadeOut(() => {
+      $('#network').empty();
+      $('#groupKey').find('tbody').empty();
       $('.showForSequence, .showForMST, .showForLinkCSV, .showForNodeFile').slideUp();
-      $('#alignerColumn').removeClass('col-sm-offset-6');
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
       $('#align').prop('checked', false).parent().removeClass('active');
-      $('#FastaOrLinkFileName').text('').hide();
-      $('#NodeCSVFileColumn, #main-submit').hide();
-      $('#NodeCSVFile').val('');
-      $('#file_panel').fadeIn();
-      app.messages = [];
-      $('#loadingInformation').empty();
-      $('#network').empty();
       $('.showForNotMST').css('display', 'inline-block');
-      $('#groupKey').find('tbody').empty();
-    }
-    if(soft){
-      resetDom();
-    } else {
-      $('#FastaOrLinkFile').val('');
-      $('#NodeCSVFileName').text('').hide();
+      $('#loadingInformation').empty();
       $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('hidden');
-      $('#button-wrapper, #main_panel').fadeOut(() => resetDom());
-    }
-    //Trust me, this is necessary. Don't ask why.
-    if(typeof app.network !== 'undefined'){
-      if(app.network.force){
-        app.network.force.stop();
-      }
-    }
-    ipcRenderer.send('reset');
+      $('#main-submit').hide();
+      $('#file_panel').fadeIn();
+    });
   }
 
   $('body').prepend(ipcRenderer.sendSync('get-component', 'nav.html'));
   //Since the navbar is a reused component, we can only change it per view by injecting elements, like so:
   $('#FileTab').click(() => reset());
+
+  $('<li id="AddDataTab" class="hidden"><a href="#">Add Data</a></li>').click(() => {
+
+  }).insertAfter('#FileTab');
+
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
@@ -98,7 +89,7 @@ $(function(){
           'Degrees': {},
           'Multiple sequences': {},
           'Edge Stages': {},
-          'Cluster sizes': app.data.clusters.map(c => c.size),
+          'Cluster sizes': session.data.clusters.map(c => c.size),
           'Settings': {
             'contaminant-ids': [],
             'contaminants': 'remove',
@@ -107,13 +98,13 @@ $(function(){
           },
           'Network Summary': {
             'Sequences used to make links': 0,
-            'Clusters': app.data.clusters.length,
-            'Edges': app.data.links.filter(l => l.visible).length,
-            'Nodes': app.data.nodes.length
+            'Clusters': session.data.clusters.length,
+            'Edges': session.data.links.filter(l => l.visible).length,
+            'Nodes': session.data.nodes.length
           },
           'Directed Edges': {},
-          'Edges': app.data.links,
-          'Nodes': app.data.nodes
+          'Edges': session.data.links,
+          'Nodes': session.data.nodes
         }
       }, null, 2));
       alertify.success('File Saved!');
@@ -132,9 +123,9 @@ $(function(){
       }
       let extension = fileName.split('.').pop();
       if(extension === 'fas' || extension === 'fasta'){
-        jetpack.write(fileName, app.data.nodes.map(n => '>'+n.id+'\n'+n.seq).join('\n'));
+        jetpack.write(fileName, session.data.nodes.map(n => '>'+n.id+'\n'+n.seq).join('\n'));
       } else {
-        jetpack.write(fileName, '#MEGA\nTitle: '+fileName+'\n\n'+app.data.nodes.map(n => '#'+n.id+'\n'+n.seq).join('\n'));
+        jetpack.write(fileName, '#MEGA\nTitle: '+fileName+'\n\n'+session.data.nodes.map(n => '#'+n.id+'\n'+n.seq).join('\n'));
       }
       alertify.success('File Saved!');
     });
@@ -146,34 +137,33 @@ $(function(){
   $('#searchBox').hide();
 
   $('<li id="RevealAllTab" class="hidden"><a href="#">Reveal All</a></li>').click(e => {
-    app.state.visible_clusters = app.data.clusters.map(c => c.id);
+    session.state.visible_clusters = session.data.clusters.map(c => c.id);
     $('#HideSingletons').prop('checked', false).parent().removeClass('active');
     $('#ShowSingletons').prop('checked', true).parent().addClass('active');
     setLinkVisibility();
     setNodeVisibility();
     renderNetwork();
-    app.network.force.alpha(0.3).alphaTarget(0).restart();
+    session.network.force.alpha(0.3).alphaTarget(0).restart();
   }).insertBefore('#SettingsTab');
 
-  // $('<li id="ZoomToSelectedTab" class="hidden"><a href="#">Zoom To Selected</a></li>')
-  //   .click(e => {
-  //     let nodes = app.data.nodes.filter(d => d.selected);
-  //     let maxX = math.max(nodes, 'x'),
-  //         minX = math.min(nodes, 'x'),
-  //         maxY = math.max(nodes, 'y'),
-  //         minY = math.min(nodes, 'y');
-  //     let bbox = app.network.svg.node().getBBox();
-  //     app.network.fit({
-  //       height: (maxY - minY) * 1.2,
-  //       width:  (maxX - minX) * 1.2,
-  //       x: (maxX-minX)/2 + bbox.x,
-  //       y: (maxY-minY)/2 - bbox.y
-  //     });
-  //   })
-  //   .insertBefore('#SettingsTab');
+  $('<li id="ZoomToSelectedTab" class="hidden"><a href="#">Zoom To Selected</a></li>')
+    .click(e => {
+      let nodes = session.data.nodes.filter(d => d.selected);
+      let maxX = math.max(nodes, 'x'),
+          minX = math.min(nodes, 'x'),
+          maxY = math.max(nodes, 'y'),
+          minY = math.min(nodes, 'y');
+      let bbox = session.network.svg.node().getBBox();
+      session.network.fit({
+        height: (maxY - minY) * 1.2,
+        width:  (maxX - minX) * 1.2,
+        x: (maxX-minX)/2 + bbox.x,
+        y: (maxY-minY)/2 - bbox.y
+      });
+    })//.insertBefore('#SettingsTab');
 
   $('<li id="ZoomToFitTab" class="hidden"><a href="#">Zoom To Fit</a></li>')
-    .click(e => app.network.fit())
+    .click(e => session.network.fit())
     .insertBefore('#SettingsTab');
 
   $('<li role="separator" class="divider"></li>').insertBefore('#SettingsTab');
@@ -197,81 +187,89 @@ $(function(){
     });
   }
 
-  $('#FastaOrLinkFile').change(e => {
-    reset(true);
-
-    if(e.target.files.length < 1) return
-
-    $('#FastaOrLinkFileName').text(e.target.files[0].name).slideDown();
-
-    if(e.target.files[0].name.slice(-3).toLowerCase() == 'csv'){
-      Papa.parse(e.target.files[0], {
-        header: true,
-        preview: 1,
-        complete: results => {
-          app.data.links = results.data;
-          let keys = Object.keys(app.data.links[0]);
-          $('.linkVariables').html(
-            keys
-              .map(key => '<option value="' + key + '">' + key + '</option>')
-              .join('\n')
-          );
-          $('#LinkSourceColumn').val(keys.includes('source') ? 'source' : keys[0]);
-          $('#LinkTargetColumn').val(keys.includes('target') ? 'target' : keys[1]);
-        }
-      });
-      $('.showForSequence').slideUp();
-      $('.showForLinkCSV').slideDown();
-    } else {
-      $('.showForLinkCSV').slideUp();
-      $('.showForSequence').slideDown();
-    }
-
-    $('#NodeCSVFile').val('');
-    $('#NodeCSVFileName').text('');
-    $('.showForNodeFile').slideUp();
-    $('#NodeCSVFileColumn').slideDown();
-    $('#main-submit').slideDown();
-  });
-
-  $('#NodeCSVFile').on('change', e => {
-    if(e.target.files.length > 0){
-      $('#NodeCSVFileName').text(e.target.files[0].name).slideDown();
-      Papa.parse(e.target.files[0], {
-        header: true,
-        preview: 1,
-        complete: results => {
-          let keys = Object.keys(results.data[0]);
-          $('.nodeVariables').html(
-            keys
-              .map(key => '<option value="' + key + '">' + key + '</option>')
-              .join('\n')
-          );
-          if($('#FastaOrLinkFile')[0].files[0].name.slice(-3).toLowerCase() == 'csv'){
-            $('#NodeSequenceColumn').prepend('<option selected>None</option>\n');
-            $('#NodeSequenceColumnRow').slideDown();
-          }
-          $('#NodeIDColumn').val(keys[0]);
-          $('.showForNodeFile').slideDown();
-        }
-      });
-    } else {
-      $('#NodeCSVFileName').text('');
-      $('#sequenceAlignmentRow').slideUp();
-      $('#NodeSequenceColumnRow').slideUp();
-      $('.showForNodeFile').slideUp();
-    }
-  });
-
-  $('#NodeSequenceColumn').on('change', e => {
-    if(e.target.value === 'None'){
-      $('.showForSequence').slideUp(e => {
-        $('#alignerColumn').removeClass('col-sm-offset-6');
-      });
-    } else {
-      $('#alignerColumn').addClass('col-sm-offset-6');
-      $('.showForSequence').slideDown();
-    }
+  $('#addFiles').click(e => {
+    remote.dialog.showOpenDialog({
+      filters: [{name: 'Allowed Files', extensions: ['csv', 'tsv', 'tab', 'txt', 'fas', 'fasta']}],
+      properties: ['multiSelections']
+    }, paths => {
+      if(paths){
+        Array.prototype.push.apply(session.files, paths);
+        paths.forEach(path => {
+          let filename = path.split(/[\\\/]/).pop();
+          let extension = filename.split('.').pop().slice(0,3).toLowerCase();
+          let isFasta = (extension === 'fas');
+          let isNode = filename.toLowerCase().includes('node');
+          let root = $('<div class="row" style="display:none; margin:2px auto;"></div>');
+          $('<div class="col-xs-3 filename"></div>')
+            .append($('<a href="#" class="fa fa-times killlink"></a>').click(e => {
+              session.files.splice(session.files.indexOf(path),1);
+              root.slideUp(e => root.remove());
+            }))
+            .append(' ' + filename)
+            .appendTo(root);
+          root.append(`
+            <div class="col-xs-3 text-right">
+              <div class="btn-group btn-group-xs" data-toggle="buttons">
+                <label class="btn btn-primary${!isFasta&!isNode?' active':''}">
+                  <input type="radio" name="options-${filename}" data-state="link" autocomplete="off"${!isFasta&!isNode?' checked':''}>Link</input>
+                </label>
+                <label class="btn btn-primary${!isFasta&isNode?' active':''}">
+                  <input type="radio" name="options-${filename}" data-state="node" autocomplete="off"${!isFasta&isNode?' checked':''}>Node</input>
+                </label>
+                <label class="btn btn-primary${isFasta?' active':''}">
+                  <input type="radio" name="options-${filename}" data-state="fasta" autocomplete="off"${isFasta?' checked':''}>FASTA</input>
+                </label>
+              </div>
+            </div>
+          `);
+          let data = '', options = '', headers = [];
+          let stream = jetpack.createReadStream(path);
+          stream.on('data', chunk => {
+            data += chunk;
+            if(chunk.includes('\n')){
+              headers = data.substring(0, data.indexOf('\n')).split(',').map(h => {
+                if(['"', "'"].includes(h[0])) h = h.substring(1, h.length-1);
+                return h;
+              });
+              options = '<option>None</option>' + headers.map(h => '<option>'+h+'</option>').join('');
+              root.append(`
+                <div class='col-xs-3 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
+                  <label>${isNode?'ID':'Source'}</label>&nbsp;<select>${options}</select>
+                </div>
+                <div class='col-xs-3 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
+                  <label>${isNode?'Sequence':'Target'}</label>&nbsp;<select>${options}</select>
+                </div>
+              `);
+              stream.pause();
+            }
+          });
+          root.appendTo('#fileTable').slideDown();
+          let refit = function(e){
+            let these = $(`[data-file='${filename}']`),
+                first = $(these.get(0)),
+                second = $(these.get(1));
+            if($(e.target).data('state') === 'node'){
+              first.find('label').text('ID');
+              if(headers.includes('id')) first.find('select').val('id');
+              second.find('label').text('Sequence');
+              if(headers.includes('seq')) second.find('select').val('seq');
+              these.fadeIn();
+            } else if($(e.target).data('state') === 'link'){
+              first.find('label').text('Source');
+              if(headers.includes('source')) first.find('select').val('source');
+              second.find('label').text('Target');
+              if(headers.includes('target')) second.find('select').val('target');
+              these.fadeIn();
+            } else {
+              these.fadeOut();
+            }
+          };
+          $(`[name="options-${filename}"]`).change(refit);
+          refit({target: $('[name="options-'+filename+'"]:checked')[0]});
+        });
+        $('#main-submit').slideDown();
+      }
+    });
   });
 
   $('[name="shouldAlign"]').change(e => {
@@ -303,20 +301,25 @@ $(function(){
   });
 
   $('#main-submit').click(function(e){
-    ipcRenderer.send('parse-file', {
-      file: $('#FastaOrLinkFile')[0].files[0].path,
-      supplement: $('#NodeCSVFile')[0].files.length > 0 ? $('#NodeCSVFile')[0].files[0].path : '',
+    let files = [];
+    $('#fileTable .row').each((i, el) => {
+      files[i] = {
+        path: session.files[i],
+        type: $(el).find('input[type="radio"]:checked').data('state'),
+        field1: $(el).find('select:first').val(),
+        field2: $(el).find('select:last').val()
+      };
+    });
+
+    ipcRenderer.send('parse-files', {
+      files: files,
       align: $('#align').is(':checked'),
-      reference: $('[name="referenceSequence"]:checked')[0].id == 'refSeqFirst' ? 'first' : $('#reference').text(),
-      identifierColumn: $('#NodeIDColumn').val(),
-      sequenceColumn: $('#NodeSequenceColumn').val(),
-      sourceColumn: $('#LinkSourceColumn').val(),
-      targetColumn: $('#LinkTargetColumn').val()
+      reference: $('[name="referenceSequence"]:checked')[0].id == 'refSeqFirst' ? 'first' : $('#reference').text()
     });
 
     $('#file_panel').fadeOut(() => {
       $('#button-wrapper, #main_panel').fadeIn(() => {
-        if(!app.network){
+        if(!session.network){
           $('#loadingInformationModal').modal({
             keyboard: false,
             backdrop: 'static'
@@ -328,17 +331,16 @@ $(function(){
 
   ipcRenderer.on('tick', (event, msg) => $('.progress-bar').css('width', msg+'%').attr('aria-valuenow', msg));
 
-  app.messages = [];
   ipcRenderer.on('message', (event, msg) => {
-    app.messages.push(msg);
-    $('#loadingInformation').html(app.messages.join('<br />'));
+    session.messages.push(msg);
+    $('#loadingInformation').html(session.messages.join('<br />'));
   });
 
   ipcRenderer.on('deliver-data', (e, data) => {
-    Object.assign(app.data, data);
-    app.data.links.forEach(l => {
-      l.source = app.data.nodes.find(d => d.id === l.source);
-      l.target = app.data.nodes.find(d => d.id === l.target);
+    session.data = data;
+    session.data.links.forEach(l => {
+      l.source = session.data.nodes.find(d => d.id === l.source);
+      l.target = session.data.nodes.find(d => d.id === l.target);
     });
     updateNodeVariables();
     updateLinkVariables();
@@ -348,17 +350,17 @@ $(function(){
     renderNetwork();
     tagClusters();
     computeDegree();
-    app.state.visible_clusters = app.data.clusters.map(c => c.id);
+    session.state.visible_clusters = session.data.clusters.map(c => c.id);
     updateStatistics();
     $('.hidden').removeClass('hidden');
     setTimeout(e => {
-      app.network.fit();
+      session.network.fit();
       $('#loadingInformationModal').modal('hide');
     }, 1500);
   });
 
   function updateNodeVariables(){
-    let keys = Object.keys(app.data.nodes[0]);
+    let keys = Object.keys(session.data.nodes[0]);
     $('.nodeVariables.categorical').html(
       '<option value="none">None</option>\n' +
       keys
@@ -368,7 +370,7 @@ $(function(){
     $('.nodeVariables.numeric').html(
       '<option value="none">None</option>\n' +
       keys
-        .filter(key => math.isNumber(app.data.nodes[0][key]))
+        .filter(key => math.isNumber(session.data.nodes[0][key]))
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
@@ -376,7 +378,7 @@ $(function(){
   }
 
   function updateLinkVariables(){
-    let keys = Object.keys(app.data.links[0]);
+    let keys = Object.keys(session.data.links[0]);
     $('.linkVariables').html(
       '<option value="none">None</option>\n' +
       keys
@@ -386,7 +388,7 @@ $(function(){
     $('.linkVariables.numeric').html(
       '<option value="none">None</option>\n' +
       keys
-        .filter(key => math.isNumber(app.data.links[0][key]))
+        .filter(key => math.isNumber(session.data.links[0][key]))
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
@@ -398,24 +400,23 @@ $(function(){
 
   function updateStatistics(){
     if($('#hideNetworkStatistics').is(':checked')) return;
-    let llinks = Lazy(app.data.links).filter(e => e.visible);
-    let lnodes = Lazy(app.data.nodes).filter(e => e.visible);
+    let llinks = Lazy(session.data.links).filter(e => e.visible);
+    let lnodes = Lazy(session.data.nodes).filter(e => e.visible);
     let singletons = lnodes.size() - llinks.pluck('source').union(llinks.pluck('target')).uniq().size();
     $('#numberOfSelectedNodes').text(lnodes.filter(d => d.selected).size().toLocaleString());
     $('#numberOfNodes').text(lnodes.size().toLocaleString());
     $('#numberOfVisibleLinks').text(llinks.size().toLocaleString());
     $('#numberOfSingletonNodes').text(singletons.toLocaleString());
-    $('#numberOfDisjointComponents').text(app.data.clusters.length - singletons);
+    $('#numberOfDisjointComponents').text(session.data.clusters.length - singletons);
   }
 
   function tagClusters(){
-    app.data.clusters = [];
-    app.data.nodes.forEach(node => delete node.cluster);
-    app.data.nodes.forEach(node => {
+    session.data.clusters = [];
+    session.data.nodes.forEach(node => delete node.cluster);
+    session.data.nodes.forEach(node => {
       if(typeof node.cluster === 'undefined'){
-        app.data.clusters.push({
-          index: app.data.clusters.length,
-          id: app.data.clusters.length,
+        session.data.clusters.push({
+          id: session.data.clusters.length,
           nodes: 0,
           links: 0,
           sum_distances: 0,
@@ -424,20 +425,20 @@ $(function(){
         DFS(node);
       }
     });
-    app.state.visible_clusters = app.data.clusters.map(c => c.id);
-    ipcRenderer.send('update-node-cluster', app.data.nodes);
+    session.state.visible_clusters = session.data.clusters.map(c => c.id);
+    ipcRenderer.send('update-node-cluster', session.data.nodes);
   }
 
   function DFS(node){
     if(typeof node.cluster !== 'undefined') return;
     let lsv = $('#linkSortVariable').val();
-    node.cluster = app.data.clusters.length;
-    app.data.clusters[app.data.clusters.length - 1].nodes++;
-    app.data.links.forEach(l => {
+    node.cluster = session.data.clusters.length;
+    session.data.clusters[session.data.clusters.length - 1].nodes++;
+    session.data.links.forEach(l => {
       if(l.visible && (l.source.id == node.id || l.target.id == node.id)){
-        l.cluster = app.data.clusters.length;
-        app.data.clusters[app.data.clusters.length - 1].links++;
-        app.data.clusters[app.data.clusters.length - 1].sum_distances += l[lsv];
+        l.cluster = session.data.clusters.length;
+        session.data.clusters[session.data.clusters.length - 1].links++;
+        session.data.clusters[session.data.clusters.length - 1].sum_distances += l[lsv];
         if(!l.source.cluster) DFS(l.source);
         if(!l.target.cluster) DFS(l.target);
       }
@@ -445,78 +446,78 @@ $(function(){
   }
 
   function computeDegree(){
-    app.data.nodes.forEach(d => d.degree = 0);
-    app.data.links
+    session.data.nodes.forEach(d => d.degree = 0);
+    session.data.links
       .filter(l => l.visible)
       .forEach(l => {
         l.source.degree++;
         l.target.degree++;
       });
-    app.data.clusters.forEach(c => {
+    session.data.clusters.forEach(c => {
       c.links = c.links/2;
       c.links_per_node = c.links/c.nodes;
       c.mean_genetic_distance = c.sum_distances/c.links;
     });
-    ipcRenderer.send('update-clusters', app.data.clusters);
+    ipcRenderer.send('update-clusters', session.data.clusters);
   }
 
   function setNodeVisibility(){
-    app.data.nodes.forEach(n => n.visible = true);
-    if(app.state.visible_clusters.length < app.data.clusters.length){
-      app.data.nodes.forEach(n => n.visible = n.visible && app.state.visible_clusters.includes(n.cluster));
+    session.data.nodes.forEach(n => n.visible = true);
+    if(session.state.visible_clusters.length < session.data.clusters.length){
+      session.data.nodes.forEach(n => n.visible = n.visible && session.state.visible_clusters.includes(n.cluster));
     }
     if($('#HideSingletons').is(':checked')){
-      let clusters = app.data.clusters.map(c => c.nodes);
-      app.data.nodes.forEach(n => n.visible = n.visible && clusters[n.cluster-1] > 1);
+      let clusters = session.data.clusters.map(c => c.nodes);
+      session.data.nodes.forEach(n => n.visible = n.visible && clusters[n.cluster-1] > 1);
     }
   }
 
   function setLinkVisibility(){
     let metric  = $('#linkSortVariable').val(),
         threshold = $('#default-link-threshold').val();
-    app.data.links.forEach(link => link.visible = true);
+    session.data.links.forEach(link => link.visible = true);
     if(metric !== 'none'){
-      app.data.links.forEach(link => link.visible = link.visible && (link[metric] <= threshold));
+      session.data.links.forEach(link => link.visible = link.visible && (link[metric] <= threshold));
     }
     if($('#showMSTLinks').is(':checked')){
-      app.data.links.forEach(link => link.visible = link.visible && link.mst);
+      session.data.links.forEach(link => link.visible = link.visible && link.mst);
     }
-    if(app.state.visible_clusters.length < app.data.clusters.length){
-      app.data.links.forEach(link => link.visible = link.visible && app.state.visible_clusters.includes(link.cluster));
+    if(session.state.visible_clusters.length < session.data.clusters.length){
+      session.data.links.forEach(link => link.visible = link.visible && session.state.visible_clusters.includes(link.cluster));
     }
   }
 
   function setupNetwork(){
-    app.network = {};
+    session.network = {};
     let width = $(window).width(),
         height = $(window).height(),
         xScale = d3.scaleLinear().domain([0, width]).range([0, width]),
         yScale = d3.scaleLinear().domain([0, height]).range([0, height]);
 
-    app.network.zoom = d3.zoom().on('zoom', () => app.network.svg.attr('transform', d3.event.transform));
+    session.network.zoom = d3.zoom().on('zoom', () => session.network.svg.attr('transform', d3.event.transform));
 
-    app.network.svg = d3.select('svg')
+    session.network.svg = d3.select('svg')
       .on('click', hideContextMenu)
       .html('') //Let's make sure the canvas is blank.
-      .call(app.network.zoom)
+      .call(session.network.zoom)
       .append('g');
 
-    app.network.fit = function(bounds){
-      if(!bounds) bounds = app.network.svg.node().getBBox();
+    session.network.fit = function(bounds){
+      if(!bounds) bounds = session.network.svg.node().getBBox();
       if (bounds.width == 0 || bounds.height == 0) return; // nothing to fit
-      let parent = app.network.svg.node().parentElement,
+      let parent = session.network.svg.node().parentElement,
           midX = bounds.x + bounds.width / 2,
           midY = bounds.y + bounds.height / 2;
       let scale = 0.95 / Math.max(bounds.width / parent.clientWidth, bounds.height / parent.clientHeight);
       d3.select('svg')
         .transition()
         .duration(750)
-        .call(app.network.zoom.transform, d3.zoomIdentity
+        .call(session.network.zoom.transform, d3.zoomIdentity
           .translate(parent.clientWidth / 2 - scale * midX, parent.clientHeight / 2 - scale * midY)
           .scale(scale));
     };
 
-    app.network.force = d3.forceSimulation()
+    session.network.force = d3.forceSimulation()
       .force('link', d3.forceLink()
         .id(d => d.id)
         .distance($('#default-link-length').val())
@@ -531,11 +532,11 @@ $(function(){
       )
       .force('center', d3.forceCenter(width / 2, height / 2));
 
-    app.network.force.on('end', e => {
+    session.network.force.on('end', e => {
       $('#playbutton').data('state', 'paused').html('<i class="fa fa-play" aria-hidden="true"></i>');
     });
 
-    app.network.svg.append('svg:defs').append('marker')
+    session.network.svg.append('svg:defs').append('marker')
       .attr('id', 'end-arrow')
       .attr('viewBox', '0 0 10 10')
       .attr('refX', 20)
@@ -546,12 +547,12 @@ $(function(){
       .append('svg:path')
         .attr('d', 'M0,0 L0,10 L10,5 z');
 
-    app.network.svg.append('g').attr('id', 'links');
-    app.network.svg.append('g').attr('id', 'nodes');
+    session.network.svg.append('g').attr('id', 'links');
+    session.network.svg.append('g').attr('id', 'nodes');
   }
 
   function renderNetwork(){
-    let vlinks = app.data.links.filter(link => link.visible);
+    let vlinks = session.data.links.filter(link => link.visible);
 
     // Links are considerably simpler.
     let link = d3.select('g#links').selectAll('line').data(vlinks);
@@ -568,7 +569,7 @@ $(function(){
     scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
     scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
 
-    let vnodes = app.data.nodes.filter(node => node.visible);
+    let vnodes = session.data.nodes.filter(node => node.visible);
 
     //OK, this is a little bit of expert-level D3 voodoo that deserves some explanation.
     let node = d3.select('g#nodes').selectAll('g.node').data(vnodes);
@@ -604,15 +605,17 @@ $(function(){
       .attr('dy', 5)
       .attr('dx', 8);
 
-    let pb = $('#playbutton');
+    let pb = $('#playbutton'),
+        allLinks = d3.select('g#links').selectAll('line'),
+        allNodes = d3.select('g#nodes').selectAll('g.node');
 
-    app.network.force.nodes(vnodes).on('tick', () => {
-      d3.select('g#links').selectAll('line')
+    session.network.force.nodes(vnodes).on('tick', () => {
+      allLinks
         .attr('x1', d => d.source.x)
         .attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y);
-      d3.select('g#nodes').selectAll('g.node')
+      allNodes
         .attr('transform', d => {
           if(d.fixed){
             return 'translate(' + d.fx + ', ' + d.fy + ')';
@@ -621,18 +624,18 @@ $(function(){
           }
         });
       if(pb.data('state', 'paused')){
-        pb.data('state', 'playing');
-        pb.html('<i class="fa fa-pause" aria-hidden="true"></i>');
+        pb.data('state', 'playing')
+          .html('<i class="fa fa-pause" aria-hidden="true"></i>');
       }
     });
 
-    app.network.force.force('link').links(vlinks);
+    session.network.force.force('link').links(vlinks);
 
-    ipcRenderer.send('update-visibility', app.data);
+    ipcRenderer.send('update-visibility', session.data);
   }
 
   function dragstarted(d) {
-    if (!d3.event.active) app.network.force.alphaTarget(0.3).restart();
+    if (!d3.event.active) session.network.force.alphaTarget(0.3).restart();
     d.fx = d.x;
     d.fy = d.y;
   }
@@ -643,7 +646,7 @@ $(function(){
   }
 
   function dragended(d) {
-    if (!d3.event.active) app.network.force.alphaTarget(0);
+    if (!d3.event.active) session.network.force.alphaTarget(0);
     if(!d.fixed){
       d.fx = null;
       d.fy = null;
@@ -652,14 +655,14 @@ $(function(){
 
   function clickHandler(n){
    if(!d3.event.shiftKey){
-     app.data.nodes
+     session.data.nodes
        .filter(node => node !== n)
        .forEach(node => node.selected = false);
    }
    n.selected = !n.selected;
-   ipcRenderer.send('update-node-selection', app.data.nodes);
-   d3.select('g#nodes').selectAll('g.node').data(app.data.nodes).select('path').classed('selected', d => d.selected);
-   $('#numberOfSelectedNodes').text(app.data.nodes.filter(d => d.selected).length.toLocaleString());
+   ipcRenderer.send('update-node-selection', session.data.nodes);
+   d3.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path').classed('selected', d => d.selected);
+   $('#numberOfSelectedNodes').text(session.data.nodes.filter(d => d.selected).length.toLocaleString());
  }
 
   function showContextMenu(d){
@@ -681,7 +684,7 @@ $(function(){
         d.fx = null;
         d.fy = null;
         d.fixed = false;
-        app.network.force.alpha(0.3).alphaTarget(0).restart();
+        session.network.force.alpha(0.3).alphaTarget(0).restart();
         hideContextMenu();
       });
     } else {
@@ -693,29 +696,29 @@ $(function(){
       });
     }
     $('#hideCluster').click(e => {
-      app.state.visible_clusters = app.state.visible_clusters.filter(cid => cid !== d.cluster);
+      session.state.visible_clusters = session.state.visible_clusters.filter(cid => cid !== d.cluster);
       setLinkVisibility();
       setNodeVisibility();
       renderNetwork();
-      app.network.force.alpha(0.3).alphaTarget(0).restart();
+      session.network.force.alpha(0.3).alphaTarget(0).restart();
       hideContextMenu();
     });
-    if(app.state.visible_clusters < app.data.clusters.length){
+    if(session.state.visible_clusters < session.data.clusters.length){
       $('#isolateCluster').text('De-isolate Cluster').click(e => {
-        app.state.visible_clusters = app.data.clusters.map(c => c.id);
+        session.state.visible_clusters = session.data.clusters.map(c => c.id);
         setNodeVisibility();
         setLinkVisibility();
         renderNetwork();
-        app.network.force.alpha(0.3).alphaTarget(0).restart();
+        session.network.force.alpha(0.3).alphaTarget(0).restart();
         hideContextMenu();
       });
     } else {
       $('#isolateCluster').text('Isolate Cluster').click(e => {
-        app.state.visible_clusters = [d.cluster];
+        session.state.visible_clusters = [d.cluster];
         setLinkVisibility();
         setNodeVisibility();
         renderNetwork();
-        app.network.force.alpha(0.3).alphaTarget(0).restart();
+        session.network.force.alpha(0.3).alphaTarget(0).restart();
         hideContextMenu();
       });
     }
@@ -778,7 +781,7 @@ $(function(){
     let o = (b => d3[$('#default-node-symbol').val()]);
     if(symbolVariable !== 'none'){
       let map = {};
-      let values = Lazy(app.data.nodes).pluck(symbolVariable).uniq().sort().toArray();
+      let values = Lazy(session.data.nodes).pluck(symbolVariable).uniq().sort().toArray();
       $('#nodeShapes select').each(function(i, el){
         map[values[i]] = $(this).val();
       });
@@ -789,14 +792,14 @@ $(function(){
     let size = defaultSize;
     let sizeVariable = $('#nodeRadiusVariable').val();
     if(sizeVariable !== 'none'){
-      let values = Lazy(app.data.nodes).pluck(sizeVariable).without(undefined).uniq().sort().toArray();
+      let values = Lazy(session.data.nodes).pluck(sizeVariable).without(undefined).uniq().sort().toArray();
       var min = math.min(values);
       var max = math.max(values);
       var oldrng = max - min;
       var med = oldrng / 2;
     }
-    let vnodes = app.data.nodes.filter(n => n.visible);
-    let nodes = app.network.svg.select('g#nodes').selectAll('g.node').data(vnodes);
+    let vnodes = session.data.nodes.filter(n => n.visible);
+    let nodes = session.network.svg.select('g#nodes').selectAll('g.node').data(vnodes);
     nodes.select('path').each(function(d){
       if(symbolVariable !== 'none'){
         type = d3[o(d[$('#nodeSymbolVariable').val()])];
@@ -819,17 +822,17 @@ $(function(){
   }
 
   ipcRenderer.on('update-node-selection', (e, newNodes) => {
-    app.data.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
-    app.network.svg.select('g#nodes').selectAll('g.node').data(app.data.nodes).select('path').classed('selected', d => d.selected);
-    $('#numberOfSelectedNodes').text(app.data.nodes.filter(d => d.selected).length.toLocaleString());
+    session.data.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
+    session.network.svg.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path').classed('selected', d => d.selected);
+    $('#numberOfSelectedNodes').text(session.data.nodes.filter(d => d.selected).length.toLocaleString());
   });
 
   $('#nodeLabelVariable').change(e => {
     if(e.target.value === 'none'){
-      app.network.svg.select('g#nodes').selectAll('g.node')
+      session.network.svg.select('g#nodes').selectAll('g.node')
         .select('text').text('');
     } else {
-      app.network.svg.select('g#nodes').selectAll('g.node').data(app.data.nodes.filter(n => n.visible))
+      session.network.svg.select('g#nodes').selectAll('g.node').data(session.data.nodes.filter(n => n.visible))
         .select('text').text(d => d[e.target.value]);
     }
   });
@@ -845,7 +848,7 @@ $(function(){
       return table.fadeOut(e => table.remove());
     }
     table.append('<tr><th>'+e.target.value+'</th><th>Shape</th><tr>');
-    let values = Lazy(app.data.nodes).pluck(e.target.value).uniq().sort().toArray();
+    let values = Lazy(session.data.nodes).pluck(e.target.value).uniq().sort().toArray();
     let symbolKeys = ['symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye'].concat(Object.keys(extraSymbols));
     let o = d3.scaleOrdinal(symbolKeys).domain(values);
     let options = $('#default-node-symbol').html();
@@ -865,11 +868,11 @@ $(function(){
   function scaleNodeOpacity(){
     let scalar = $('#default-node-opacity').val();
     let variable = $('#nodeOpacityVariable').val();
-    let circles = app.network.svg.select('g#nodes').selectAll('g.node').data(app.data.nodes).select('path');
+    let circles = session.network.svg.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path');
     if(variable === 'none'){
       return circles.attr('opacity', scalar);
     }
-    let values = Lazy(app.data.nodes).pluck(variable).without(undefined).sort().uniq().toArray();
+    let values = Lazy(session.data.nodes).pluck(variable).without(undefined).sort().uniq().toArray();
     let min = math.min(values);
     let max = math.max(values);
     let rng = max - min;
@@ -884,10 +887,10 @@ $(function(){
   $('#default-node-opacity').on('input', scaleNodeOpacity);
   $('#nodeOpacityVariable').change(scaleNodeOpacity);
 
-  $('#default-node-color').on('input', e => app.network.svg.select('g#nodes').selectAll('g.node').select('path').attr('fill', e.target.value));
+  $('#default-node-color').on('input', e => session.network.svg.select('g#nodes').selectAll('g.node').select('path').attr('fill', e.target.value));
   $('#nodeColorVariable').change(e => {
     $('#default-node-color').fadeOut();
-    let circles = app.network.svg.select('g#nodes').selectAll('g.node').data(app.data.nodes).select('path');
+    let circles = session.network.svg.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path');
     $('#nodeColors').fadeOut(function(){$(this).remove()});
     let table = $('<tbody id="nodeColors"></tbody>').appendTo('#groupKey');
     if(e.target.value == 'none'){
@@ -897,7 +900,7 @@ $(function(){
       return;
     }
     table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
-    let values = Lazy(app.data.nodes).pluck(e.target.value).uniq().sortBy().toArray();
+    let values = Lazy(session.data.nodes).pluck(e.target.value).uniq().sortBy().toArray();
     let colors = JSON.parse(ipcRenderer.sendSync('get-component', 'colors.json'));
     let o = d3.scaleOrdinal(colors).domain(values);
     circles.attr('fill', d => o(d[e.target.value]));
@@ -916,16 +919,16 @@ $(function(){
   });
 
   $('#default-node-charge').on('input', e => {
-    app.network.force.force('charge').strength(-e.target.value);
-    app.network.force.alpha(0.3).alphaTarget(0).restart();
+    session.network.force.force('charge').strength(-e.target.value);
+    session.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#DirectedLinks').parent().click(e => {
-    app.network.svg.select('g#links').selectAll('line').attr('marker-end', 'url(#end-arrow)');
+    session.network.svg.select('g#links').selectAll('line').attr('marker-end', 'url(#end-arrow)');
   });
 
   $('#UndirectedLinks').parent().click(e => {
-    app.network.svg.select('g#links').selectAll('line').attr('marker-end', null);
+    session.network.svg.select('g#links').selectAll('line').attr('marker-end', null);
   });
 
   function setLinkPattern(){
@@ -936,31 +939,31 @@ $(function(){
       'Dashed': linkWidth * 5,
       'Dot-Dashed': linkWidth * 5 + ',' + linkWidth * 5 + ',' + linkWidth  + ',' + linkWidth * 5
     }
-    app.network.svg.select('g#links').selectAll('line').attr('stroke-dasharray', mappings[$('#default-link-pattern').val()]);
+    session.network.svg.select('g#links').selectAll('line').attr('stroke-dasharray', mappings[$('#default-link-pattern').val()]);
   }
 
   $('#default-link-pattern').on('change', setLinkPattern);
 
   $('#default-link-length').on('input', e => {
-    app.network.force.force('link').distance(e.target.value);
-    app.network.force.alpha(0.3).alphaTarget(0).restart();
+    session.network.force.force('link').distance(e.target.value);
+    session.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   function setLinkColor(e){
     if($('#linkColorVariable').val() == 'none'){
-      app.network.svg.select('g#links').selectAll('line').style('stroke', $('#default-link-color').val());
+      session.network.svg.select('g#links').selectAll('line').style('stroke', $('#default-link-color').val());
       $('#default-link-color').fadeIn();
       $('#linkColors').fadeOut();
       return;
     }
     $('#default-link-color').fadeOut();
-    let links = app.network.svg.select('g#links').selectAll('line').data(app.data.links);
+    let links = session.network.svg.select('g#links').selectAll('line').data(session.data.links);
     $('#linkColors').remove();
     $('#groupKey').append('<tbody id="linkColors"></tbody>');
     let table = $('#linkColors');
     let variable = $('#linkColorVariable').val();
     table.append('<tr><th>'+variable+'</th><th>Color</th><tr>');
-    let values = Lazy(app.data.links).pluck(variable).uniq().sort().toArray();
+    let values = Lazy(session.data.links).pluck(variable).uniq().sort().toArray();
     let colors = JSON.parse(ipcRenderer.sendSync('get-component', 'colors.json'));
     let o = d3.scaleOrdinal(colors).domain(values);
     links.style('stroke', d => o(d[variable]));
@@ -982,12 +985,12 @@ $(function(){
   $('#linkColorVariable').change(setLinkColor);
 
   function scaleLinkThing(scalar, variable, attribute, floor){
-    let links = app.network.svg.select('g#links').selectAll('line').data(app.data.links.filter(l => l.visible));
+    let links = session.network.svg.select('g#links').selectAll('line').data(session.data.links.filter(l => l.visible));
     if(variable === 'none'){
       return links.attr(attribute, scalar);
     }
     if(!floor){floor = 1;}
-    let values = Lazy(app.data.links).pluck(variable).without(undefined).sort().uniq().toArray();
+    let values = Lazy(session.data.links).pluck(variable).without(undefined).sort().uniq().toArray();
     let min = math.min(values);
     let max = math.max(values);
     let rng = max - min;
@@ -1013,14 +1016,14 @@ $(function(){
       $('#computeMST').fadeOut();
       $('#default-link-threshold').css('visibility', 'hidden');
     } else {
-      //$('#default-link-threshold').attr('step', math.meanAbsoluteDeviation(app.data.links.map(l => l[e.target.value])));
+      //$('#default-link-threshold').attr('step', math.meanAbsoluteDeviation(session.data.links.map(l => l[e.target.value])));
       $('#computeMST').css('display', 'inline-block');
       $('#default-link-threshold').css('visibility', 'visible');
     }
   });
 
   ipcRenderer.on('update-links-mst', (event, newLinks) => {
-    app.data.links.forEach(ol => {
+    session.data.links.forEach(ol => {
       ol.mst = false;
       let newlink = newLinks.find(nl => nl.source == ol.source.id && nl.target == ol.target.id);
       if(typeof newlink !== "undefined"){
@@ -1043,7 +1046,7 @@ $(function(){
     renderNetwork();
     computeDegree();
     updateStatistics();
-    app.network.force.alpha(0.3).alphaTarget(0).restart();
+    session.network.force.alpha(0.3).alphaTarget(0).restart();
   })
 
   $('#ShowSingletons, #HideSingletons').change(e => {
@@ -1052,7 +1055,7 @@ $(function(){
     renderNetwork();
     computeDegree();
     updateStatistics();
-    app.network.force.alpha(0.3).alphaTarget(0).restart();
+    session.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#default-link-threshold').on('input', e => {
@@ -1062,7 +1065,7 @@ $(function(){
     renderNetwork();
     computeDegree();
     updateStatistics();
-    app.network.force.alpha(0.3).alphaTarget(0).restart();
+    session.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#hideNetworkStatistics').parent().click(() => $('#networkStatistics').fadeOut());
@@ -1072,13 +1075,13 @@ $(function(){
   });
 
   $('#network-friction').on('input', e => {
-    app.network.force.velocityDecay(e.target.value);
-    app.network.force.alpha(0.3).alphaTarget(0).restart();
+    session.network.force.velocityDecay(e.target.value);
+    session.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#network-gravity').on('input', e => {
-    app.network.force.force('gravity').strength(e.target.value);
-    app.network.force.alpha(0.3).alphaTarget(0).restart();
+    session.network.force.force('gravity').strength(e.target.value);
+    session.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
   $('#main_panel').css('background-color', $('#network-color').val());
@@ -1086,12 +1089,12 @@ $(function(){
   $('#network-color').on('input', e => $('#main_panel').css('background-color', e.target.value));
 
   $('#faster').click(e => {
-    app.state.alpha += 0.2;
-    app.network.force.alphaTarget(app.state.alpha).restart();
+    session.state.alpha += 0.2;
+    session.network.force.alphaTarget(session.state.alpha).restart();
   });
   $('#slower').click(e => {
-    app.state.alpha = Math.max(app.state.alpha - 0.2, 0.1);
-    app.network.force.alphaTarget(app.state.alpha).restart();
+    session.state.alpha = Math.max(session.state.alpha - 0.2, 0.1);
+    session.network.force.alphaTarget(session.state.alpha).restart();
   });
 
   $('#playbutton')
@@ -1100,28 +1103,28 @@ $(function(){
       if($(this).data('state') === 'paused'){
         $(this).data('state', 'playing')
           .html('<i class="fa fa-pause" aria-hidden="true"></i>');
-        app.network.force.alphaTarget(app.state.alpha).restart();
+        session.network.force.alphaTarget(session.state.alpha).restart();
       } else {
         $(this).data('state', 'paused')
           .html('<i class="fa fa-play" aria-hidden="true"></i>');
-        app.network.force.alpha(0).alphaTarget(0);
+        session.network.force.alpha(0).alphaTarget(0);
       }
     });
 
   $('#search').on('input', e => {
     if(e.target.value === '') {
-      app.data.nodes.forEach(n => n.selected = false);
+      session.data.nodes.forEach(n => n.selected = false);
     } else {
-      app.data.nodes.forEach(n => n.selected = (n.id.indexOf(e.target.value)>-1));
-      if(app.data.nodes.filter(n => n.selected).length === 0) alertify.warning('No matches!');
+      session.data.nodes.forEach(n => n.selected = (n.id.indexOf(e.target.value)>-1));
+      if(session.data.nodes.filter(n => n.selected).length === 0) alertify.warning('No matches!');
     }
     d3.select('g#nodes')
       .selectAll('g.node')
       .select('path')
-      .data(app.data.nodes)
+      .data(session.data.nodes)
       .classed('selected', d => d.selected);
-    ipcRenderer.send('update-node-selection', app.data.nodes);
-    $('#numberOfSelectedNodes').text(app.data.nodes.filter(d => d.selected).length.toLocaleString());
+    ipcRenderer.send('update-node-selection', session.data.nodes);
+    $('#numberOfSelectedNodes').text(session.data.nodes.filter(d => d.selected).length.toLocaleString());
   });
 
   $('[data-toggle="tooltip"]').tooltip();

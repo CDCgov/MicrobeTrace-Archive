@@ -16,18 +16,24 @@ if (env.name !== 'production') {
   app.setPath('userData', `${userDataPath} (${env.name})`);
 }
 
-var data;
-
-function reset(){
-  data = {
-    nodes: [],
-    links: [],
-    clusters: [],
-    distance_matrix: {}
+function dataSkeleton(){
+  return {
+    files: [],
+    data: {
+      nodes: [],
+      links: [],
+      clusters: [],
+      distance_matrix: {}
+    },
+    state: {
+      visible_clusters: [],
+      alpha: 0.3
+    },
+    messages: []
   };
 };
 
-reset();
+var session = dataSkeleton();
 
 const manifest = jetpack.cwd(app.getAppPath()).read('package.json', 'json');
 
@@ -51,21 +57,37 @@ app.on('ready', () => {
   ipcMain.on('message', (event, msg) => mainWindow.send('message', msg));
 });
 
-ipcMain.on('parse-file', (event, instructions) => {
-  var worker = 'workers/'
-  if(instructions.file.slice(-3) === 'csv'){
-    worker += 'parse-link-csv.html';
-  } else {
-    worker += 'parse-fasta.html';
-  }
+ipcMain.on('parse-files', (event, instructions) => {
   const parserWindow = createWindow('File Parser', {show: false});
   parserWindow.loadURL(url.format({
-    pathname: path.join(__dirname, worker),
+    pathname: path.join(__dirname, 'workers/combined.html'),
     protocol: 'file:',
     slashes: true
   }));
   parserWindow.on('ready-to-show', e => {
     parserWindow.send('deliver-instructions', instructions);
+  });
+});
+
+ipcMain.on('add-nodes', (event, newNodes) => {
+  newNodes.forEach(newNode => {
+    let o = session.data.nodes.find(oldNode => newNode.id == oldNode);
+    if(o){
+      Object.assign(o, newNode);
+    } else {
+      session.data.nodes.push(newNode);
+    }
+  });
+});
+
+ipcMain.on('add-links', (event, newLinks) => {
+  newLinks.forEach(newLink => {
+    let o = session.data.links.find(oldLink => newLink.source == oldLink.source && newLink.target == oldLink.target);
+    if(o){
+      Object.assign(o, newLink);
+    } else {
+      session.data.links.push(newLink);
+    }
   });
 });
 
@@ -77,7 +99,7 @@ ipcMain.on('compute-mst', (event, titles) => {
     slashes: true
   }));
   computeWindow.on('ready-to-show', e => {
-    computeWindow.send('deliver-data', data);
+    computeWindow.send('deliver-data', session.data);
   });
 });
 
@@ -90,40 +112,40 @@ function distribute(type, sdata, except){
 }
 
 ipcMain.on('update-data', (e, newData) => {
-  Object.assign(data, newData);
-  distribute('deliver-data', data, e.sender.id);
+  Object.assign(session.data, newData);
+  distribute('deliver-data', session.data, e.sender.id);
 });
 
 ipcMain.on('update-node-selection', (event, newNodes) => {
-  data.nodes.forEach(d => d.selected = newNodes.find(nn => nn.id == d.id).selected);
-  distribute('update-node-selection', data.nodes, event.sender.id);
+  session.data.nodes.forEach(d => d.selected = newNodes.find(nn => nn.id == d.id).selected);
+  distribute('update-node-selection', session.data.nodes, event.sender.id);
 });
 
 ipcMain.on('update-node-cluster', (event, newNodes) => {
-  data.nodes.forEach(d => d.cluster = newNodes.find(nn => nn.id == d.id).cluster);
-  distribute('update-node-cluster', data.nodes, event.sender.id);
+  session.data.nodes.forEach(d => d.cluster = newNodes.find(nn => nn.id == d.id).cluster);
+  distribute('update-node-cluster', session.data.nodes, event.sender.id);
 });
 
 ipcMain.on('update-visibility', (event, newData) => {
-  data.links.forEach((l, i) => l.visible = newData.links[i].visible);
-  data.nodes.forEach((d, i) => d.visible = newData.nodes[i].visible);
-  data.clusters = newData.clusters;
-  distribute('update-visibility', data, event.sender.id);
+  session.data.links.forEach((l, i) => l.visible = newData.links[i].visible);
+  session.data.nodes.forEach((d, i) => d.visible = newData.nodes[i].visible);
+  session.data.clusters = newData.clusters;
+  distribute('update-visibility', session.data, event.sender.id);
 });
 
 ipcMain.on('update-clusters', (event, clusters) => {
-  data.clusters = clusters;
-  distribute('update-clusters', data.clusters);
+  session.data.clusters = clusters;
+  distribute('update-clusters', session.data.clusters);
 });
 
 ipcMain.on('update-links-mst', (event, newLinks) => {
-  data.links = newLinks;
-  distribute('update-links-mst', data.links);
+  session.data.links = newLinks;
+  distribute('update-links-mst', session.data.links);
 });
 
 ipcMain.on('get-data', e => {
-  e.returnValue = data;
-  e.sender.send('deliver-data', data);
+  e.returnValue = session.data;
+  e.sender.send('deliver-data', session.data);
 });
 
 ipcMain.on('get-manifest', e => {
@@ -152,6 +174,6 @@ ipcMain.on('launch-view', (event, view) => {
   }
 });
 
-ipcMain.on('reset', reset);
+ipcMain.on('reset', () => session = dataSkeleton());
 
 app.on('window-all-closed', app.quit);
