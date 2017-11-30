@@ -67,10 +67,6 @@ $(function(){
   //Since the navbar is a reused component, we can only change it per view by injecting elements, like so:
   $('#FileTab').click(() => reset());
 
-  $('<li id="AddDataTab" class="hidden"><a href="#">Add Data</a></li>').click(() => {
-
-  }).insertAfter('#FileTab');
-
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
@@ -132,6 +128,8 @@ $(function(){
   }).insertAfter('#FileTab');
 
   $('<li role="separator" class="divider"></li>').insertAfter('#FileTab');
+
+  $('<li id="AddDataTab" class="hidden"><a href="#">Add Data</a></li>').click(reset).insertAfter('#FileTab');
 
   $('body').append(ipcRenderer.sendSync('get-component', 'search.html'));
   $('#searchBox').hide();
@@ -319,12 +317,10 @@ $(function(){
 
     $('#file_panel').fadeOut(() => {
       $('#button-wrapper, #main_panel').fadeIn(() => {
-        if(!session.network){
-          $('#loadingInformationModal').modal({
-            keyboard: false,
-            backdrop: 'static'
-          });
-        }
+        $('#loadingInformationModal').modal({
+          keyboard: false,
+          backdrop: 'static'
+        });
       });
     });
   });
