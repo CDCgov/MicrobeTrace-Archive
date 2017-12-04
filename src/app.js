@@ -48,17 +48,16 @@ $(function(){
       window.session = dataSkeleton();
       $('#fileTable').empty();
       ipcRenderer.send('reset');
+      $('#main-submit').hide();
     }
     $('#button-wrapper, #main_panel').fadeOut(() => {
       $('#network').empty();
       $('#groupKey').find('tbody').empty();
       $('.showForMST').hide();
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
-      $('#align').prop('checked', false).parent().removeClass('active');
       $('.showForNotMST').css('display', 'inline-block');
       $('#loadingInformation').empty();
       $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('disabled');
-      $('#main-submit').hide();
       $('#file_panel').fadeIn();
     });
   }
@@ -270,32 +269,15 @@ $(function(){
     });
   });
 
-  $('[name="shouldAlign"]').change(e => {
-    if(e.target.id == 'align'){
-      $('#alignerRow').slideDown();
-    } else {
-      $('#alignerRow, #referenceRow').slideUp();
-    }
-  });
-
-  $('[name="referenceSequence"]').change(e => {
-    if(e.target.id == 'refSeqFirst'){
-      $('#referenceRow #refSeqFile').slideUp();
-    } else {
-      if(e.target.id == 'refSeqLoad'){
-        remote.dialog.showOpenDialog({
-          filters: [{name: 'FASTA Files', extensions:['fas', 'fasta', 'txt']}]
-        }, paths => {
-          if(paths.length > 0){
-            $('#refSeqFile').text(paths[0]).slideDown();
-            $('#reference').val(jetpack.read(paths[0]).split(/[\n>]/)[2]);
-          }
-        });
-      } else {
-        $('#refSeqFile').slideUp();
+  $('#refSeqLoad').click(e => {
+    remote.dialog.showOpenDialog({
+      filters: [{name: 'FASTA Files', extensions:['fas', 'fasta', 'txt']}]
+    }, paths => {
+      if(paths.length > 0){
+        $('#refSeqFile').text(paths[0]).slideDown();
+        $('#reference').val(jetpack.read(paths[0]).split(/[\n>]/)[2]);
       }
-      $('#referenceRow').slideDown();
-    }
+    });
   });
 
   $('#main-submit').click(function(e){
@@ -312,7 +294,7 @@ $(function(){
     ipcRenderer.send('parse-files', {
       files: files,
       align: $('#align').is(':checked'),
-      reference: $('[name="referenceSequence"]:checked')[0].id == 'refSeqFirst' ? 'first' : $('#reference').text()
+      reference: $('#reference').text()
     });
 
     $('#file_panel').fadeOut(() => {

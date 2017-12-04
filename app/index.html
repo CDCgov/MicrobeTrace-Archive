@@ -78,42 +78,19 @@ performance of this software.</pre>
             <div class="col-sm-10">
               <div class="btn-group btn-group-xs" data-toggle="buttons">
                 <label class="btn btn-default active">
-                  <a href="#" data-toggle="tooltip" title="Recommended. Results will be better if input sequences are already aligned.">
-                    <input type="radio" name="shouldAlign" id="doNotAlign" autocomplete="off" checked> No
-                  </a>
+                  <input type="radio" name="shouldAlign" id="align" autocomplete="off" checked> Yes
                 </label>
                 <label class="btn btn-default">
-                  <a href="#" data-toggle="tooltip" title="Not Recommended. MicrobeTrace will do the best it can, but can't guarantee the quality of the alignment.">
-                    <input type="radio" name="shouldAlign" id="align" autocomplete="off"> Yes
-                  </a>
+                  <input type="radio" name="shouldAlign" id="doNotAlign" autocomplete="off"> No
                 </label>
               </div>
             </div>
           </div>
           <div class="row" id="alignerRow" style="margin-bottom: 5px">
             <div class="col-sm-2">
-              <a href="#" data-toggle="tooltip" title="What sequence should MicrobeTrace align your sequences against?">Reference</a>
+              <input id="refSeqLoad" class="btn btn-default btn-xs" type="button" value="Load From File" />
             </div>
-            <div class="col-sm-4">
-              <div class="btn-group btn-group-xs" data-toggle="buttons">
-                <label class="btn btn-default active">
-                  <a href="#" data-toggle="tooltip" title="Should MicrobeTrace align against the first sequence in your file?">
-                    <input type="radio" name="referenceSequence" id="refSeqFirst" autocomplete="off" checked> First
-                  </a>
-                </label>
-                <label class="btn btn-default">
-                  <a href="#" data-toggle="tooltip" title="Would you like to paste in an alignment reference sequence?">
-                    <input type="radio" name="referenceSequence" id="refSeqPaste" autocomplete="off"> Paste
-                  </a>
-                </label>
-                <label class="btn btn-default">
-                  <a href="#" data-toggle="tooltip" title="Would you like to paste in an alignment reference sequence?">
-                    <input type="radio" name="referenceSequence" id="refSeqLoad" autocomplete="off"> Load From File
-                  </a>
-                </label>
-              </div>
-            </div>
-            <div class="col-sm-6">
+            <div class="col-sm-10">
               <pre id="refSeqFile"></pre>
             </div>
           </div>
