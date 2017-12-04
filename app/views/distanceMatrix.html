@@ -99,8 +99,23 @@
     electron.ipcRenderer.send('get-manifest');
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
-
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
+    $('<li id="ExportTab"><a href="#">Export Data</a></li>').click(() => {
+      electron.remote.dialog.showSaveDialog({
+        filters: [
+          {name: 'Comma-Separated Values', extensions: ['csv']}
+        ]
+      }, (fileName) => {
+        if (fileName === undefined){
+          return alertify.error('File not exported!');
+        }
+        let labels = window.nodes.map(d => 'N' + d.id);
+        let data = window.distance_matrix[$('[name="distanceMetric"]:checked')[0].id].map(l => l.slice());
+        jetpack.write(fileName, ',' + labels.join(',') + '\n' + data.map((row, i) => labels[i] + ',' + row.join(',')).join('\n'));
+        alertify.success('File Saved!');
+      });
+    }).insertAfter('#FileTab');
+    $('<li role="separator" class="divider"></li>').insertAfter('#FileTab');
 
     function replot(){
       if(!window.distance_matrix.tn93 && !window.distance_matrix.snps){
