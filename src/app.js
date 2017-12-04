@@ -52,12 +52,12 @@ $(function(){
     $('#button-wrapper, #main_panel').fadeOut(() => {
       $('#network').empty();
       $('#groupKey').find('tbody').empty();
-      $('.showForSequence, .showForMST, .showForLinkCSV, .showForNodeFile').slideUp();
+      $('.showForMST').hide();
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
       $('#align').prop('checked', false).parent().removeClass('active');
       $('.showForNotMST').css('display', 'inline-block');
       $('#loadingInformation').empty();
-      $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('hidden');
+      $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('disabled');
       $('#main-submit').hide();
       $('#file_panel').fadeIn();
     });
@@ -70,7 +70,7 @@ $(function(){
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
-  $('<li id="ExportHIVTraceTab" class="hidden"><a href="#">Export HIVTRACE File</a></li>').click(() => {
+  $('<li id="ExportHIVTraceTab"><a href="#">Export HIVTRACE File</a></li>').click(() => {
     remote.dialog.showSaveDialog({
       filters: [
         {name: 'JSON', extensions: ['json']}
@@ -107,7 +107,7 @@ $(function(){
     });
   })//.insertAfter('#FileTab');
 
-  $('<li id="ExportTab" class="hidden"><a href="#">Export Data</a></li>').click(e => {
+  $('<li id="ExportTab"><a href="#">Export Data</a></li>').click(e => {
     remote.dialog.showSaveDialog({
       filters: [
         {name: 'FASTA', extensions: ['fas', 'fasta']},
@@ -129,12 +129,12 @@ $(function(){
 
   $('<li role="separator" class="divider"></li>').insertAfter('#FileTab');
 
-  $('<li id="AddDataTab" class="hidden"><a href="#">Add Data</a></li>').click(reset).insertAfter('#FileTab');
+  $('<li id="AddDataTab"><a href="#">Add Data</a></li>').click(reset).insertAfter('#FileTab');
 
   $('body').append(ipcRenderer.sendSync('get-component', 'search.html'));
   $('#searchBox').hide();
 
-  $('<li id="RevealAllTab" class="hidden"><a href="#">Reveal All</a></li>').click(e => {
+  $('<li id="RevealAllTab"><a href="#">Reveal All</a></li>').click(e => {
     session.state.visible_clusters = session.data.clusters.map(c => c.id);
     $('#HideSingletons').prop('checked', false).parent().removeClass('active');
     $('#ShowSingletons').prop('checked', true).parent().addClass('active');
@@ -144,7 +144,7 @@ $(function(){
     session.network.force.alpha(0.3).alphaTarget(0).restart();
   }).insertBefore('#SettingsTab');
 
-  $('<li id="ZoomToSelectedTab" class="hidden"><a href="#">Zoom To Selected</a></li>')
+  $('<li id="ZoomToSelectedTab"><a href="#">Zoom To Selected</a></li>')
     .click(e => {
       let nodes = session.data.nodes.filter(d => d.selected);
       let maxX = math.max(nodes, 'x'),
@@ -160,7 +160,7 @@ $(function(){
       });
     })//.insertBefore('#SettingsTab');
 
-  $('<li id="ZoomToFitTab" class="hidden"><a href="#">Zoom To Fit</a></li>')
+  $('<li id="ZoomToFitTab"><a href="#">Zoom To Fit</a></li>')
     .click(e => session.network.fit())
     .insertBefore('#SettingsTab');
 
@@ -333,6 +333,7 @@ $(function(){
   });
 
   ipcRenderer.on('deliver-data', (e, data) => {
+    $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').removeClass('disabled');
     session.data = data;
     session.data.links.forEach(l => {
       l.source = session.data.nodes.find(d => d.id === l.source);
