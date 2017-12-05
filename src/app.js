@@ -721,6 +721,7 @@ $(function(){
       target.append('<tr><td><strong>' + attribute + '</strong></td><td>' + d[attribute] + '</td></tr>');
     }
     $('#attributeModal').modal('show');
+    hideContextMenu();
   }
 
   function showNodeToolTip(d){

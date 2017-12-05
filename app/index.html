@@ -54,18 +54,6 @@ performance of this software.</pre>
     </div>
   </div>
 
-  <div id="attributeModal" class="modal fade" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header"><h4 class="modal-title">Node Attributes</h4></div>
-        <table class="table"><tbody></tbody></table>
-        <div class="panel-footer clearfix">
-          <button type="submit" class="btn btn-primary pull-right" data-dismiss="modal" title="Confirm Alignment Configurations are All Properly Set">Confirm</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div id="alignerControlsModal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -144,6 +132,22 @@ performance of this software.</pre>
       <li><a href="#" id="isolateCluster">Isolate Cluster</a></li>
       <li><a href="#" id="hideCluster">Hide Cluster</a></li>
     </ul>
+
+    <div id="attributeModal" class="modal fade" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header"><h4 class="modal-title">Node Attributes</h4></div>
+          <div class="modal-body" style="overflow: auto">
+            <table class="table table-striped">
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="panel-footer clearfix">
+            <button type="submit" class="btn btn-primary pull-right" data-dismiss="modal" title="">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <table id="groupKey">
       <tbody id="nodeGroupKey"></tbody>
