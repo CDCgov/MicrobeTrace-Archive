@@ -213,6 +213,9 @@ $(function(){
                 <label class="btn btn-primary${!isFasta&isNode?' active':''}">
                   <input type="radio" name="options-${filename}" data-state="node" autocomplete="off"${!isFasta&isNode?' checked':''}>Node</input>
                 </label>
+                <label class="btn btn-primary">
+                  <input type="radio" name="options-${filename}" data-state="distmat" autocomplete="off">Dist. Mat.</input>
+                </label>
                 <label class="btn btn-primary${isFasta?' active':''}">
                   <input type="radio" name="options-${filename}" data-state="fasta" autocomplete="off"${isFasta?' checked':''}>FASTA</input>
                 </label>

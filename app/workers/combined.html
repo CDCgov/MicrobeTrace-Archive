@@ -80,7 +80,7 @@
         var llinks = Lazy(results.data);
         llinks.pluck(file.field1).union(llinks.pluck(file.field2)).forEach(d => addNode({'id': d}));
 
-      } else { //i.e. Node
+      } else if(file.type === 'node'){
 
         electron.ipcRenderer.send('message', 'Parsing as Node CSV...');
 
@@ -97,6 +97,32 @@
         });
         nodeFields = [...new Set([...nodeFields, ...Object.keys(results.data[0])])];
         if(nodeFields.includes('seq')) anySequences = true;
+
+      } else { //Distance Matrix
+
+        electron.ipcRenderer.send('message', 'Parsing as Distance Matrix...');
+
+        let results = Papa.parse(fs.readFileSync(file.path, 'utf-8'), {
+          dynamicTyping: true,
+          skipEmptyLines: true
+        });
+        let nodeIDs = [];
+        results.data.forEach((row, i) => {
+          if(i == 0){
+            nodeIDs = row;
+            nodeIDs.forEach((cell, k) => { if(k > 0) addNode({id: cell}) });
+          } else {
+            row.forEach((cell, j) => {
+              if(j > i){
+                addLink({
+                  source: nodeIDs[j],
+                  target: nodeIDs[i],
+                  distance: cell
+                });
+              }
+            });
+          }
+        });
 
       }
     });
