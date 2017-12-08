@@ -299,11 +299,11 @@ $(function(){
         field2: $(el).find('select:last').val()
       };
     });
-    
+
     ipcRenderer.send('parse-files', {
       files: files,
       align: $('#align').is(':checked'),
-      reference: $('#reference').text()
+      reference: $('#reference').val()
     });
 
     $('#file_panel').fadeOut(() => {

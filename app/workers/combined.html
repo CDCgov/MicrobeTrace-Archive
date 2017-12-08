@@ -155,17 +155,16 @@
     });
 
     //Alignment:
-    let reference = instructions.reference;
     if(anySequences && instructions.align){
       electron.ipcRenderer.send('message', 'Aligning Sequences...');
-      // data.nodes
-      //   .filter(d => !(/^-*$/.test(d.seq)))
-      //   .forEach(node => {
-      //     let rst = bioseq.align(instructions.reference, node.seq, true, [1, -1], [-5, -1.7]);
-      //     let fmt = bioseq.cigar2gaps(instructions.reference, node.seq, rst.position, rst.CIGAR);
-      //     node.padding = rst.position;
-      //     node.seq = fmt[1];
-      //   });
+      data.nodes
+        .filter(d => !(/^-*$/.test(d.seq)))
+        .forEach(node => {
+          let rst = bioseq.align(instructions.reference, node.seq, true, [1, -1], [-5, -1.7]);
+          let fmt = bioseq.cigar2gaps(instructions.reference, node.seq, rst.position, rst.CIGAR);
+          node.padding = rst.position;
+          node.seq = fmt[1];
+        });
     }
 
     if(anySequences){
