@@ -19,15 +19,15 @@
     distance_matrix: {
       tn93: [],
       snps: []
-    }
+    },
+    nodeFields: ['id', 'padding', 'selected'],
+    linkFields: ['source', 'target', 'cluster', 'visible', 'distance', 'snps']
   };
-
-  var nodeFields = ['id', 'padding', 'selected'];
-  var linkFields = ['source', 'target', 'cluster', 'visible', 'distance', 'snps'];
 
   var instructions = {
     align: false,
-    reference: 'first'
+    files: [],
+    reference: ''
   };
 
   var anySequences = false;
@@ -38,13 +38,14 @@
     instructions.files.forEach(file => {
       let filename = file.path.split(/[\\\/]/g).pop();
 
-      nodeFields.push(filename);
-      linkFields.push(filename);
+      data.nodeFields.push(filename);
+      data.linkFields.push(filename);
 
       if(file.type === 'fasta'){
 
         electron.ipcRenderer.send('message', `Parsing ${filename} as FASTA...`);
         anySequences = true;
+        let t = 0, n = 0;
         fs.readFileSync(file.path, 'utf-8')
           .replace(/;.*?$/m)
           .split(/>/m)
@@ -54,11 +55,13 @@
             if(temp.length === 2){
               node = {'id': temp[0], 'seq': temp[1].replace(/\n/,"")};
               node[filename] = true;
-              addNode(node);
+              n += addNode(node);
+              t++;
             }
           });
+        electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${t} Total Nodes from FASTA.`);
 
-      } else if(file.type === 'link') {
+      } else if(file.type === 'link'){
 
         electron.ipcRenderer.send('message', `Parsing ${filename} as Link CSV...`);
         let results = Papa.parse(fs.readFileSync(file.path, 'utf-8'), {
@@ -66,21 +69,25 @@
           dynamicTyping: true,
           skipEmptyLines: true
         });
-
+        let n = 0;
         results.data.forEach(link => {
           link.source = link[file.field1];
           link.target = link[file.field2];
           link.cluster = 1;
           link.visible = true;
           link[filename] = true;
-          addLink(link);
+          n += addLink(link);
         });
-        electron.ipcRenderer.send('message', ' - Parsed ' + results.data.length + ' Links from Link CSV.');
+        electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${results.data.length} Total Links from Link CSV.`);
 
-        linkFields = [...new Set([...linkFields, ...Object.keys(results.data[0]), filename])];
+        data.linkFields = [...new Set([...data.linkFields, ...Object.keys(results.data[0]), filename])];
 
-        var llinks = Lazy(results.data);
-        llinks.pluck(file.field1).union(llinks.pluck(file.field2)).forEach(d => addNode({'id': d}));
+        n = 0;
+        let llinks = Lazy(results.data);
+        let nodeIDs = llinks.pluck(file.field1).union(llinks.pluck(file.field2));
+        let t = nodeIDs.size();
+        nodeIDs.forEach(d => n += addNode({'id': d}));
+        electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${t} Total Nodes from Link CSV.`);
 
       } else if(file.type === 'node'){
 
@@ -91,14 +98,17 @@
           dynamicTyping: true,
           skipEmptyLines: true
         });
+        let n = 0;
         results.data.forEach(node => {
           node.id = node[file.field1];
           if(file.field2 !== 'None') node.seq = node[file.field2];
           node[filename] = true;
-          addNode(node);
+          n += addNode(node);
         });
-        nodeFields = [...new Set([...nodeFields, ...Object.keys(results.data[0]), filename])];
-        if(nodeFields.includes('seq')) anySequences = true;
+        data.nodeFields = [...new Set([...data.nodeFields, ...Object.keys(results.data[0]), filename])];
+        if(data.nodeFields.includes('seq')) anySequences = true;
+
+        electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${results.data.length} Total Nodes from Node CSV.`);
 
       } else { //Distance Matrix
 
@@ -109,6 +119,7 @@
           skipEmptyLines: true
         });
         let nodeIDs = [];
+        let nn = 0, nl = 0;
         results.data.forEach((row, i) => {
           if(i == 0){
             nodeIDs = row;
@@ -116,58 +127,57 @@
               if(k > 0){
                 let newNode = {id: cell};
                 newNode[filename] = true;
-                addNode(newNode);
+                nn += addNode(newNode);
               }
             });
           } else {
             row.forEach((cell, j) => {
               if(j > i){
                 let newLink = {
-                  source: nodeIDs[j],
-                  target: nodeIDs[i],
+                  source: nodeIDs[i],
+                  target: nodeIDs[j],
                   distance: cell
                 };
                 newLink[filename] = true;
-                addLink(newLink);
+                nl += addLink(newLink);
               }
             });
           }
         });
 
-        nodeFields = [...new Set([...nodeFields, filename])];
-        linkFields = [...new Set([...linkFields, filename])];
+        electron.ipcRenderer.send('message', ` - Parsed ${nn} New, ${results.data.length - 1} Total Nodes from Distance Matrix.`);
+        electron.ipcRenderer.send('message', ` - Parsed ${nl} New, ${(Math.pow(results.data.length-1, 2) - results.data.length + 1)/2} Total Links from Distance Matrix.`);
+
+        data.nodeFields = [...new Set([...data.nodeFields, filename])];
+        data.linkFields = [...new Set([...data.linkFields, filename])];
 
       }
     });
 
-    //Post-processing Nodes:
-    electron.ipcRenderer.send('message', `Post-processing nodes${(anySequences && instructions.align) ? ' and aligning sequences':''}...`);
-
+    //Alignment:
     let reference = instructions.reference;
-    data.nodes.forEach((node, i) => {
-      nodeFields.forEach(field => {
-        if(typeof node[field] === 'undefined') node[field] = null;
-      });
-      if(anySequences && instructions.align){
-        if(node.seq !== '' && node.seq != '-'.repeat(node.seq.length)){
-          let rst = bioseq.align(reference, node.seq, true, [1, -1], [-5, -1.7]);
-          let fmt = bioseq.cigar2gaps(reference, node.seq, rst.position, rst.CIGAR);
-          node.padding = rst.position;
-          node.seq = fmt[1];
-        } else {
-          node.padding = null;
-        }
-      }
-    });
+    if(anySequences && instructions.align){
+      electron.ipcRenderer.send('message', 'Aligning Sequences...');
+      // data.nodes
+      //   .filter(d => !(/^-*$/.test(d.seq)))
+      //   .forEach(node => {
+      //     let rst = bioseq.align(instructions.reference, node.seq, true, [1, -1], [-5, -1.7]);
+      //     let fmt = bioseq.cigar2gaps(instructions.reference, node.seq, rst.position, rst.CIGAR);
+      //     node.padding = rst.position;
+      //     node.seq = fmt[1];
+      //   });
+    }
 
-    // Computing Distance Matrices:
     if(anySequences){
-      electron.ipcRenderer.send('message', 'Computing Distance Matrices...');
-
+      //Final step in alignment: left- and right- padding with hyphens
       let minPadding = math.min(data.nodes, 'padding');
       data.nodes.forEach(d => d.seq = "-".repeat(d.padding - minPadding) + d.seq);
+
       let maxLength = math.max(data.nodes.map(d => d.seq.length));
       data.nodes.forEach(d => d.seq = d.seq + "-".repeat(maxLength - d.seq.length));
+
+      // Computing Distance Matrices:
+      electron.ipcRenderer.send('message', 'Computing New Distance Matrices...');
 
       data.distance_matrix.tn93 = Array(data.nodes.length);
       data.distance_matrix.snps = Array(data.nodes.length);
@@ -175,36 +185,29 @@
         data.distance_matrix.tn93[i] = Array(data.nodes.length);
         data.distance_matrix.snps[i] = Array(data.nodes.length);
         data.distance_matrix.tn93[i][i] = data.distance_matrix.snps[i][i] = 0;
-        for(var j = 0; j < i; j++){
-          let newLink = {
-            'source': data.nodes[j].id,
-            'target': data.nodes[i].id
+        if(data.nodes[i].seq){
+          if(data.nodes[i]['seq'] != '' & data.nodes[i]['seq'] != '-'.repeat(data.nodes[i]['seq'].length)){
+            for(var j = 0; j < i; j++){
+              let newLink = {
+                'source': data.nodes[j].id,
+                'target': data.nodes[i].id
+              };
+              if(data.nodes[j]['seq'] !== '' && data.nodes[j]['seq'] != '-'.repeat(data.nodes[j]['seq'].length)){
+                newLink.distance = tn93(
+                  data.nodes[j]['seq'],
+                  data.nodes[i]['seq'],
+                  'AVERAGE'
+                );
+                newLink.snps = hamming(data.nodes[j]['seq'], data.nodes[i]['seq']);
+                data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = newLink.distance;
+                data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = newLink.snps;
+              }
+              addLink(newLink);
+            }
           }
-          if(data.nodes[j]['seq'] !== '' &&
-             data.nodes[i]['seq'] !== '' &&
-             data.nodes[j]['seq'] != '-'.repeat(data.nodes[j]['seq'].length) &&
-             data.nodes[j]['seq'] != '-'.repeat(data.nodes[i]['seq'].length)
-           ){
-            newLink.distance = tn93(
-              data.nodes[j]['seq'],
-              data.nodes[i]['seq'],
-              'AVERAGE'
-            );
-            newLink.snps = hamming(data.nodes[j]['seq'], data.nodes[i]['seq']);
-            data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = newLink.dist;
-            data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = newLink.snps;
-          }
-          addLink(newLink);
         }
       }
     }
-
-    electron.ipcRenderer.send('message', 'Post-processing links...');
-    data.links.forEach((link, i) => {
-      linkFields.forEach(field => {
-        if(typeof link[field] === 'undefined') link[field] = '';
-      });
-    });
 
     function defaultNode(){
       return {
@@ -219,11 +222,13 @@
     }
 
     function addNode(newNode){
-      let oldNode = data.nodes.find(d => d.id === newNode.id);
+      let oldNode = data.nodes.find(d => d.id == newNode.id);
       if(oldNode){
         Object.assign(oldNode, newNode);
+        return 0;
       } else {
         data.nodes.push(Object.assign(defaultNode(), newNode));
+        return 1;
       }
     }
 
@@ -239,11 +244,13 @@
     }
 
     function addLink(newLink){
-      let oldLink = data.links.find(l => l.source === newLink.source & l.target === newLink.target);
+      let oldLink = data.links.find(l => l.source == newLink.source & l.target == newLink.target);
       if(oldLink){
         Object.assign(oldLink, newLink);
+        return 0;
       } else {
         data.links.push(Object.assign(defaultLink(), newLink));
+        return 1;
       }
     }
 
