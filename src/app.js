@@ -20,7 +20,9 @@ function dataSkeleton(){
       nodes: [],
       links: [],
       clusters: [],
-      distance_matrix: {}
+      distance_matrix: {},
+      nodeFields: [],
+      linkFields: []
     },
     state: {
       visible_clusters: [],
@@ -351,7 +353,7 @@ $(function(){
   });
 
   function updateNodeVariables(){
-    let keys = Object.keys(session.data.nodes[0]);
+    let keys = session.data.nodeFields;
     $('.nodeVariables.categorical').html(
       '<option value="none">None</option>\n' +
       keys
@@ -369,7 +371,7 @@ $(function(){
   }
 
   function updateLinkVariables(){
-    let keys = Object.keys(session.data.links[0]);
+    let keys = session.data.linkFields;
     $('.linkVariables').html(
       '<option value="none">None</option>\n' +
       keys
