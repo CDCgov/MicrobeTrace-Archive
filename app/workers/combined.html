@@ -45,21 +45,13 @@
 
         electron.ipcRenderer.send('message', `Parsing ${filename} as FASTA...`);
         anySequences = true;
-        let t = 0, n = 0;
-        fs.readFileSync(file.path, 'utf-8')
-          .replace(/;.*?$/m)
-          .split(/>/m)
-          .slice(1)
-          .forEach(e => {
-            let temp = e.split(/\n/m, 2);
-            if(temp.length === 2){
-              node = {'id': temp[0], 'seq': temp[1].replace(/\n/,"")};
-              node[filename] = true;
-              n += addNode(node);
-              t++;
-            }
-          });
-        electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${t} Total Nodes from FASTA.`);
+        let n = 0, contents = fs.readFileSync(file.path, 'utf-8');
+        let seqs = parseFASTA(contents);
+        seqs.forEach(node => {
+          node[filename] = true;
+          n += addNode(node);
+        });
+        electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${seqs.length} Total Nodes from FASTA.`);
 
       } else if(file.type === 'link'){
 
@@ -251,6 +243,25 @@
         data.links.push(Object.assign(defaultLink(), newLink));
         return 1;
       }
+    }
+
+    function parseFASTA(text){
+      if(!text || text.length == 0) return []
+      let seqs = [], currentSeq = {};
+      text.split(/[\r\n]+/g).forEach((line, i) => {
+        if(/^\s*$/.test(line)) return;
+        if(line[0] == ">" || line[0] == ";"){
+          if(i > 0) seqs.push(currentSeq);
+          currentSeq = {
+            id: line.slice(1),
+            seq: ''
+          };
+        } else {
+          currentSeq.seq += line;
+        }
+      });
+      seqs.push(currentSeq);
+      return seqs;
     }
 
     electron.ipcRenderer.send('update-data', data);
