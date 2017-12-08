@@ -195,6 +195,7 @@ $(function(){
           let filename = path.split(/[\\\/]/).pop();
           let extension = filename.split('.').pop().slice(0,3).toLowerCase();
           let isFasta = (extension === 'fas');
+          if(isFasta) $('#alignerControlsButton').slideDown();
           let isNode = filename.toLowerCase().includes('node');
           let root = $('<div class="row" style="display:none; margin:2px auto;"></div>');
           $('<div class="col-xs-3 filename"></div>')
@@ -272,16 +273,22 @@ $(function(){
     });
   });
 
-  $('#refSeqLoad').click(e => {
+  $('#align').parent().click(e => $('#referenceRow').slideDown());
+  $('#doNotAlign').parent().click(e => $('#referenceRow').slideUp());
+
+  $('#refSeqFileLoad').click(e => {
     remote.dialog.showOpenDialog({
       filters: [{name: 'FASTA Files', extensions:['fas', 'fasta', 'txt']}]
     }, paths => {
-      if(paths.length > 0){
+      if(paths){
         $('#refSeqFile').text(paths[0]).slideDown();
         $('#reference').val(jetpack.read(paths[0]).split(/[\n>]/)[2]);
       }
     });
   });
+
+  $('#refSeqLoad').click(e => $('#reference').val($('#HXB2pol').html()));
+  $('#reference').val($('#HXB2pol').html());
 
   $('#main-submit').click(function(e){
     let files = [];
