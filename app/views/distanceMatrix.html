@@ -109,7 +109,7 @@
         if (fileName === undefined){
           return alertify.error('File not exported!');
         }
-        let labels = window.nodes.map(d => 'N' + d.id);
+        let labels = window.nodes.map(d => d.id);
         let data = window.distance_matrix[$('[name="distanceMetric"]:checked')[0].id].map(l => l.slice());
         jetpack.write(fileName, ',' + labels.join(',') + '\n' + data.map((row, i) => labels[i] + ',' + row.join(',')).join('\n'));
         alertify.success('File Saved!');
