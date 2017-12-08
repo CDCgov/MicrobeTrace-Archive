@@ -197,8 +197,8 @@ $(function(){
           let isFasta = (extension === 'fas');
           if(isFasta) $('#alignerControlsButton').slideDown();
           let isNode = filename.toLowerCase().includes('node');
-          let root = $('<div class="row" style="display:none; margin:2px auto;"></div>');
-          $('<div class="col-xs-3 filename"></div>')
+          let root = $('<div class="row row-striped" style="display:none; margin:2px auto;"></div>');
+          $('<div class="col-xs-8 filename"></div>')
             .append($('<a href="#" class="fa fa-times killlink"></a>').click(e => {
               session.files.splice(session.files.indexOf(path),1);
               root.slideUp(e => root.remove());
@@ -206,19 +206,19 @@ $(function(){
             .append(' ' + filename)
             .appendTo(root);
           root.append(`
-            <div class="col-xs-3 text-right">
+            <div class="col-xs-4 text-right">
               <div class="btn-group btn-group-xs" data-toggle="buttons">
                 <label class="btn btn-primary${!isFasta&!isNode?' active':''}">
-                  <input type="radio" name="options-${filename}" data-state="link" autocomplete="off"${!isFasta&!isNode?' checked':''}>Link</input>
+                  <input type="radio" name="options-${filename}" data-type="link" autocomplete="off"${!isFasta&!isNode?' checked':''}>Link</input>
                 </label>
                 <label class="btn btn-primary${!isFasta&isNode?' active':''}">
-                  <input type="radio" name="options-${filename}" data-state="node" autocomplete="off"${!isFasta&isNode?' checked':''}>Node</input>
+                  <input type="radio" name="options-${filename}" data-type="node" autocomplete="off"${!isFasta&isNode?' checked':''}>Node</input>
                 </label>
                 <label class="btn btn-primary">
-                  <input type="radio" name="options-${filename}" data-state="distmat" autocomplete="off">Dist. Mat.</input>
+                  <input type="radio" name="options-${filename}" data-type="distmat" autocomplete="off">Dist. Mat.</input>
                 </label>
                 <label class="btn btn-primary${isFasta?' active':''}">
-                  <input type="radio" name="options-${filename}" data-state="fasta" autocomplete="off"${isFasta?' checked':''}>FASTA</input>
+                  <input type="radio" name="options-${filename}" data-type="fasta" autocomplete="off"${isFasta?' checked':''}>FASTA</input>
                 </label>
               </div>
             </div>
@@ -234,11 +234,11 @@ $(function(){
               });
               options = '<option>None</option>' + headers.map(h => '<option>'+h+'</option>').join('');
               root.append(`
-                <div class='col-xs-3 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
-                  <label>${isNode?'ID':'Source'}</label>&nbsp;<select>${options}</select>
+                <div class='col-xs-6 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
+                  <label style="width:65px">${isNode?'ID':'Source'}</label><span>&nbsp;</span><select style="width:calc(100% - 69px)">${options}</select>
                 </div>
-                <div class='col-xs-3 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
-                  <label>${isNode?'Sequence':'Target'}</label>&nbsp;<select>${options}</select>
+                <div class='col-xs-6 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
+                  <label style="width:65px">${isNode?'Sequence':'Target'}</label><span>&nbsp;</span><select style="width:calc(100% - 69px)">${options}</select>
                 </div>
               `);
               stream.pause();
@@ -249,24 +249,23 @@ $(function(){
             let these = $(`[data-file='${filename}']`),
                 first = $(these.get(0)),
                 second = $(these.get(1));
-            if($(e.target).data('state') === 'node'){
+            if($(e.target).data('type') === 'node'){
               first.find('label').text('ID');
               if(headers.includes('id')) first.find('select').val('id');
               second.find('label').text('Sequence');
               if(headers.includes('seq')) second.find('select').val('seq');
-              these.fadeIn();
-            } else if($(e.target).data('state') === 'link'){
+              these.slideDown();
+            } else if($(e.target).data('type') === 'link'){
               first.find('label').text('Source');
               if(headers.includes('source')) first.find('select').val('source');
               second.find('label').text('Target');
               if(headers.includes('target')) second.find('select').val('target');
-              these.fadeIn();
+              these.slideDown();
             } else {
-              these.fadeOut();
+              these.slideUp();
             }
           };
           $(`[name="options-${filename}"]`).change(refit);
-          refit({target: $('[name="options-'+filename+'"]:checked')[0]});
         });
         $('#main-submit').slideDown();
       }
@@ -295,12 +294,12 @@ $(function(){
     $('#fileTable .row').each((i, el) => {
       files[i] = {
         path: session.files[i],
-        type: $(el).find('input[type="radio"]:checked').data('state'),
+        type: $(el).find('input[type="radio"]:checked').data('type'),
         field1: $(el).find('select:first').val(),
         field2: $(el).find('select:last').val()
       };
     });
-
+    
     ipcRenderer.send('parse-files', {
       files: files,
       align: $('#align').is(':checked'),
