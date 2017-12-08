@@ -289,6 +289,8 @@ $(function(){
   $('#refSeqLoad').click(e => $('#reference').val($('#HXB2pol').html()));
   $('#reference').val($('#HXB2pol').html());
 
+  var messageTimeout;
+
   $('#main-submit').click(function(e){
     let files = [];
     $('#fileTable .row').each((i, el) => {
@@ -314,9 +316,9 @@ $(function(){
         });
       });
     });
-  });
 
-  ipcRenderer.on('tick', (event, msg) => $('.progress-bar').css('width', msg+'%').attr('aria-valuenow', msg));
+    messageTimeout = setTimeout(() => alertify.warning("If you stare long enough, you can reverse the DNA Molecule\'s spin direction"), 20000);
+  });
 
   ipcRenderer.on('message', (event, msg) => {
     session.messages.push(msg);
@@ -324,6 +326,7 @@ $(function(){
   });
 
   ipcRenderer.on('deliver-data', (e, data) => {
+    clearTimeout(messageTimeout);
     $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').removeClass('disabled');
     session.data = data;
     session.data.links.forEach(l => {
