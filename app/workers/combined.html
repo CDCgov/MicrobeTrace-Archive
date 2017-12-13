@@ -11,7 +11,7 @@
   const hamming  = require('plain-hamming');
   const Lazy     = require('lazy.js');
 
-  const hierarchy = ['fasta', 'link', 'node', 'distmat'];
+  const hierarchy = ['distmat', 'link', 'node', 'fasta'];
 
   var data = {
     nodes: [],
@@ -20,8 +20,8 @@
       tn93: [],
       snps: []
     },
-    nodeFields: ['id', 'padding', 'selected'],
-    linkFields: ['source', 'target', 'cluster', 'visible', 'distance', 'snps']
+    nodeFields: ['id', 'padding', 'cluster', 'degree', 'seq', 'visible', 'selected', 'source'],
+    linkFields: ['source', 'target', 'cluster', 'visible', 'distance', 'snps', 'source']
   };
 
   var instructions = {
@@ -38,9 +38,6 @@
     instructions.files.forEach(file => {
       let filename = file.path.split(/[\\\/]/g).pop();
 
-      data.nodeFields.push(filename);
-      data.linkFields.push(filename);
-
       if(file.type === 'fasta'){
 
         electron.ipcRenderer.send('message', `Parsing ${filename} as FASTA...`);
@@ -48,7 +45,7 @@
         let n = 0, contents = fs.readFileSync(file.path, 'utf-8');
         let seqs = parseFASTA(contents);
         seqs.forEach(node => {
-          node[filename] = true;
+          node[file] = filename;
           n += addNode(node);
         });
         electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${seqs.length} Total Nodes from FASTA.`);
@@ -63,16 +60,15 @@
         });
         let n = 0;
         results.data.forEach(link => {
-          link.source = link[file.field1];
-          link.target = link[file.field2];
-          link.cluster = 1;
-          link.visible = true;
-          link[filename] = true;
-          n += addLink(link);
+          n += addLink(Object.assign({
+            source: link[file.field1],
+            target: link[file.field2],
+            source: filename
+          }, link));
         });
         electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${results.data.length} Total Links from Link CSV.`);
 
-        data.linkFields = [...new Set([...data.linkFields, ...Object.keys(results.data[0]), filename])];
+        data.linkFields = [...new Set([...data.linkFields, ...Object.keys(results.data[0])])];
 
         n = 0;
         let llinks = Lazy(results.data);
@@ -94,10 +90,10 @@
         results.data.forEach(node => {
           node.id = node[file.field1];
           if(file.field2 !== 'None') node.seq = node[file.field2];
-          node[filename] = true;
+          node.source = filename;
           n += addNode(node);
         });
-        data.nodeFields = [...new Set([...data.nodeFields, ...Object.keys(results.data[0]), filename])];
+        data.nodeFields = [...new Set([...data.nodeFields, ...Object.keys(results.data[0])])];
         if(data.nodeFields.includes('seq')) anySequences = true;
 
         electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${results.data.length} Total Nodes from Node CSV.`);
@@ -117,21 +113,21 @@
             nodeIDs = row;
             nodeIDs.forEach((cell, k) => {
               if(k > 0){
-                let newNode = {id: cell};
-                newNode[filename] = true;
-                nn += addNode(newNode);
+                nn += addNode({
+                  id: cell,
+                  source: filename
+                });
               }
             });
           } else {
             row.forEach((cell, j) => {
               if(j > i){
-                let newLink = {
+                nl += addLink({
                   source: nodeIDs[i],
                   target: nodeIDs[j],
-                  distance: cell
-                };
-                newLink[filename] = true;
-                nl += addLink(newLink);
+                  distance: cell,
+                  source: filename
+                });
               }
             });
           }
@@ -139,10 +135,6 @@
 
         electron.ipcRenderer.send('message', ` - Parsed ${nn} New, ${results.data.length - 1} Total Nodes from Distance Matrix.`);
         electron.ipcRenderer.send('message', ` - Parsed ${nl} New, ${(Math.pow(results.data.length-1, 2) - results.data.length + 1)/2} Total Links from Distance Matrix.`);
-
-        data.nodeFields = [...new Set([...data.nodeFields, filename])];
-        data.linkFields = [...new Set([...data.linkFields, filename])];
-
       }
     });
 
@@ -208,7 +200,8 @@
         cluster: 1,
         visible: true,
         degree: 0,
-        seq: ''
+        seq: '',
+        source: ''
       }
     }
 
@@ -230,7 +223,8 @@
         distance: 1,
         snps: Number.INFINITY,
         visible: true,
-        cluster: 1
+        cluster: 1,
+        source: 'Genetic Distance'
       }
     }
 

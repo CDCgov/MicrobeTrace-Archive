@@ -951,7 +951,7 @@ $(function(){
       return;
     }
     $('#default-link-color').fadeOut();
-    let links = session.network.svg.select('g#links').selectAll('line').data(session.data.links);
+    let links = session.network.svg.select('g#links').selectAll('line').data(session.data.links.filter(l => l.visible));
     $('#linkColors').remove();
     $('#groupKey').append('<tbody id="linkColors"></tbody>');
     let table = $('#linkColors');
