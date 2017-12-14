@@ -357,6 +357,10 @@ $(function(){
     setLinkVisibility();
     setupNetwork();
     renderNetwork();
+    if(session.data.linkFields.includes('origin')){
+      $('#linkColorVariable').val('origin');
+      setLinkColor();
+    }
     tagClusters();
     computeDegree();
     session.state.visible_clusters = session.data.clusters.map(c => c.id);
@@ -960,7 +964,8 @@ $(function(){
   });
 
   function setLinkColor(e){
-    if($('#linkColorVariable').val() == 'none'){
+    let variable = $('#linkColorVariable').val();
+    if(variable == 'none'){
       session.network.svg.select('g#links').selectAll('line').style('stroke', $('#default-link-color').val());
       $('#default-link-color').fadeIn();
       $('#linkColors').fadeOut();
@@ -971,7 +976,6 @@ $(function(){
     $('#linkColors').remove();
     $('#groupKey').append('<tbody id="linkColors"></tbody>');
     let table = $('#linkColors');
-    let variable = $('#linkColorVariable').val();
     table.append('<tr><th>'+variable+'</th><th>Color</th><tr>');
     let values = Lazy(session.data.links).pluck(variable).uniq().sort().toArray();
     let colors = JSON.parse(ipcRenderer.sendSync('get-component', 'colors.json'));
