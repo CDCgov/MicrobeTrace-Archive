@@ -21,7 +21,7 @@
       snps: []
     },
     nodeFields: ['id', 'padding', 'cluster', 'degree', 'seq', 'visible', 'selected', 'source'],
-    linkFields: ['source', 'target', 'cluster', 'visible', 'distance', 'snps', 'source']
+    linkFields: ['source', 'target', 'cluster', 'visible', 'distance', 'snps', 'origin']
   };
 
   var instructions = {
@@ -63,7 +63,8 @@
           n += addLink(Object.assign({
             source: link[file.field1],
             target: link[file.field2],
-            source: filename
+            origin: filename,
+            visible: true
           }, link));
         });
         electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${results.data.length} Total Links from Link CSV.`);
@@ -126,7 +127,7 @@
                   source: nodeIDs[i],
                   target: nodeIDs[j],
                   distance: cell,
-                  source: filename
+                  origin: filename
                 });
               }
             });
@@ -138,11 +139,13 @@
       }
     });
 
+    const allDashes = /^-*$/;
+
     //Alignment:
     if(anySequences && instructions.align){
       electron.ipcRenderer.send('message', 'Aligning Sequences...');
       data.nodes
-        .filter(d => !(/^-*$/.test(d.seq)))
+        .filter(d => !allDashes.test(d.seq))
         .forEach(node => {
           let rst = bioseq.align(instructions.reference, node.seq, true, [1, -1], [-5, -1.7]);
           let fmt = bioseq.cigar2gaps(instructions.reference, node.seq, rst.position, rst.CIGAR);
@@ -168,26 +171,21 @@
         data.distance_matrix.tn93[i] = Array(data.nodes.length);
         data.distance_matrix.snps[i] = Array(data.nodes.length);
         data.distance_matrix.tn93[i][i] = data.distance_matrix.snps[i][i] = 0;
-        if(data.nodes[i].seq){
-          if(data.nodes[i]['seq'] != '' & data.nodes[i]['seq'] != '-'.repeat(data.nodes[i]['seq'].length)){
-            for(var j = 0; j < i; j++){
-              let newLink = {
-                'source': data.nodes[j].id,
-                'target': data.nodes[i].id
-              };
-              if(data.nodes[j]['seq'] !== '' && data.nodes[j]['seq'] != '-'.repeat(data.nodes[j]['seq'].length)){
-                newLink.distance = tn93(
-                  data.nodes[j]['seq'],
-                  data.nodes[i]['seq'],
-                  'AVERAGE'
-                );
-                newLink.snps = hamming(data.nodes[j]['seq'], data.nodes[i]['seq']);
-                data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = newLink.distance;
-                data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = newLink.snps;
-              }
-              addLink(newLink);
-            }
+        for(var j = 0; j < i; j++){
+          let newLink = {
+            'source': data.nodes[j].id,
+            'target': data.nodes[i].id
+          };
+          if(!allDashes.test(data.nodes[j]['seq']) & !allDashes.test(data.nodes[i]['seq'])){
+            newLink.distance = tn93(data.nodes[j]['seq'], data.nodes[i]['seq'], 'AVERAGE');
+            newLink.snps = hamming(data.nodes[j]['seq'], data.nodes[i]['seq']);
+            data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = newLink.distance;
+            data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = newLink.snps;
+          } else {
+            data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = null;
+            data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = null;
           }
+          addLink(newLink);
         }
       }
     }
@@ -206,7 +204,7 @@
     }
 
     function addNode(newNode){
-      let oldNode = data.nodes.find(d => d.id == newNode.id);
+      let oldNode = data.nodes.find(d => d.id === newNode.id);
       if(oldNode){
         Object.assign(oldNode, newNode);
         return 0;
@@ -222,14 +220,14 @@
         target: '',
         distance: 1,
         snps: Number.INFINITY,
-        visible: true,
+        visible: false,
         cluster: 1,
-        source: 'Genetic Distance'
+        origin: 'Genetic Distance'
       }
     }
 
     function addLink(newLink){
-      let oldLink = data.links.find(l => l.source == newLink.source & l.target == newLink.target);
+      let oldLink = data.links.find(l => l.source === newLink.source & l.target === newLink.target);
       if(oldLink){
         Object.assign(oldLink, newLink);
         return 0;
@@ -240,7 +238,7 @@
     }
 
     function parseFASTA(text){
-      if(!text || text.length == 0) return []
+      if(!text || text.length === 0) return []
       let seqs = [], currentSeq = {};
       text.split(/[\r\n]+/g).forEach((line, i) => {
         if(/^\s*$/.test(line)) return;
