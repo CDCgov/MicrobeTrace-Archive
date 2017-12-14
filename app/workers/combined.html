@@ -20,8 +20,8 @@
       tn93: [],
       snps: []
     },
-    nodeFields: ['id', 'padding', 'cluster', 'degree', 'seq', 'visible', 'selected', 'source'],
-    linkFields: ['source', 'target', 'cluster', 'visible', 'distance', 'snps', 'origin']
+    nodeFields: new Set(['id', 'padding', 'cluster', 'degree', 'visible', 'selected', 'source']),
+    linkFields: new Set(['source', 'target', 'cluster', 'visible', 'distance', 'snps', 'origin'])
   };
 
   var instructions = {
@@ -69,7 +69,7 @@
         });
         electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${results.data.length} Total Links from Link CSV.`);
 
-        data.linkFields = [...new Set([...data.linkFields, ...Object.keys(results.data[0])])];
+        Object.keys(results.data[0]).forEach(key => data.linkFields.add(key));
 
         n = 0;
         let llinks = Lazy(results.data);
@@ -94,8 +94,8 @@
           node.source = filename;
           n += addNode(node);
         });
-        data.nodeFields = [...new Set([...data.nodeFields, ...Object.keys(results.data[0])])];
-        if(data.nodeFields.includes('seq')) anySequences = true;
+        Object.keys(results.data[0]).forEach(key => data.nodeFields.add(key));
+        if(data.nodeFields.has('seq')) anySequences = true;
 
         electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${results.data.length} Total Nodes from Node CSV.`);
 
@@ -256,6 +256,9 @@
       return seqs;
     }
 
+    data.nodeFields = Array.from(data.nodeFields);
+    data.linkFields = Array.from(data.linkFields);
+    
     electron.ipcRenderer.send('update-data', data);
     electron.remote.getCurrentWindow().close();
 
