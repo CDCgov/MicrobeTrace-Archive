@@ -186,6 +186,7 @@ $(function(){
     });
   }
 
+  //This kind of shit gives me nightmares. How did it come to this?
   $('#addFiles').click(e => {
     remote.dialog.showOpenDialog({
       filters: [{name: 'Allowed Files', extensions: ['csv', 'tsv', 'tab', 'txt', 'fas', 'fasta']}],
@@ -243,6 +244,17 @@ $(function(){
                   <label style="width:65px">${isNode?'Sequence':'Target'}</label><span>&nbsp;</span><select style="width:calc(100% - 69px)">${options}</select>
                 </div>
               `);
+              if(isNode){
+                ['Id', 'ID', 'id']
+                  .forEach(title => { if(headers.includes(title)){ $(root.find('select').get(0)).val(title) }});
+                ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq']
+                  .forEach(title => { if(headers.includes(title)){ $(root.find('select').get(1)).val(title) }});
+              } else {
+                ['SOURCE', 'Source', 'source']
+                  .forEach(title => { if(headers.includes(title)){ $(root.find('select').get(0)).val(title) }});
+                ['TARGET', 'Target', 'target']
+                  .forEach(title => { if(headers.includes(title)){ $(root.find('select').get(1)).val(title) }});
+              }
               stream.pause();
             }
           });
@@ -253,15 +265,19 @@ $(function(){
                 second = $(these.get(1));
             if($(e.target).data('type') === 'node'){
               first.find('label').text('ID');
-              if(headers.includes('id')) first.find('select').val('id');
               second.find('label').text('Sequence');
-              if(headers.includes('seq')) second.find('select').val('seq');
+              ['Id', 'ID', 'id']
+                .forEach(title => { if(headers.includes(title)){ first.val(title) }});
+              ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq']
+                .forEach(title => { if(headers.includes(title)){ second.val(title) }});
               these.slideDown();
             } else if($(e.target).data('type') === 'link'){
               first.find('label').text('Source');
-              if(headers.includes('source')) first.find('select').val('source');
               second.find('label').text('Target');
-              if(headers.includes('target')) second.find('select').val('target');
+              ['SOURCE', 'Source', 'source']
+                .forEach(title => { if(headers.includes(title)){ first.val(title) }});
+              ['TARGET', 'Target', 'target']
+                .forEach(title => { if(headers.includes(title)){ second.val(title) }});
               these.slideDown();
             } else {
               these.slideUp();
