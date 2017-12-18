@@ -141,44 +141,44 @@
 
     const allDashes = /^-*$/;
 
+    let subset = data.nodes.filter(d => !allDashes.test(d.seq));
+
     //Alignment:
     if(anySequences && instructions.align){
       electron.ipcRenderer.send('message', 'Aligning Sequences...');
-      data.nodes
-        .filter(d => !allDashes.test(d.seq))
-        .forEach(node => {
-          let rst = bioseq.align(instructions.reference, node.seq, true, [1, -1], [-5, -1.7]);
-          let fmt = bioseq.cigar2gaps(instructions.reference, node.seq, rst.position, rst.CIGAR);
-          node.padding = rst.position;
-          node.seq = fmt[1];
-        });
+      subset.forEach(node => {
+        let rst = bioseq.align(instructions.reference, node.seq, true, [1, -1], [-5, -1.7]);
+        let fmt = bioseq.cigar2gaps(instructions.reference, node.seq, rst.position, rst.CIGAR);
+        node.padding = rst.position;
+        node.seq = fmt[1];
+      });
+
+      //Final step in alignment: left- and right- padding with hyphens
+      let minPadding = math.min(subset, 'padding');
+      data.nodes.forEach(d => d.seq = "-".repeat(d.padding - minPadding) + d.seq);
+
+      let maxLength = math.max(subset.map(d => d.seq.length));
+      data.nodes.forEach(d => d.seq = d.seq + "-".repeat(maxLength - d.seq.length));
     }
 
     if(anySequences){
-      //Final step in alignment: left- and right- padding with hyphens
-      let minPadding = math.min(data.nodes, 'padding');
-      data.nodes.forEach(d => d.seq = "-".repeat(d.padding - minPadding) + d.seq);
-
-      let maxLength = math.max(data.nodes.map(d => d.seq.length));
-      data.nodes.forEach(d => d.seq = d.seq + "-".repeat(maxLength - d.seq.length));
-
       // Computing Distance Matrices:
       electron.ipcRenderer.send('message', 'Computing New Distance Matrices...');
 
-      data.distance_matrix.tn93 = Array(data.nodes.length);
-      data.distance_matrix.snps = Array(data.nodes.length);
-      for(let i = 0; i < data.nodes.length; i++){
-        data.distance_matrix.tn93[i] = Array(data.nodes.length);
-        data.distance_matrix.snps[i] = Array(data.nodes.length);
+      data.distance_matrix.tn93 = Array(subset.length);
+      data.distance_matrix.snps = Array(subset.length);
+      for(let i = 0; i < subset.length; i++){
+        data.distance_matrix.tn93[i] = Array(subset.length);
+        data.distance_matrix.snps[i] = Array(subset.length);
         data.distance_matrix.tn93[i][i] = data.distance_matrix.snps[i][i] = 0;
         for(var j = 0; j < i; j++){
           let newLink = {
-            'source': data.nodes[j].id,
-            'target': data.nodes[i].id
+            'source': subset[j].id,
+            'target': subset[i].id
           };
-          if(!allDashes.test(data.nodes[j]['seq']) & !allDashes.test(data.nodes[i]['seq'])){
-            newLink.distance = tn93(data.nodes[j]['seq'], data.nodes[i]['seq'], 'AVERAGE');
-            newLink.snps = hamming(data.nodes[j]['seq'], data.nodes[i]['seq']);
+          if(!allDashes.test(subset[j]['seq']) & !allDashes.test(subset[i]['seq'])){
+            newLink.distance = tn93(subset[j]['seq'], subset[i]['seq'], 'AVERAGE');
+            newLink.snps = hamming(subset[j]['seq'], subset[i]['seq']);
             data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = newLink.distance;
             data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = newLink.snps;
           } else {
@@ -258,7 +258,7 @@
 
     data.nodeFields = Array.from(data.nodeFields);
     data.linkFields = Array.from(data.linkFields);
-    
+
     electron.ipcRenderer.send('update-data', data);
     electron.remote.getCurrentWindow().close();
 
