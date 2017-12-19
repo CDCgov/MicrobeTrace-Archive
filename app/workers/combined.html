@@ -155,36 +155,32 @@
 
       //Final step in alignment: left- and right- padding with hyphens
       let minPadding = math.min(subset, 'padding');
-      data.nodes.forEach(d => d.seq = "-".repeat(d.padding - minPadding) + d.seq);
+      subset.forEach(d => d.seq = "-".repeat(d.padding - minPadding) + d.seq);
 
       let maxLength = math.max(subset.map(d => d.seq.length));
-      data.nodes.forEach(d => d.seq = d.seq + "-".repeat(maxLength - d.seq.length));
+      subset.forEach(d => d.seq = d.seq + "-".repeat(maxLength - d.seq.length));
     }
 
     if(anySequences){
       // Computing Distance Matrices:
       electron.ipcRenderer.send('message', 'Computing New Distance Matrices...');
-
-      data.distance_matrix.tn93 = Array(subset.length);
-      data.distance_matrix.snps = Array(subset.length);
-      for(let i = 0; i < subset.length; i++){
-        data.distance_matrix.tn93[i] = Array(subset.length);
-        data.distance_matrix.snps[i] = Array(subset.length);
+      let n = subset.length;
+      data.distance_matrix.tn93 = Array(n);
+      data.distance_matrix.snps = Array(n);
+      data.distance_matrix.labels = subset.map(d => d.id);
+      for(let i = 0; i < n; i++){
+        data.distance_matrix.tn93[i] = Array(n);
+        data.distance_matrix.snps[i] = Array(n);
         data.distance_matrix.tn93[i][i] = data.distance_matrix.snps[i][i] = 0;
         for(var j = 0; j < i; j++){
           let newLink = {
             'source': subset[j].id,
-            'target': subset[i].id
+            'target': subset[i].id,
+            'distance': tn93(subset[j]['seq'], subset[i]['seq'], 'AVERAGE'),
+            'snps': hamming(subset[j]['seq'], subset[i]['seq'])
           };
-          if(!allDashes.test(subset[j]['seq']) & !allDashes.test(subset[i]['seq'])){
-            newLink.distance = tn93(subset[j]['seq'], subset[i]['seq'], 'AVERAGE');
-            newLink.snps = hamming(subset[j]['seq'], subset[i]['seq']);
-            data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = newLink.distance;
-            data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = newLink.snps;
-          } else {
-            data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = null;
-            data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = null;
-          }
+          data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = newLink.distance;
+          data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = newLink.snps;
           addLink(newLink);
         }
       }
