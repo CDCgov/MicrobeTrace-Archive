@@ -72,7 +72,7 @@
           autoResize: true,
           currentSize: -20
         },
-        seqs: window.nodes.map((node, i) => ({
+        seqs: window.nodes.filter(d => d.seq).map((node, i) => ({
           'details': {'en': node.id},
           'id': node.id,
           'name': node.id,

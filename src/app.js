@@ -380,13 +380,6 @@ $(function(){
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
-    $('.nodeVariables.numeric').html(
-      '<option value="none">None</option>\n' +
-      keys
-        .filter(key => math.isNumber(session.data.nodes[0][key]))
-        .map(key => '<option value="' + key + '">' + key + '</option>')
-        .join('\n')
-    );
     if(keys.includes('id')) $('#nodeTooltipVariable').val('id');
   }
 
@@ -395,13 +388,6 @@ $(function(){
     $('.linkVariables').html(
       '<option value="none">None</option>\n' +
       keys
-        .map(key => '<option value="' + key + '">' + key + '</option>')
-        .join('\n')
-    );
-    $('.linkVariables.numeric').html(
-      '<option value="none">None</option>\n' +
-      keys
-        .filter(key => math.isNumber(session.data.links[0][key]))
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );

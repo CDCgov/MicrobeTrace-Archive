@@ -173,7 +173,7 @@ body{
 
     function drawTree(){
       svg.html(null);
-      var taxa = window.data.nodes.map(d => ({
+      var taxa = window.data.nodes.filter(d => d.seq).map(d => ({
         name: d.id,
         genotype: d.id
       }));
