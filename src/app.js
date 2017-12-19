@@ -974,8 +974,7 @@ $(function(){
     $('#default-link-color').fadeOut();
     let links = session.network.svg.select('g#links').selectAll('line').data(session.data.links.filter(l => l.visible));
     $('#linkColors').remove();
-    $('#groupKey').append('<tbody id="linkColors"></tbody>');
-    let table = $('#linkColors');
+    let table = $('<tbody id="linkColors"></tbody>').appendTo('#groupKey');
     table.append('<tr><th>'+variable+'</th><th>Color</th><tr>');
     let values = Lazy(session.data.links).pluck(variable).uniq().sort().toArray();
     let colors = JSON.parse(ipcRenderer.sendSync('get-component', 'colors.json'));
