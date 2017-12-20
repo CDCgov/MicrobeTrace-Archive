@@ -161,14 +161,24 @@
     }
   });
 
+  function reset(){
+    electron.remote.getCurrentWindow().reload();
+  }
+
   function toggleFullScreen(){
     let win = electron.remote.getCurrentWindow();
     win.setFullScreen(!win.isFullScreen());
   }
 
   $(document).on('keydown', e => {
+    if(e.key === 'F5'){
+      reset();
+    }
     if (e.key === 'F11') {
       toggleFullScreen();
+    }
+    if(e.key === 'F12'){
+      electron.remote.getCurrentWindow().toggleDevTools();
     }
   });
 

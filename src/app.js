@@ -1134,11 +1134,5 @@ $(function(){
     if(e.key === 'Escape'){
       $('#searchBox').slideUp();
     }
-    if(e.key === 'F5'){
-      reset();
-    }
-    if(e.key === 'F12'){
-      remote.getCurrentWindow().toggleDevTools();
-    }
   });
 });
