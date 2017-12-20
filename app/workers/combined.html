@@ -20,7 +20,7 @@
       tn93: [],
       snps: []
     },
-    nodeFields: new Set(['id', 'padding', 'cluster', 'degree', 'visible', 'selected', 'source']),
+    nodeFields: new Set(['id', 'padding', 'cluster', 'degree', 'visible', 'selected', 'origin']),
     linkFields: new Set(['source', 'target', 'cluster', 'visible', 'distance', 'snps', 'origin'])
   };
 
@@ -45,7 +45,7 @@
         let n = 0, contents = fs.readFileSync(file.path, 'utf-8');
         let seqs = parseFASTA(contents);
         seqs.forEach(node => {
-          node[file] = filename;
+          node['origin'] = filename;
           n += addNode(node);
         });
         electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${seqs.length} Total Nodes from FASTA.`);
@@ -75,7 +75,10 @@
         let llinks = Lazy(results.data);
         let nodeIDs = llinks.pluck(file.field1).union(llinks.pluck(file.field2));
         let t = nodeIDs.size();
-        nodeIDs.forEach(d => n += addNode({'id': d}));
+        nodeIDs.forEach(d => n += addNode({
+          'id': d,
+          'origin': filename
+        }));
         electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${t} Total Nodes from Link CSV.`);
 
       } else if(file.type === 'node'){
@@ -91,7 +94,7 @@
         results.data.forEach(node => {
           node.id = node[file.field1];
           if(file.field2 !== 'None') node.seq = node[file.field2];
-          node.source = filename;
+          node['origin'] = filename;
           n += addNode(node);
         });
         Object.keys(results.data[0]).forEach(key => data.nodeFields.add(key));
@@ -116,7 +119,7 @@
               if(k > 0){
                 nn += addNode({
                   id: cell,
-                  source: filename
+                  origin: filename
                 });
               }
             });
@@ -195,7 +198,7 @@
         visible: true,
         degree: 0,
         seq: '',
-        source: ''
+        origin: ''
       }
     }
 
