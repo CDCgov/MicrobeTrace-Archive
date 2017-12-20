@@ -66,7 +66,9 @@ $(function(){
 
   $('body').prepend(ipcRenderer.sendSync('get-component', 'nav.html'));
   //Since the navbar is a reused component, we can only change it per view by injecting elements, like so:
-  $('#FileTab').click(() => reset());
+  $('<li id="FileTab"><a href="#settings">New</a></li>')
+    .click(() => reset())
+    .insertBefore('#CloseTab');
 
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
