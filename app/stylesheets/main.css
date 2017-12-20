@@ -79,6 +79,9 @@ td {
   padding: 10px;
   white-space: pre-line;
 }
+#loadCancelButton {
+  display: none;
+}
 #main_panel {
   width: 100%;
   height: 100%;

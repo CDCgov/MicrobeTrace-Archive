@@ -52,10 +52,10 @@ $(function(){
       ipcRenderer.send('reset');
       $('#main-submit').hide();
     }
-    $('#button-wrapper, #main_panel').fadeOut(() => {
+    $('#main_panel').fadeOut(() => {
       $('#network').empty();
-      $('#groupKey').find('tbody').empty();
-      $('.showForMST').hide();
+      $('#groupKey').empty();
+      $('#loadCancelButton, .showForMST').hide();
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
       $('.showForNotMST').css('display', 'inline-block');
       $('#loadingInformation').empty();
@@ -309,6 +309,12 @@ $(function(){
   $('#refSeqLoad').click(e => $('#reference').val($('#HXB2pol').html()));
   $('#reference').val($('#HXB2pol').html());
 
+  $('#loadCancelButton').click(e => {
+    ipcRenderer.send('cancel');
+    $('#loadingInformationModal').modal('hide');
+    reset(true);
+  });
+
   var messageTimeout;
 
   $('#main-submit').click(function(e){
@@ -329,7 +335,7 @@ $(function(){
     });
 
     $('#file_panel').fadeOut(() => {
-      $('#button-wrapper, #main_panel').fadeIn(() => {
+      $('#main_panel').fadeIn(() => {
         $('#loadingInformationModal').modal({
           keyboard: false,
           backdrop: 'static'
@@ -337,7 +343,10 @@ $(function(){
       });
     });
 
-    messageTimeout = setTimeout(() => alertify.warning("If you stare long enough, you can reverse the DNA Molecule\'s spin direction"), 20000);
+    messageTimeout = setTimeout(() => {
+      $('#loadCancelButton').slideDown();
+      alertify.warning("If you stare long enough, you can reverse the DNA Molecule\'s spin direction");
+    }, 20000);
   });
 
   ipcRenderer.on('message', (event, msg) => {

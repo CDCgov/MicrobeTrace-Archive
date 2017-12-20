@@ -23,12 +23,14 @@ function dataSkeleton(){
 
 var session = dataSkeleton();
 
+var mainWindow, parserWindow;
+
 const manifest = jetpack.cwd(app.getAppPath()).read('package.json', 'json');
 
 ipcMain.on('log', (event, msg) => console.log(msg));
 
 app.on('ready', () => {
-  const mainWindow = createWindow('main', {
+  mainWindow = createWindow('main', {
     width: 1024,
     height: 768,
     show: true
@@ -43,7 +45,7 @@ app.on('ready', () => {
 });
 
 ipcMain.on('parse-files', (event, instructions) => {
-  const parserWindow = createWindow('File Parser', {show: false});
+  parserWindow = createWindow('File Parser', {show: false});
   parserWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'workers/combined.html'),
     protocol: 'file:',
@@ -52,6 +54,10 @@ ipcMain.on('parse-files', (event, instructions) => {
   parserWindow.on('ready-to-show', e => {
     parserWindow.send('deliver-instructions', instructions);
   });
+});
+
+ipcMain.on('cancel', (event) => {
+  parserWindow.destroy();
 });
 
 ipcMain.on('add-nodes', (event, newNodes) => {
