@@ -194,9 +194,8 @@
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
     electron.ipcRenderer.on('deliver-data', (e, data) => {
-      window.nodes = data.nodes;
-      window.links = data.links;
-      var fields = Object.keys(window.nodes[0]);
+      window.session = {data: data};
+      var fields = session.data.nodeFields;
       $('.fields').append(fields.map(field => '<option value="'+field+'">'+field+'</option>').join('\n'));
       if(fields.includes('lat')) $('#latitudeField').val('lat');
       if(fields.includes('lon')) $('#longitudeField').val('lon');
@@ -213,7 +212,7 @@
       if($('#latitudeField').val() !== 'None' && $('#longitudeField').val() !== 'None'){
         let lat = $('#latitudeField').val(),
             lon = $('#longitudeField').val();
-        window.nodes.forEach(n => {
+        session.data.nodes.forEach(n => {
           n.lat = n[lat];
           n.lon = n[lon];
         });
@@ -227,13 +226,13 @@
           }));
         }
         let val = $('#zipcodeField').val();
-        window.nodes.forEach(n => {
+        session.data.nodes.forEach(n => {
           let zo = zipcodes.find(z => z.zipcode == n[val]);
           if(zo) Object.assign(n, zo);
         });
       } else if($('#countyField').val() !== 'None'){
         let val = $('#countyField').val();
-        window.nodes.forEach(n => {
+        session.data.nodes.forEach(n => {
           //TODO: Work out the State Problem.
           //TODO: Add Fuzzy String matching.
           let county = counties.find(c => c.name == n[val]);
@@ -241,25 +240,25 @@
         });
       } else if($('#stateField').val() !== 'None'){
         var val = $('#stateField').val();
-        window.nodes.forEach(n => {
+        session.data.nodes.forEach(n => {
           //TODO: Work out the format problem.
           var state = states.find(s => s.usps == n[val]);
           if(state) Object.assign(n, {lat: state.lat, lon: state.lon});
         });
       } else if($('#countryField').val() !== 'None'){
         var val = $('#countryField').val();
-        window.nodes.forEach(n => {
+        session.data.nodes.forEach(n => {
           //TODO: Merge content of countries.csv into countries.json
           //TODO: Work out the format problem.
           var country = countries.find(c => c.name == n[val]);
           if(state) Object.assign(n, {lat: state.lat, lon: state.lon});
         });
       }
-      if(window.nodes[0].lat && window.nodes[0].lon) drawNodes();
+      if(session.data.nodes[0].lat && session.data.nodes[0].lon) drawNodes();
     }
 
     electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
-      window.links.forEach((l, i) => l.visible = newLinks[i].visible);
+      session.data.links.forEach((l, i) => l.visible = newLinks[i].visible);
       if($('#showLinks').hasClass('active')) drawLinks();
     });
 
@@ -361,9 +360,9 @@
     }
 
     function drawNodes(){
-      if(window.nodes[0].lat && window.nodes[0].lon){
+      if(session.data.nodes[0].lat && session.data.nodes[0].lon){
         nodeLayer
-          .selectAll('circle').data(window.nodes).enter()
+          .selectAll('circle').data(session.data.nodes).enter()
           .append('circle')
           .attr('cx', d => projection([d.lon, d.lat])[0])
           .attr('cy', d => projection([d.lon, d.lat])[1])
@@ -375,13 +374,13 @@
     }
 
     function drawLinks(){
-      if(typeof window.links[0].source !== 'object'){
-        window.links.forEach(l => {
-          l.source = window.nodes.find(d => d.id === l.source);
-          l.target = window.nodes.find(d => d.id === l.target);
+      if(typeof session.data.links[0].source !== 'object'){
+        session.data.links.forEach(l => {
+          l.source = session.data.nodes.find(d => d.id === l.source);
+          l.target = session.data.nodes.find(d => d.id === l.target);
         });
       }
-      let vlinks = window.links.filter(l => l.visible)
+      let vlinks = session.data.links.filter(l => l.visible)
       let ll = linkLayer.selectAll('line').data(vlinks);
       ll.exit().remove();
       ll.enter().append('line').merge(ll)
@@ -437,13 +436,13 @@
     $('#color').on('input', e => nodeLayer.selectAll('circle').style('fill', e.target.value));
 
     $('#jitter').on('input', e => {
-      nodeLayer.selectAll('circle').data(window.nodes)
+      nodeLayer.selectAll('circle').data(session.data.nodes)
         .attr('cx', d => projection([d.lon, d.lat])[0] + (Math.random()*2-1)*e.target.value)
         .attr('cy', d => projection([d.lon, d.lat])[1] + (Math.random()*2-1)*e.target.value);
     });
 
     $('#nodeColorField').change(e => {
-      var circles = svg.select('g#nodes').selectAll('circle').data(window.nodes);
+      var circles = svg.select('g#nodes').selectAll('circle').data(session.data.nodes);
       var table = $('#groupKey').empty();
       if(e.target.value == 'none'){
         circles.style('fill', $('#color').val());
@@ -451,7 +450,7 @@
         return;
       }
       table.append('<tr><th>'+e.target.value+'</th><th>Color</th></tr>');
-      var values = Lazy(window.nodes).pluck(e.target.value).uniq().sort().toArray();
+      var values = Lazy(session.data.nodes).pluck(e.target.value).uniq().sort().toArray();
       let colors = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'colors.json'));
       var o = d3.scaleOrdinal(colors).domain(values);
       circles.style('fill', d => o(d[e.target.value]));

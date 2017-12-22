@@ -109,8 +109,8 @@
         if (fileName === undefined){
           return alertify.error('File not exported!');
         }
-        let labels = window.distance_matrix.labels;
-        let data = window.distance_matrix[$('[name="distanceMetric"]:checked')[0].id].map(l => l.slice());
+        let labels = session.data.distance_matrix.labels;
+        let data = session.data.distance_matrix[$('[name="distanceMetric"]:checked')[0].id].map(l => l.slice());
         jetpack.write(fileName, ',' + labels.join(',') + '\n' + data.map((row, i) => labels[i] + ',' + row.join(',')).join('\n'));
         alertify.success('File Saved!');
       });
@@ -118,15 +118,15 @@
     $('<li role="separator" class="divider"></li>').insertAfter('#FileTab');
 
     function replot(){
-      if(!window.distance_matrix.tn93 && !window.distance_matrix.snps){
+      if(!session.data.distance_matrix.tn93 && !session.data.distance_matrix.snps){
         return alertify.error('No distance matrix could be found!');
       }
 
       if(window.plot) Plotly.purge('main_panel');
 
-      let xLabels = window.nodes.map(d => 'N' + d.id);
+      let xLabels = session.data.distance_matrix.labels.map(d => 'N' + d);
       let yLabels = xLabels.slice();
-      let data = window.distance_matrix[$('[name="distanceMetric"]:checked')[0].id].map(l => l.slice());
+      let data = session.data.distance_matrix[$('[name="distanceMetric"]:checked')[0].id].map(l => l.slice());
 
       if($('#invertX').is(':checked')){
         data.forEach(l => l.reverse());
@@ -167,7 +167,7 @@
     }
 
     electron.ipcRenderer.on('deliver-data', (e, data) => {
-      Object.assign(window, data);
+      window.session = { data: data };
       replot();
     });
     electron.ipcRenderer.send('get-data');

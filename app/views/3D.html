@@ -99,7 +99,7 @@
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
 
-  var graph, data;
+  var graph, session = {};
 
   $(function(){
 
@@ -116,15 +116,15 @@
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
     electron.ipcRenderer.on('deliver-data', (e, d) => {
-      data = d;
+      session.data = d;
       $('.nodeVariables').html(
         ['<option value="none" selected>None</option>'].concat(
-          Object.keys(data.nodes[0]).map(key => '<option value="' + key + '">' + key + '</option>')
+          session.data.nodeFields.map(key => '<option value="' + key + '">' + key + '</option>')
         ).join('\n')
       );
       $('.linkVariables').html(
         ['<option value="none" selected>None</option>'].concat(
-          Object.keys(data.links[0]).map(key => '<option value="' + key + '">' + key + '</option>')
+          session.data.linkFields.map(key => '<option value="' + key + '">' + key + '</option>')
         ).join('\n')
       );
       $('#linkSortVariable').val('distance');
@@ -142,8 +142,8 @@
         .lineOpacity($('#default-link-opacity').val())
         .linkColorField(l => lc)
         .graphData({
-          nodes: data.nodes,
-          links: data.links.filter(l => l[pv] < t)
+          nodes: session.data.nodes,
+          links: session.data.links.filter(l => l[pv] < t)
         });
     }
 

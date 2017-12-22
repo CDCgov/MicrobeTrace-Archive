@@ -153,7 +153,7 @@ body{
         if (fileName === undefined){
           return alertify.error('File not exported!');
         }
-        jetpack.write(fileName, window.newick);
+        jetpack.write(fileName, session.data.newick);
         alertify.success('File Saved!');
       });
     }).insertAfter('#FileTab');
@@ -167,20 +167,20 @@ body{
 
     electron.ipcRenderer.send('get-data');
     electron.ipcRenderer.on('deliver-data', (e, data) => {
-      window.data = data;
+      window.session = {data: data};
       drawTree();
     });
 
     function drawTree(){
       svg.html(null);
-      var taxa = window.data.nodes.filter(d => d.seq).map(d => ({
+      var taxa = session.data.nodes.filter(d => d.seq).map(d => ({
         name: d.id,
         genotype: d.id
       }));
-      var RNJ = new nj.RapidNeighborJoining(window.data.distance_matrix[$('[name="distanceMetric"]:checked')[0].id], taxa);
+      var RNJ = new nj.RapidNeighborJoining(session.data.distance_matrix[$('[name="distanceMetric"]:checked')[0].id], taxa);
       RNJ.run();
-      window.newick = RNJ.getAsNewick();
-      tree(window.newick).svg(svg).layout();
+      session.data.newick = RNJ.getAsNewick();
+      tree(session.data.newick).svg(svg).layout();
       tree.branch_length(null);
       tree.branch_name(null);
       tree.node_span('equal');

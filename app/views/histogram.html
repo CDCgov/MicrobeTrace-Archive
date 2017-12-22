@@ -98,12 +98,12 @@
     electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
       window.links = newLinks;
       if($('#vislinks').is(':checked')){
-        Plotly.update('main_panel', {x: [window.links.filter(l => l.visible)]});
+        Plotly.update('main_panel', {x: [session.data.links.filter(l => l.visible)]});
       }
     });
 
     electron.ipcRenderer.on('deliver-data', (e, data) => {
-      window.links = data.links;
+      window.session = {data: data};
       let links = data.links;
       $('#variable').html(Object.keys(links[0]).map(key => '<option>' + key + '</option>').join('\n'));
       let varName = $('#variable').val('distance');
@@ -125,12 +125,12 @@
 
     $('#alllinks').parent().click(e => {
       let varName = $('#variable').val();
-      Plotly.restyle('main_panel', {x: [window.links.map(l => l[varName])]});
+      Plotly.restyle('main_panel', {x: [session.data.links.map(l => l[varName])]});
     });
 
     $('#vislinks').parent().click(e => {
       let varName = $('#variable').val();
-      Plotly.restyle('main_panel', {x: [window.links.filter(l => l.visible).map(l => l[varName])]});
+      Plotly.restyle('main_panel', {x: [session.data.links.filter(l => l.visible).map(l => l[varName])]});
     });
 
     $('#logScale, #linearScale').parent().click(e => Plotly.relayout('main_panel', {yaxis: e.target.outerText === 'Log' ? {type: 'log'} : {}}));
