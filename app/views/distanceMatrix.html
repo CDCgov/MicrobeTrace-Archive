@@ -14,7 +14,6 @@
     display: list-item;
   }
   </style>
-  <script src="../vendor/plotly.min.js"></script>
 </head>
 <body>
   <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" data-backdrop="false">
@@ -87,6 +86,7 @@
   const electron = require('electron');
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
+  const Plotly = require('plotly.js');
   const alertify = require('alertifyjs');
 
   $(function(){
