@@ -7,6 +7,7 @@
   <title></title>
   <link rel="icon" href="img/image32.ico" />
   <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+  <link href="../../node_modules/msa/css/msa.css" rel="stylesheet" type="text/css" />
   <style>
     body {
       margin-top: 60px;
@@ -18,6 +19,10 @@
       border-radius: 0px !important;
       background-image: none !important;
       background-color: #777777 !important;
+    }
+    .smenu-dropdown {
+      left: 18px !important;
+      top: 38px !important;
     }
   </style>
 </head>
@@ -38,12 +43,12 @@
   </div><!-- /.modal -->
 
   <div id="main_panel"></div>
-  <script src="../vendor/msa.min.gz.js"></script>
   <script>
   const electron = require('electron');
-
+  var _ = require('underscore');
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
+  var msa = require('msa');
 
   $(function(){
 
@@ -61,10 +66,9 @@
       var m = new msa.msa({
         el: $('#main_panel')[0],
         vis: {
-          conserv: false,
           overviewbox: true,
-          seqlogo: false,
           bootstrapMenu: true,
+          labels: false,
           labelId: false
         },
         zoomer: {
