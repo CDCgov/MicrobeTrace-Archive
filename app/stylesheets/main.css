@@ -40,13 +40,13 @@ a:focus {
 #file_panel {
   width: 768px;
 }
-#fileTable .filename {
+.filename {
   font-family: monospace;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-#fileTable .filename a:hover {
+.filename a:hover {
   color: red;
 }
 td {
@@ -242,7 +242,8 @@ td {
   width: 100%;
 }
 .row-striped {
-  padding: 4px 0;
+  display:none;
+  padding-top: 5px;
 }
 .row-striped:nth-of-type(even) {
   background-color: #efefef;

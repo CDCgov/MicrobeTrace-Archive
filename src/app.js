@@ -202,7 +202,7 @@ $(function(){
           let isFasta = (extension === 'fas');
           if(isFasta) $('#alignerControlsButton').slideDown();
           let isNode = filename.toLowerCase().includes('node');
-          let root = $('<div class="row row-striped" style="display:none; margin:2px auto;"></div>');
+          let root = $('<div class="row row-striped"></div>');
           $('<div class="col-xs-8 filename"></div>')
             .append($('<a href="#" class="fa fa-times killlink"></a>').click(e => {
               session.files.splice(session.files.indexOf(path),1);
@@ -211,7 +211,7 @@ $(function(){
             .append(' ' + filename)
             .appendTo(root);
           root.append(`
-            <div class="col-xs-4 text-right">
+            <div class="col-xs-4 text-right" style="padding-bottom:5px;">
               <div class="btn-group btn-group-xs" data-toggle="buttons">
                 <label class="btn btn-primary${!isFasta&!isNode?' active':''}">
                   <input type="radio" name="options-${filename}" data-type="link" autocomplete="off"${!isFasta&!isNode?' checked':''}>Link</input>
@@ -260,7 +260,7 @@ $(function(){
               stream.pause();
             }
           });
-          root.appendTo('#fileTable').slideDown();
+          root.appendTo('#file_panel .panel-body').slideDown();
           let refit = function(e){
             let these = $(`[data-file='${filename}']`),
                 first = $(these.get(0)),
@@ -319,7 +319,7 @@ $(function(){
 
   $('#main-submit').click(function(e){
     let files = [];
-    $('#fileTable .row').each((i, el) => {
+    $('#file_panel .row').each((i, el) => {
       files[i] = {
         path: session.files[i],
         type: $(el).find('input[type="radio"]:checked').data('type'),
