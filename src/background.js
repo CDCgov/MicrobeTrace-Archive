@@ -56,10 +56,6 @@ ipcMain.on('parse-files', (event, instructions) => {
   });
 });
 
-ipcMain.on('cancel', (event) => {
-  parserWindow.destroy();
-});
-
 ipcMain.on('add-nodes', (event, newNodes) => {
   newNodes.forEach(newNode => {
     let o = session.data.nodes.find(oldNode => newNode.id == oldNode);
@@ -81,6 +77,7 @@ ipcMain.on('add-links', (event, newLinks) => {
     }
   });
 });
+ipcMain.on('cancel-parsing', e => parserWindow.destroy());
 
 ipcMain.on('compute-mst', (event, titles) => {
   const computeWindow = createWindow('MST Computer', {show: false});

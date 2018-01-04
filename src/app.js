@@ -319,7 +319,7 @@ $(function(){
   $('#reference').val($('#HXB2pol').html());
 
   $('#loadCancelButton').click(e => {
-    ipcRenderer.send('cancel');
+    ipcRenderer.send('cancel-parsing');
     $('#loadingInformationModal').modal('hide');
     reset(true);
   });
