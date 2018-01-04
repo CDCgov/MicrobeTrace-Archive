@@ -41,13 +41,18 @@ a:focus {
   width: 768px;
 }
 .filename {
-  font-family: monospace;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.filename a:hover {
+.filename a{
+  font-weight: 700;
+}
+.filename a.killlink:hover {
   color: red;
+}
+#file_panel label {
+  font-weight: normal;
 }
 td {
   overflow: hidden;

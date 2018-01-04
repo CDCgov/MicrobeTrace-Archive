@@ -208,7 +208,7 @@ $(function(){
               session.files.splice(session.files.indexOf(path),1);
               root.slideUp(e => root.remove());
             }))
-            .append(' ' + filename)
+            .append(`&nbsp;<a href="#" title="${filename}">${filename}</a>`)
             .appendTo(root);
           root.append(`
             <div class="col-xs-4 text-right" style="padding-bottom:5px;">
@@ -233,9 +233,9 @@ $(function(){
           stream.on('data', chunk => {
             data += chunk;
             if(chunk.includes('\n')){
-              headers = data.substring(0, data.indexOf('\n')).split(',').map(h => {
+              data.substring(0, data.indexOf('\n')).split(',').forEach(h => {
                 if(['"', "'"].includes(h[0])) h = h.substring(1, h.length-1);
-                return h;
+                headers.push(h);
               });
               options = '<option>None</option>' + headers.map(h => '<option>'+h+'</option>').join('');
               $(`
@@ -249,7 +249,7 @@ $(function(){
                   <label style="width:65px">Distance</label><span>&nbsp;</span><select style="width:calc(100% - 69px)">${options}</select>
                 </div>
               `).appendTo(root);
-              let a = isNode ? ['Id', 'ID', 'id'] : ['SOURCE', 'Source', 'source'],
+              let a = isNode ? ['ID', 'Id', 'id'] : ['SOURCE', 'Source', 'source'],
                   b = isNode ? ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq'] : ['TARGET', 'Target', 'target'],
                   c = ['SNPs', 'TN93', 'snps', 'tn93', 'length', 'distance'];
               [a, b, c].forEach((list, i) => {
@@ -269,17 +269,12 @@ $(function(){
                 first = $(these.get(0)),
                 second = $(these.get(1)),
                 third = $(these.get(2)),
-                a = type == 'node' ? ['Id', 'ID', 'id'] : ['SOURCE', 'Source', 'source'],
-                b = type == 'node' ? ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq'] : ['TARGET', 'Target', 'target'],
+                a = ['SOURCE', 'Source', 'source'],
+                b = ['TARGET', 'Target', 'target'],
                 c = ['SNPs', 'TN93', 'snps', 'tn93', 'length', 'distance'];
-            [a, b, c].forEach((list, i) => {
-              list.forEach(title => {
-                if(headers.includes(title)){
-                  $(root.find('select').get(i)).find('select').val(title);
-                }
-              });
-            });
             if(type === 'node'){
+              a = ['ID', 'Id', 'id'];
+              b = ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq'];
               first.slideDown().find('label').text('ID');
               second.slideDown().find('label').text('Sequence');
               third.slideUp();
@@ -290,6 +285,13 @@ $(function(){
             } else {
               these.slideUp();
             }
+            [a, b, c].forEach((list, i) => {
+              list.forEach(title => {
+                if(headers.includes(title)){
+                  $(these.find('select').get(i)).find('select').val(title);
+                }
+              });
+            });
           };
           $(`[name="options-${filename}"]`).change(refit);
           refit();
