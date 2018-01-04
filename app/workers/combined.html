@@ -64,6 +64,7 @@
           n += addLink(Object.assign({
             source: link[file.field1],
             target: link[file.field2],
+            distance: (file.field3 === "None") ? 1 : link[file.field3],
             origin: filename,
             visible: true
           }, link));

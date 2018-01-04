@@ -238,54 +238,61 @@ $(function(){
                 return h;
               });
               options = '<option>None</option>' + headers.map(h => '<option>'+h+'</option>').join('');
-              root.append(`
-                <div class='col-xs-6 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
+              $(`
+                <div class='col-xs-4 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
                   <label style="width:65px">${isNode?'ID':'Source'}</label><span>&nbsp;</span><select style="width:calc(100% - 69px)">${options}</select>
                 </div>
-                <div class='col-xs-6 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
+                <div class='col-xs-4 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
                   <label style="width:65px">${isNode?'Sequence':'Target'}</label><span>&nbsp;</span><select style="width:calc(100% - 69px)">${options}</select>
                 </div>
-              `);
-              if(isNode){
-                ['Id', 'ID', 'id']
-                  .forEach(title => { if(headers.includes(title)){ $(root.find('select').get(0)).val(title) }});
-                ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq']
-                  .forEach(title => { if(headers.includes(title)){ $(root.find('select').get(1)).val(title) }});
-              } else {
-                ['SOURCE', 'Source', 'source']
-                  .forEach(title => { if(headers.includes(title)){ $(root.find('select').get(0)).val(title) }});
-                ['TARGET', 'Target', 'target']
-                  .forEach(title => { if(headers.includes(title)){ $(root.find('select').get(1)).val(title) }});
-              }
+                <div class='col-xs-4 text-right'${!isFasta&&!isNode?'':' style="display: none;"'} data-file='${filename}'>
+                  <label style="width:65px">Distance</label><span>&nbsp;</span><select style="width:calc(100% - 69px)">${options}</select>
+                </div>
+              `).appendTo(root);
+              let a = isNode ? ['Id', 'ID', 'id'] : ['SOURCE', 'Source', 'source'],
+                  b = isNode ? ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq'] : ['TARGET', 'Target', 'target'],
+                  c = ['SNPs', 'TN93', 'snps', 'tn93', 'length', 'distance'];
+              [a, b, c].forEach((list, i) => {
+                list.forEach(title => {
+                  if(headers.includes(title)){
+                    $(root.find('select').get(i)).val(title);
+                  }
+                });
+              });
               stream.pause();
             }
           });
           root.appendTo('#file_panel .panel-body').slideDown();
           let refit = function(e){
-            let these = $(`[data-file='${filename}']`),
+            let type = $(e ? e.target : `[name="options-${filename}"]:checked`).data('type'),
+                these = $(`[data-file='${filename}']`),
                 first = $(these.get(0)),
-                second = $(these.get(1));
-            if($(e.target).data('type') === 'node'){
-              first.find('label').text('ID');
-              second.find('label').text('Sequence');
-              ['Id', 'ID', 'id']
-                .forEach(title => { if(headers.includes(title)){ first.val(title) }});
-              ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq']
-                .forEach(title => { if(headers.includes(title)){ second.val(title) }});
-              these.slideDown();
-            } else if($(e.target).data('type') === 'link'){
-              first.find('label').text('Source');
-              second.find('label').text('Target');
-              ['SOURCE', 'Source', 'source']
-                .forEach(title => { if(headers.includes(title)){ first.val(title) }});
-              ['TARGET', 'Target', 'target']
-                .forEach(title => { if(headers.includes(title)){ second.val(title) }});
-              these.slideDown();
+                second = $(these.get(1)),
+                third = $(these.get(2)),
+                a = type == 'node' ? ['Id', 'ID', 'id'] : ['SOURCE', 'Source', 'source'],
+                b = type == 'node' ? ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq'] : ['TARGET', 'Target', 'target'],
+                c = ['SNPs', 'TN93', 'snps', 'tn93', 'length', 'distance'];
+            [a, b, c].forEach((list, i) => {
+              list.forEach(title => {
+                if(headers.includes(title)){
+                  $(root.find('select').get(i)).find('select').val(title);
+                }
+              });
+            });
+            if(type === 'node'){
+              first.slideDown().find('label').text('ID');
+              second.slideDown().find('label').text('Sequence');
+              third.slideUp();
+            } else if(type === 'link'){
+              first.slideDown().find('label').text('Source');
+              second.slideDown().find('label').text('Target');
+              third.slideDown();
             } else {
               these.slideUp();
             }
           };
           $(`[name="options-${filename}"]`).change(refit);
+          refit();
         });
         $('#main-submit').slideDown();
       }
@@ -323,8 +330,9 @@ $(function(){
       files[i] = {
         path: session.files[i],
         type: $(el).find('input[type="radio"]:checked').data('type'),
-        field1: $(el).find('select:first').val(),
-        field2: $(el).find('select:last').val()
+        field1: $(el).find('select').get(0).value,
+        field2: $(el).find('select').get(1).value,
+        field3: $(el).find('select').get(2).value
       };
     });
 
