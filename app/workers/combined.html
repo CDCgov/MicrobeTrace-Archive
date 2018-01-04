@@ -160,16 +160,17 @@
 
       //Final step in alignment: left- and right- padding with hyphens
       let minPadding = math.min(subset, 'padding');
-      subset.forEach(d => d.seq = "-".repeat(d.padding - minPadding) + d.seq);
+      subset.forEach(d => d.seq = '-'.repeat(d.padding - minPadding) + d.seq);
 
       let maxLength = math.max(subset.map(d => d.seq.length));
-      subset.forEach(d => d.seq = d.seq + "-".repeat(maxLength - d.seq.length));
+      subset.forEach(d => d.seq = d.seq + '-'.repeat(maxLength - d.seq.length));
     }
 
     if(anySequences){
       // Computing Distance Matrices:
       electron.ipcRenderer.send('message', 'Computing New Distance Matrices...');
       let n = subset.length;
+      let k = 0;
       data.distance_matrix.tn93 = Array(n);
       data.distance_matrix.snps = Array(n);
       data.distance_matrix.labels = subset.map(d => d.id);
@@ -186,9 +187,10 @@
           };
           data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = newLink.distance;
           data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = newLink.snps;
-          addLink(newLink);
+          k += addLink(newLink);
         }
       }
+      electron.ipcRenderer.send('message', ` - Found ${k} New Links while computing Distance Matrices`);
     }
 
     function defaultNode(){
