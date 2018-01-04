@@ -368,10 +368,6 @@ $(function(){
     clearTimeout(messageTimeout);
     $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').removeClass('disabled');
     session.data = data;
-    session.data.links.forEach(l => {
-      l.source = session.data.nodes.find(d => d.id === l.source);
-      l.target = session.data.nodes.find(d => d.id === l.target);
-    });
     updateNodeVariables();
     updateLinkVariables();
     setNodeVisibility();
@@ -513,6 +509,11 @@ $(function(){
         height = $(window).height(),
         xScale = d3.scaleLinear().domain([0, width]).range([0, width]),
         yScale = d3.scaleLinear().domain([0, height]).range([0, height]);
+
+    session.data.links.forEach(l => {
+      l.source = session.data.nodes.find(d => d.id === l.source.id);
+      l.target = session.data.nodes.find(d => d.id === l.target.id);
+    });
 
     session.network.zoom = d3.zoom().on('zoom', () => session.network.svg.attr('transform', d3.event.transform));
 

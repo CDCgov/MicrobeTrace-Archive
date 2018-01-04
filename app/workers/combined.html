@@ -260,6 +260,11 @@
     data.nodeFields = Array.from(data.nodeFields);
     data.linkFields = Array.from(data.linkFields);
 
+    data.links.forEach(l => {
+      l.source = data.nodes.find(d => d.id === l.source);
+      l.target = data.nodes.find(d => d.id === l.target);
+    });
+
     electron.ipcRenderer.send('update-data', data);
     electron.remote.getCurrentWindow().close();
 
