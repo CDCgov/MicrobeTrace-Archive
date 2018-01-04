@@ -159,7 +159,7 @@
           if (fileName === undefined){
             return alertify.error('File not exported!');
           }
-          jetpack.write(fileName, Papa.unparse(window.data));
+          jetpack.write(fileName, Papa.unparse(session.data[$('input[name=nodelink]:checked')[0].id + 's']));
         });
       })
     );
@@ -168,36 +168,7 @@
 
     window.table = { destroy: () => {} };
 
-    function reorder(){ window.table.draw(false); }
-
-    electron.ipcRenderer.on('update-node-selection', (e, newNodes) => {
-      window.table.rows().deselect();
-      window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
-      window.table.rows(window.nodes.filter(n => n.selected).map(n => n.index)).select();
-      reorder();
-    });
-
-    electron.ipcRenderer.on('update-visibility', (e, data) => {
-      window.nodes.forEach(d => d.visible = data.nodes.find(d2 => d2.id == d.id).visible);
-      window.links.forEach(d => d.visible = data.links.find(d2 => d2.id == d.id).visible);
-      window.clusters = data.clusters;
-      updateTable();
-    });
-
-    electron.ipcRenderer.on('update-clusters', (e, clusters) => {
-      window.clusters = clusters.filter(c => c.nodes > 1);
-      if($('input[name=nodelink]:checked')[0].id === 'cluster') updateTable();
-    });
-
-    function updateData(){
-      window.data = window[$('input[name=nodelink]:checked')[0].id + 's']
-        .slice()
-        .filter(r => r.visible);
-      window.clusters = clusters.filter(c => c.nodes > 1);
-      window.columns = Object
-        .keys(window.data[0])
-        .map(k => ({title:k, data:k, mData:k, sTitle:k}));
-    }
+    function reorder(){ table.draw(false); }
 
     function resetTextsize(){
       var s = $('#font-size-slider').val();
@@ -208,69 +179,50 @@
     }
 
     function updateTable(){
-      updateData();
-      window.table.destroy();
+      let nodelink = $('input[name=nodelink]:checked')[0].id;
+      let data = session.data[nodelink + 's'].filter(r => r.visible);
+      let clusters = session.data.clusters.filter(c => c.nodes > 1);
+      let columns = session.data[nodelink + 'Fields'];
+      table.destroy();
       let options = {
         dom: 'lrtip',
-        data: window.data,
-        columns: window.columns,
+        data: data,
+        columns: columns.map(k => ({title:k, data:k, mData:k, sTitle:k})),
         deferRender: true,
         colReorder: true,
         select: {
           style: 'multi'
         }
       };
-      let selectedColumn = window.columns.findIndex(d => d.data === 'selected');
-      if(selectedColumn >= 0){
-        options.orderFixed = [selectedColumn, 'desc'];
-      }
+      let selectedColumn = columns.findIndex(d => d === 'selected');
+      if(selectedColumn >= 0) options.orderFixed = [selectedColumn, 'desc'];
       window.table = $('#table').empty().DataTable(options);
-      let nodelink = $('input[name=nodelink]:checked')[0].id;
       let colsToKeep = $('#'+nodelink+'-columns').val().map(parseFloat);
-      Object.keys(window.data[0]).forEach((col, i) => {
-        window.table.column(i).visible(colsToKeep.includes(i));
-      });
-      window.table.on('user-select', (e, dt, type, cell) => {
+      columns.forEach((col, i) => table.column(i).visible(colsToKeep.includes(i)));
+      table.on('user-select', (e, dt, type, cell) => {
         let index = cell.index().row;
-        window.data[index].selected = !window.data[index].selected;
-        window.table.row(index).data(window.data[index]);
-        if(nodelink === 'node'){
-          electron.ipcRenderer.send('update-node-selection', window.data);
-        }
+        data[index].selected = !data[index].selected;
+        table.row(index).data(data[index]);
         reorder();
       });
-      window.table.rows(
-        window.data
-          .filter(n => n.selected)
-          .map(n => n.index)
-      ).select();
+      table.rows(data.filter(n => n.selected).map(n => n.index)).select();
       reorder();
       resetTextsize();
     }
 
     electron.ipcRenderer.on('deliver-data', (e, data) => {
-      Object.assign(window, data);
+      window.session = {data: data};
+      session.data.clusterFields = Object.keys(session.data.clusters[0]);
       ['node', 'link', 'cluster'].forEach(thing => {
         $('#'+thing+'-columns').html(
-          Object
-            .keys(window[thing+'s'][0])
-            .map((d, i) => {
-              if(meta.includes(d)) return;
-              out = '<option value="' + i;
-              if(i < 10){
-                out += '" selected >';
-              } else {
-                out += '">';
-              }
-              return out + d + '</option>';
-            })
-            .join('\n')
+          session.data[thing+'Fields'].map((d, i) => {
+            if(meta.includes(d)) return;
+            return `<option value="${i}"${(i < 7) ? " selected" : ""}>${d}</option>`
+          }).join('\n')
         ).change(e => {
           if($('input[name=nodelink]:checked')[0].id === thing){
             let colsToKeep = $('#'+thing+'-columns').val().map(parseFloat);
-            Object
-              .keys(window[thing+'s'][0])
-              .forEach((col, i) => window.table.column(i).visible(colsToKeep.includes(i)));
+            session.data[thing+'Fields'].forEach((col, i) => table.column(i).visible(colsToKeep.includes(i)));
           }
         });
       });
@@ -278,7 +230,7 @@
     });
 
     $('#search').on('input', e => {
-      window.table.search(e.target.value).draw();
+      table.search(e.target.value).draw();
     });
 
     $('#tiltHeaders').on('input', function(e){
@@ -293,6 +245,14 @@
         $('th').css('border-bottom', '1px solid black');
       }
     });
+
+    function resetTextsize(){
+      var s = $('#font-size-slider').val();
+      $('#table').css({
+        'font-size': s + 'px',
+        'line-height': s/10
+      });
+    }
 
     $('#font-size-slider').on('input', resetTextsize);
     $('input[name=nodelink]').on('change', updateTable);
