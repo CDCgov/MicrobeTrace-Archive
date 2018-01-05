@@ -16,12 +16,18 @@ If you're reading this, it's probably because you are somehow involved in the de
 ### Getting Started
 
 To jump right to development, download this repo on a machine running the
-operating system for which you want to build an executable. Currently, this is
-only x64 Windows. Make sure you also have `node` and `npm` [available on your path](http://stackoverflow.com/questions/37029089/how-to-install-nodejs-lts-on-windows-as-a-local-user-without-admin-rights).
-Then, open your command prompt, cd to the project directory, and run the
+operating system for which you want to build an executable. Make sure you
+also have at least [`node`](https://nodejs.org/en/) and [`npm`](https://www.npmjs.com/)
+(and preferably [`yarn`](https://yarnpkg.com/en/))
+[available on your path](http://stackoverflow.com/questions/37029089/how-to-install-nodejs-lts-on-windows-as-a-local-user-without-admin-rights).
+Then, open your command prompt, `cd` to the project directory, and run the
 following command:
 
     npm install
+
+(Alternately, if you followed my advice and installed `yarn`, run this:
+
+    yarn install
 
 This will download all of the development dependencies for this project.
 WARNING: This will download several hundred megabytes.
@@ -34,38 +40,35 @@ Next, issue the following command to your command prompt:
 
     npm start
 
-This will launch the developer's view of application itself. It includes
-real-time recompilation of main scripts, but not real-time refreshing, so every
-time you change something you'll probably need to give the application focus
-and then hit `Ctrl-R` to test the change.
+This will launch the developer's view of the application itself. It includes
+real-time recompilation of the frontend scripts, but not real-time refreshing,
+so every time you change something you'll probably need to give the
+application focus and then hit `Ctrl-R` to test the change.
 
 ### What to touch, what not to
 
 Basically, anything that's listed in the `.gitignore` file shouldn't be messed
 with. These are either dependencies that you should download and ignore (e.g.
-`node_modules/`), or compiled versions (e.g. `app/stylesheets/main.css`) of
-files that are designed to be edited (e.g. `src/stylesheets/main.less`)
+`node_modules/`), or compiled versions (e.g. `app/app.js` or `app/background.js`)
+of files that are designed to be edited (e.g. `src/app.js`)
 
 At this point, there are only a handful of files that should need editing.
 These are:
 
 * src/app.js
 * src/background.js
-* src/stylesheets/main.less
-* app/app.html
+* app/stylesheets/main.css
+* app/index.html
 * app/views/*
 * app/workers/*
 
 ### What's screwed up and (probably) fixable
 
-Full disclosure: This project does not adhere to anything close to a set of
+**Full disclosure**: This project does not adhere to anything close to a set of
 best-practices. If you're interested in paying down some technical debt, here
 are some good places to start.
 
-1. The File Architecture - Eric designed a quirky system in which each script
-was embedded in HTML files (except for the main renderer process, app.js). I
-(Tony) haven't taken the time to refactor this, but it really should be done.
-2. The Data Architecture - This is a biggie. Right now, this project is mostly
+1. The Data Architecture - This is a biggie. Right now, this project is mostly
 powered by jQuery spaghetti. It works if you (the developer) catch all the edge
 cases, but there are a lot of things that can go wrong. What we should do is
 implement some sort of MV* framework. I never cared for
@@ -73,26 +76,15 @@ implement some sort of MV* framework. I never cared for
 [React](https://facebook.github.io/react/). I may start moving toward using
 [Backbone](http://backbonejs.org/) or [Vuejs](https://vuejs.org/),
 time-permitting.
-3. The UI - One of the requirements was to show multiple views of the data on
+2. The UI - One of the requirements was to show multiple views of the data on
 the same monitor at the same time, such that a user can interact with one view
 and see the effects on a different view. Rather than use a [clever
 solution](http://costas-basdekis.github.io/Panes.js/), Eric just spun the
 different views off into separate windows. There are a bunch of things wrong
 with this, but foremost is that we then need to use IPC, which sucks. It also
-makes this issue intimately tied in with items 1 and 2, above. If you're
-ambitious, tackle all three at once, and you'll have a much, much better
+makes this issue intimately tied in with items 1, above. If you're
+ambitious, tackle both at once, and you'll have a much, much better
 codebase (and ultimately, product).
-
-### What's screwed up and (probably) not fixable
-
-1. The Dependencies - In spite of the incredibly deep stack of dependencies
-that comes with electron-boilerplate, the app itself only requires a dozen or
-so javascript libraries. As in most Node-based projects, these are stored in
-the `node_modules/` directory. However, jQuery, bootstrap, and plotly are
-special snowflakes that require special handling. Plotly is stored in the repo
-(I know...) and invoked with script tags. jQuery is `require`d in places where
-it should be `import`ed. This is because bootstrap can't handle being loaded in
-a node environment like a grown-up.
 
 ### Other stuff
 
