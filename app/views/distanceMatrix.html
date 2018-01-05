@@ -27,14 +27,7 @@
           <div class="row">
             <div class="col-xs-3">Distance Metric</div>
             <div class="col-xs-9">
-              <div class="btn-group" data-toggle="buttons">
-                <label class="btn btn-default btn-xs active">
-                  <input type="radio" name="distanceMetric" id="tn93" autocomplete="off" checked> TN93
-                </label>
-                <label class="btn btn-default btn-xs">
-                  <input type="radio" name="distanceMetric" id="snps" autocomplete="off"> SNPs
-                </label>
-              </div>
+              <div class="btn-group" data-toggle="buttons" id="distanceMetric"></div>
             </div>
           </div>
           <div class="row">
@@ -168,11 +161,18 @@
 
     electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = { data: data };
+      $('#distanceMetric').html(
+        Object.keys(session.data.distance_matrix).filter(k => k !== 'labels').map((k, i) => `
+          <label class="btn btn-default btn-xs${(i===0)? ' active':''}">
+            <input type="radio" name="distanceMetric" id="${k}" autocomplete="off"${(i===0)? ' checked':''}> ${k}
+          </label>
+        `).join('')
+      );
+      $('input[name="distanceMetric"]').change(replot);
       replot();
     });
     electron.ipcRenderer.send('get-data');
 
-    $('input[name="distanceMetric"]').change(replot);
     $('input[name="axisLabels"]').change(replot);
     $('input[type="color"]').change(replot);
     $('#invertX, #invertY').change(replot);
