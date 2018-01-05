@@ -112,11 +112,9 @@
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
 
-  var graph, session = {};
-
   $(function(){
 
-    graph = ForceGraph3D()($('#main_panel')[0]);
+    let graph = ForceGraph3D()($('#main_panel')[0]);
 
     electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
       $('title').text(manifest.productName + ' v. ' + manifest.version);
@@ -128,18 +126,14 @@
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
-    electron.ipcRenderer.on('deliver-data', (e, d) => {
-      session.data = d;
+    electron.ipcRenderer.on('set-data', (e, d) => {
+      window.session = {data: d};
       $('.nodeVariables').html(
         ['<option value="none" selected>None</option>'].concat(
           session.data.nodeFields.map(key => '<option value="' + key + '">' + key + '</option>')
         ).join('\n')
       );
-      $('.linkVariables').html(
-        ['<option value="none" selected>None</option>'].concat(
-          session.data.linkFields.map(key => '<option value="' + key + '">' + key + '</option>')
-        ).join('\n')
-      );
+      $('.linkVariables').html('<option value="none" selected>None</option>' + session.data.linkFields.map(key => `<option>${key}</option>`).join('\n'));
       $('#linkSortVariable').val('distance');
       drawGraph();
     });
@@ -149,6 +143,11 @@
       let pv = $('#linkSortVariable').val();
       let t = $('#default-link-threshold').val();
       let nodeColor = $('#default-node-color').val();
+      let links = session.data.links.filter(l => l[pv] < t).map(l => {
+        l.source = l.source.id;
+        l.target = l.target.id;
+        return l;
+      });
       graph
         .backgroundColor($('#network-color').val())
         .nodeRelSize($('#default-node-radius').val())
@@ -157,7 +156,7 @@
         .linkColorField(l => lc)
         .graphData({
           nodes: session.data.nodes,
-          links: session.data.links.filter(l => l[pv] < t)
+          links: links
         });
     }
 

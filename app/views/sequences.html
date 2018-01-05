@@ -62,7 +62,7 @@
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
 
-    electron.ipcRenderer.on('deliver-data', (e, data) => {
+    electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
       var m = new msa.msa({
         el: $('#main_panel')[0],

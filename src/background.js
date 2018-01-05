@@ -56,27 +56,6 @@ ipcMain.on('parse-files', (event, instructions) => {
   });
 });
 
-ipcMain.on('add-nodes', (event, newNodes) => {
-  newNodes.forEach(newNode => {
-    let o = session.data.nodes.find(oldNode => newNode.id == oldNode);
-    if(o){
-      Object.assign(o, newNode);
-    } else {
-      session.data.nodes.push(newNode);
-    }
-  });
-});
-
-ipcMain.on('add-links', (event, newLinks) => {
-  newLinks.forEach(newLink => {
-    let o = session.data.links.find(oldLink => newLink.source == oldLink.source && newLink.target == oldLink.target);
-    if(o){
-      Object.assign(o, newLink);
-    } else {
-      session.data.links.push(newLink);
-    }
-  });
-});
 ipcMain.on('cancel-parsing', e => parserWindow.destroy());
 
 ipcMain.on('compute-mst', (event, titles) => {
@@ -99,9 +78,11 @@ function distribute(type, sdata, except){
   });
 }
 
-ipcMain.on('update-data', (e, newData) => {
-  Object.assign(session.data, newData);
-  distribute('deliver-data', session.data, e.sender.id);
+['set-data', 'update-data'].forEach(action => {
+  ipcMain.on(action, (e, newData) => {
+    Object.assign(session.data, newData);
+    distribute(action, session.data, e.sender.id);
+  });
 });
 
 ipcMain.on('update-node-selection', (event, newNodes) => {
@@ -133,7 +114,7 @@ ipcMain.on('update-links-mst', (event, newLinks) => {
 
 ipcMain.on('get-data', e => {
   e.returnValue = session.data;
-  e.sender.send('deliver-data', session.data);
+  e.sender.send('set-data', session.data);
 });
 
 ipcMain.on('get-manifest', e => {

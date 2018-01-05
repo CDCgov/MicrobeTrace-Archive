@@ -102,7 +102,7 @@
       }
     });
 
-    electron.ipcRenderer.on('deliver-data', (e, data) => {
+    electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
       let links = data.links;
       $('#variable').html(Object.keys(links[0]).map(key => '<option>' + key + '</option>').join('\n'));

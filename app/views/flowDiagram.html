@@ -64,20 +64,17 @@ svg{
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
-    electron.ipcRenderer.on('deliver-data', (e, data) => {
+    electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
-      $('#source_side').html(session.data.nodeFields.map((field, i) => '<option value="'+field+'"' + (i==1?' selected ':'') + '>'+field+'</option>'));
-      $('#target_side').html(session.data.nodeFields.map((field, i) => '<option value="'+field+'"' + (i==2?' selected ':'') + '>'+field+'</option>'));
+      $('#source_side').html(session.data.nodeFields.map((field, i) => `<option${i==1?' selected ':''}>${field}</option>`));
+      $('#target_side').html(session.data.nodeFields.map((field, i) => `<option${i==2?' selected ':''}>${field}</option>`));
       drawGraph();
     });
 
-    function updateNodes(e, nodes){
-      session.data.nodes = nodes;
+    electron.ipcRenderer.on('update-data', (e, data) => {
+      window.session = {data: data};
       drawGraph();
-    }
-
-    electron.ipcRenderer.on('update-node-selection', updateNodes);
-    electron.ipcRenderer.on('update-node-cluster',   updateNodes);
+    });
 
     function drawGraph(){
       var width = $(window).width() - 40,

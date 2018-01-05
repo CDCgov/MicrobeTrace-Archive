@@ -210,7 +210,7 @@
       resetTextsize();
     }
 
-    electron.ipcRenderer.on('deliver-data', (e, data) => {
+    electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
       session.data.clusterFields = Object.keys(session.data.clusters[0]);
       ['node', 'link', 'cluster'].forEach(thing => {
@@ -226,6 +226,11 @@
           }
         });
       });
+      updateTable();
+    });
+
+    electron.ipcRenderer.on('deliver-data', (e, data) => {
+      window.session = {data: data};
       updateTable();
     });
 

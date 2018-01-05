@@ -267,7 +267,7 @@
       l.target = data.nodes.find(d => d.id === l.target);
     });
 
-    electron.ipcRenderer.send('update-data', data);
+    electron.ipcRenderer.send('set-data', data);
     electron.remote.getCurrentWindow().close();
 
   });

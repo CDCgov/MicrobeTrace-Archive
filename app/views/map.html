@@ -193,7 +193,7 @@
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
-    electron.ipcRenderer.on('deliver-data', (e, data) => {
+    electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
       var fields = session.data.nodeFields;
       $('.fields').append(fields.map(field => '<option value="'+field+'">'+field+'</option>').join('\n'));

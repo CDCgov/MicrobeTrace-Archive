@@ -166,7 +166,7 @@
       });
     }
 
-    electron.ipcRenderer.on('deliver-data', (e, data) => {
+    electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = { data: data };
       replot();
     });

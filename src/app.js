@@ -364,12 +364,14 @@ $(function(){
     $('#loadingInformation').html(session.messages.join('<br />'));
   });
 
-  ipcRenderer.on('deliver-data', (e, data) => {
+  ipcRenderer.on('set-data', (e, data) => {
     clearTimeout(messageTimeout);
     $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').removeClass('disabled');
     session.data = data;
-    updateNodeVariables();
-    updateLinkVariables();
+    $('.nodeVariables').html('<option>none</option>\n' + session.data.nodeFields.map(key => `<option>${key}</option>`).join('\n'));
+    $('#nodeTooltipVariable').val('id');
+    $('.linkVariables').html('<option>none</option>\n' + session.data.linkFields.map(key => `<option>${key}</option>`).join('\n'));
+    $('#linkSortVariable').val('distance');
     setNodeVisibility();
     setLinkVisibility();
     setupNetwork();
@@ -388,31 +390,6 @@ $(function(){
       $('#loadingInformationModal').modal('hide');
     }, 1500);
   });
-
-  function updateNodeVariables(){
-    let keys = session.data.nodeFields;
-    $('.nodeVariables.categorical').html(
-      '<option value="none">None</option>\n' +
-      keys
-        .map(key => '<option value="' + key + '">' + key + '</option>')
-        .join('\n')
-    );
-    if(keys.includes('id')) $('#nodeTooltipVariable').val('id');
-  }
-
-  function updateLinkVariables(){
-    let keys = session.data.linkFields;
-    $('.linkVariables').html(
-      '<option value="none">None</option>\n' +
-      keys
-        .map(key => '<option value="' + key + '">' + key + '</option>')
-        .join('\n')
-    );
-    if(keys.includes('distance')){
-      $('#linkSortVariable').val('distance');
-      $('#default-link-threshold').css('visibility', 'visible');
-    }
-  }
 
   function updateStatistics(){
     if($('#hideNetworkStatistics').is(':checked')) return;
@@ -503,6 +480,13 @@ $(function(){
     }
   }
 
+  function relinkData(){
+    session.data.links.forEach(l => {
+      l.source = session.data.nodes.find(d => d.id === l.source.id);
+      l.target = session.data.nodes.find(d => d.id === l.target.id);
+    });
+  }
+
   function setupNetwork(){
     session.network = {};
     let width = $(window).width(),
@@ -510,10 +494,7 @@ $(function(){
         xScale = d3.scaleLinear().domain([0, width]).range([0, width]),
         yScale = d3.scaleLinear().domain([0, height]).range([0, height]);
 
-    session.data.links.forEach(l => {
-      l.source = session.data.nodes.find(d => d.id === l.source.id);
-      l.target = session.data.nodes.find(d => d.id === l.target.id);
-    });
+    relinkData();
 
     session.network.zoom = d3.zoom().on('zoom', () => session.network.svg.attr('transform', d3.event.transform));
 
@@ -654,6 +635,14 @@ $(function(){
 
     ipcRenderer.send('update-visibility', session.data);
   }
+
+  ipcRenderer.on('update-data', data => {
+    console.log('Got update signal');
+    session.data = data;
+    relinkData();
+    renderNetwork();
+    d3.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path').classed('selected', d => d.selected);
+  });
 
   function dragstarted(d) {
     if (!d3.event.active) session.network.force.alphaTarget(0.3).restart();
