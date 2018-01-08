@@ -372,6 +372,7 @@ $(function(){
     $('#nodeTooltipVariable').val('id');
     $('.linkVariables').html('<option>none</option>\n' + session.data.linkFields.map(key => `<option>${key}</option>`).join('\n'));
     $('#linkSortVariable').val('distance');
+    tagClusters();
     setNodeVisibility();
     setLinkVisibility();
     setupNetwork();
@@ -380,7 +381,6 @@ $(function(){
       $('#linkColorVariable').val('origin');
       setLinkColor();
     }
-    tagClusters();
     computeDegree();
     session.state.visible_clusters = session.data.clusters.map(c => c.id);
     updateStatistics();
@@ -419,7 +419,8 @@ $(function(){
       }
     });
     session.state.visible_clusters = session.data.clusters.map(c => c.id);
-    ipcRenderer.send('update-node-cluster', session.data.nodes);
+    //ipcRenderer.send('update-node-cluster', session.data.nodes);
+    ipcRenderer.send('update-data', session.data);
   }
 
   function DFS(node){
@@ -451,7 +452,8 @@ $(function(){
       c.links_per_node = c.links/c.nodes;
       c.mean_genetic_distance = c.sum_distances/c.links;
     });
-    ipcRenderer.send('update-clusters', session.data.clusters);
+    //ipcRenderer.send('update-clusters', session.data.clusters);
+    ipcRenderer.send('update-data', session.data);
   }
 
   function setNodeVisibility(){
@@ -633,7 +635,7 @@ $(function(){
 
     session.network.force.force('link').links(vlinks);
 
-    ipcRenderer.send('update-visibility', session.data);
+    ipcRenderer.send('update-data', session.data);
   }
 
   ipcRenderer.on('update-data', data => {
@@ -670,7 +672,8 @@ $(function(){
        .forEach(node => node.selected = false);
    }
    n.selected = !n.selected;
-   ipcRenderer.send('update-node-selection', session.data.nodes);
+   //ipcRenderer.send('update-node-selection', session.data.nodes);
+   ipcRenderer.send('update-data', session.data);
    d3.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path').classed('selected', d => d.selected);
    $('#numberOfSelectedNodes').text(session.data.nodes.filter(d => d.selected).length.toLocaleString());
  }
@@ -1032,21 +1035,11 @@ $(function(){
     }
   });
 
-  ipcRenderer.on('update-links-mst', (event, newLinks) => {
-    session.data.links.forEach(ol => {
-      ol.mst = false;
-      let newlink = newLinks.find(nl => nl.source == ol.source.id && nl.target == ol.target.id);
-      if(typeof newlink !== "undefined"){
-        ol.mst = newlink.mst;
-      }
-    });
-    $('.showForMST').css('display', 'inline-block');
-    alertify.success('MST successfully computed.', 4);
-  });
-
   $('#computeMST').click(e => {
     ipcRenderer.send('compute-mst');
-    $('.showForNotMST').fadeOut();
+    $('.showForNotMST').fadeOut(e => {
+      $('.showForMST').css('opacity', 0).css('display', 'inline-block').animate({'opacity': 1});
+    });
   });
 
   $('#showMSTLinks, #showAllLinks').change(e => {

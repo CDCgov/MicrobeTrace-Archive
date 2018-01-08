@@ -192,7 +192,6 @@ td {
 }
 #settingsModal #default-link-threshold {
   width: 5em;
-  visibility: hidden;
 }
 #settingsModal #computeMST {
   display: inline-block;

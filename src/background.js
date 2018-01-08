@@ -66,7 +66,7 @@ ipcMain.on('compute-mst', (event, titles) => {
     slashes: true
   }));
   computeWindow.on('ready-to-show', e => {
-    computeWindow.send('deliver-data', session.data);
+    computeWindow.send('set-data', session.data);
   });
 });
 
@@ -80,36 +80,9 @@ function distribute(type, sdata, except){
 
 ['set-data', 'update-data'].forEach(action => {
   ipcMain.on(action, (e, newData) => {
-    Object.assign(session.data, newData);
+    session.data = newData;
     distribute(action, session.data, e.sender.id);
   });
-});
-
-ipcMain.on('update-node-selection', (event, newNodes) => {
-  session.data.nodes.forEach(d => d.selected = newNodes.find(nn => nn.id == d.id).selected);
-  distribute('update-node-selection', session.data.nodes, event.sender.id);
-});
-
-ipcMain.on('update-node-cluster', (event, newNodes) => {
-  session.data.nodes.forEach(d => d.cluster = newNodes.find(nn => nn.id == d.id).cluster);
-  distribute('update-node-cluster', session.data.nodes, event.sender.id);
-});
-
-ipcMain.on('update-visibility', (event, newData) => {
-  session.data.links.forEach((l, i) => l.visible = newData.links[i].visible);
-  session.data.nodes.forEach((d, i) => d.visible = newData.nodes[i].visible);
-  session.data.clusters = newData.clusters;
-  distribute('update-visibility', session.data, event.sender.id);
-});
-
-ipcMain.on('update-clusters', (event, clusters) => {
-  session.data.clusters = clusters;
-  distribute('update-clusters', session.data.clusters);
-});
-
-ipcMain.on('update-links-mst', (event, newLinks) => {
-  session.data.links = newLinks;
-  distribute('update-links-mst', session.data.links);
 });
 
 ipcMain.on('get-data', e => {
