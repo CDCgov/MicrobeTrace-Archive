@@ -4,7 +4,7 @@
       "@babel/env",
       {
         "targets": {
-          "browsers": "last 2 Chrome versions",
+          "browsers": "last 2 Electron versions",
           "node": "current"
         }
       }
