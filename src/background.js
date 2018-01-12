@@ -113,6 +113,12 @@ ipcMain.on('launch-view', (event, view) => {
   }));
 });
 
-ipcMain.on('reset', () => session = dataSkeleton());
+ipcMain.on('reset', () => {
+  BrowserWindow
+    .getAllWindows()
+    .filter(w => w.id != mainWindow.id)
+    .forEach(w => w.close());
+  session = dataSkeleton();
+});
 
 app.on('window-all-closed', app.quit);
