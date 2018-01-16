@@ -111,6 +111,20 @@ ipcMain.on('update-node-selections', (event, selections) => {
   distribute('update-node-selections', selections, event.sender.id);
 });
 
+ipcMain.on('update-node-visibilities', (event, visibilities) => {
+  let n = session.data.nodes.length;
+  if(visibilities.length !== n) console.error('Update Node Visibilities Error: Length Mismatch');
+  for(let i = 0; i < n; i++) session.data.nodes[i].visible = visibilities[i];
+  distribute('update-node-visibilities', visibilities, event.sender.id);
+});
+
+ipcMain.on('update-link-visibilities', (event, visibilities) => {
+  let n = session.data.links.length;
+  if(visibilities.length !== n) console.error('Update Link Visibilities Error: Length Mismatch');
+  for(let i = 0; i < n; i++) session.data.links[i].visible = visibilities[i];
+  distribute('update-link-visibilities', visibilities, event.sender.id);
+});
+
 ipcMain.on('launch-view', (event, view) => {
   const thingWindow = createWindow(view, {
     width: 800,

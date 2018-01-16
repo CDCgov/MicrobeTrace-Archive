@@ -365,9 +365,9 @@ $(function(){
   });
 
   ipcRenderer.on('set-data', (e, data) => {
+    session.data = data;
     clearTimeout(messageTimeout);
     $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').removeClass('disabled');
-    session.data = data;
     $('.nodeVariables').html('<option>none</option>\n' + session.data.nodeFields.map(key => `<option>${key}</option>`).join('\n'));
     $('#nodeTooltipVariable').val('id');
     $('.linkVariables').html('<option>none</option>\n' + session.data.linkFields.map(key => `<option>${key}</option>`).join('\n'));
@@ -465,6 +465,7 @@ $(function(){
       let clusters = session.data.clusters.map(c => c.nodes);
       session.data.nodes.forEach(n => n.visible = n.visible && clusters[n.cluster-1] > 1);
     }
+    ipcRenderer.send('update-node-visibilities', session.data.nodes.map(d => d.visible));
   }
 
   function setLinkVisibility(){
@@ -480,13 +481,7 @@ $(function(){
     if(session.state.visible_clusters.length < session.data.clusters.length){
       session.data.links.forEach(link => link.visible = link.visible && session.state.visible_clusters.includes(link.cluster));
     }
-  }
-
-  function relinkData(){
-    session.data.links.forEach(l => {
-      l.source = session.data.nodes.find(d => d.id === l.source.id);
-      l.target = session.data.nodes.find(d => d.id === l.target.id);
-    });
+    ipcRenderer.send('update-link-visibilities', session.data.links.map(l => l.visible));
   }
 
   function setupNetwork(){
@@ -495,8 +490,6 @@ $(function(){
         height = $(window).height(),
         xScale = d3.scaleLinear().domain([0, width]).range([0, width]),
         yScale = d3.scaleLinear().domain([0, height]).range([0, height]);
-
-    relinkData();
 
     session.network.zoom = d3.zoom().on('zoom', () => session.network.svg.attr('transform', d3.event.transform));
 
@@ -634,8 +627,6 @@ $(function(){
     });
 
     session.network.force.force('link').links(vlinks);
-
-    ipcRenderer.send('update-data', session.data);
   }
 
   ipcRenderer.on('update-data', data => {
