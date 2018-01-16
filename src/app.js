@@ -48,7 +48,7 @@ $(function(){
   function reset(soft){
     if(!soft){
       window.session = dataSkeleton();
-      $('#fileTable').empty();
+      $('#file_panel .panel-body').empty();
       ipcRenderer.send('reset');
       $('#main-submit').hide();
     }
