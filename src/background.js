@@ -103,6 +103,14 @@ ipcMain.on('get-component', (e, component) => {
   e.sender.send('deliver-component', e.returnValue);
 });
 
+// selections is an array of indices of nodes whose selection bit must be flipped.
+ipcMain.on('update-node-selections', (event, selections) => {
+  let n = session.data.nodes.length;
+  if(selections.length !== n) console.error('Update Node Selection Error: Length Mismatch');
+  for(let i = 0; i < n; i++) session.data.nodes[i].selected = selections[i];
+  distribute('update-node-selections', selections, event.sender.id);
+});
+
 ipcMain.on('launch-view', (event, view) => {
   const thingWindow = createWindow(view, {
     width: 800,

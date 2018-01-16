@@ -204,6 +204,11 @@
         data[index].selected = !data[index].selected;
         table.row(index).data(data[index]);
         reorder();
+        if(nodelink == 'node'){
+          let node = session.data.nodes.find(d => d.id === data[index].id);
+          node.selected = data[index].selected;
+          electron.ipcRenderer.send('update-node-selections', session.data.nodes.map(d => d.selected));
+        }
       });
       table.rows(data.filter(n => n.selected).map(n => n.index)).select();
       reorder();
@@ -231,6 +236,12 @@
 
     electron.ipcRenderer.on('deliver-data', (e, data) => {
       window.session = {data: data};
+      updateTable();
+    });
+
+    electron.ipcRenderer.on('update-node-selections', (e, selections) => {
+      let i = 0, n = session.data.nodes.length;
+      for(i; i < n; i++) session.data.nodes[i].selected = selections[i];
       updateTable();
     });
 

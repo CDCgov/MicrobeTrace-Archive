@@ -646,6 +646,13 @@ $(function(){
     d3.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path').classed('selected', d => d.selected);
   });
 
+  ipcRenderer.on('update-node-selections', (e, selections) => {
+    let i = 0, n = session.data.nodes.length;
+    for(i; i < n; i++) session.data.nodes[i].selected = selections[i];
+    d3.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path').classed('selected', d => d.selected);
+    updateStatistics();
+  });
+
   function dragstarted(d) {
     if (!d3.event.active) session.network.force.alphaTarget(0.3).restart();
     d.fx = d.x;
@@ -666,17 +673,20 @@ $(function(){
   }
 
   function clickHandler(n){
-   if(!d3.event.shiftKey){
-     session.data.nodes
-       .filter(node => node !== n)
-       .forEach(node => node.selected = false);
-   }
-   n.selected = !n.selected;
-   //ipcRenderer.send('update-node-selection', session.data.nodes);
-   ipcRenderer.send('update-data', session.data);
-   d3.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path').classed('selected', d => d.selected);
-   $('#numberOfSelectedNodes').text(session.data.nodes.filter(d => d.selected).length.toLocaleString());
- }
+    if(d3.event.shiftKey){
+      n.selected = !n.selected;
+    } else {
+      let selected = session.data.nodes.filter(node => node.selected);
+      if(selected.find(d => d.id === n.id)){
+        session.data.nodes.forEach(d => d.selected = false);
+      } else {
+        session.data.nodes.forEach(d => d.selected = (d.id === n.id));
+      }
+    }
+    ipcRenderer.send('update-node-selections', session.data.nodes.map(d => d.selected));
+    d3.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path').classed('selected', d => d.selected);
+    $('#numberOfSelectedNodes').text(session.data.nodes.filter(d => d.selected).length.toLocaleString());
+  }
 
   function showContextMenu(d){
     d3.event.preventDefault();
@@ -834,12 +844,6 @@ $(function(){
     let labelVar = $('#nodeLabelVariable').val();
     nodes.select('text').text(n => n[labelVar]);
   }
-
-  ipcRenderer.on('update-node-selection', (e, newNodes) => {
-    session.data.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
-    session.network.svg.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path').classed('selected', d => d.selected);
-    $('#numberOfSelectedNodes').text(session.data.nodes.filter(d => d.selected).length.toLocaleString());
-  });
 
   $('#nodeLabelVariable').change(e => {
     if(e.target.value === 'none'){
