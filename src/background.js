@@ -23,7 +23,7 @@ function dataSkeleton(){
 
 var session = dataSkeleton();
 
-var mainWindow, parserWindow;
+var mainWindow, parserWindow, components = {};
 
 const manifest = jetpack.cwd(app.getAppPath()).read('package.json', 'json');
 
@@ -96,7 +96,10 @@ ipcMain.on('get-manifest', e => {
 });
 
 ipcMain.on('get-component', (e, component) => {
-  e.returnValue = jetpack.cwd(app.getAppPath()).read('app/components/'+component, 'utf8');
+  if(!components[component]){
+    components[component] = jetpack.cwd(app.getAppPath()).read('app/components/'+component, 'utf8');
+  }
+  e.returnValue = components[component];
   e.sender.send('deliver-component', e.returnValue);
 });
 
