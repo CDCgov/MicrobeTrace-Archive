@@ -9,24 +9,26 @@
     data.links.forEach(l => l.mst = false);
     data.links.sort((a, b) => a.distance - b.distance);
     data.links[0].mst = true;
-    let nodes_in_tree = [data.links[0].source.id, data.links[0].target.id],
-        n = data.links.length;
+    let nodes_in_tree = [data.links[0].source, data.links[0].target];
+    let n = data.links.length;
+    //Note: this is an O(links*nodes) implementation, but this [can be improved](https://en.wikipedia.org/wiki/Prim%27s_algorithm#Time_complexity).
     while(nodes_in_tree.length < data.nodes.length){
       for(let i = 0; i < n; i++){
         let link = data.links[i];
-        if(nodes_in_tree.includes(link.source.id) && !nodes_in_tree.includes(link.target.id)){
-          nodes_in_tree.push(link.target.id);
+        if(nodes_in_tree.includes(link.source) && !nodes_in_tree.includes(link.target)){
+          nodes_in_tree.push(link.target);
           link.mst = true;
           break;
         }
-        if(nodes_in_tree.includes(link.target.id) && !nodes_in_tree.includes(link.source.id)){
-          nodes_in_tree.push(link.source.id);
+        if(nodes_in_tree.includes(link.target) && !nodes_in_tree.includes(link.source)){
+          nodes_in_tree.push(link.source);
           link.mst = true;
           break;
         }
       });
     }
-    electron.ipcRenderer.send('update-data', data);
+    data.links.sort((a, b) => a.index - b.index);
+    electron.ipcRenderer.send('update-links-mst', data.links.map(l => l.mst));
     electron.remote.getCurrentWindow().close();
   });
   </script>

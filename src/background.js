@@ -136,6 +136,12 @@ ipcMain.on('update-clusters', (event, clusters) => {
   distribute('update-clusters', session.data.clusters);
 });
 
+ipcMain.on('update-links-mst', (event, newLinks) => {
+  let n = session.data.links.length;
+  for(let i = 0; i < n; i++) session.data.links[i].mst = newLinks[i];
+  distribute('update-links-mst', newLinks);
+});
+
 ipcMain.on('launch-view', (event, view) => {
   const thingWindow = createWindow(view, {
     width: 800,
