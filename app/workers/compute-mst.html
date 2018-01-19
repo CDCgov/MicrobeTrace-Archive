@@ -3,7 +3,6 @@
 <head>
   <script>
   const electron = require('electron');
-  const math     = require('bettermath');
 
   electron.ipcRenderer.on('set-data', (event, data) => {
     data.links.forEach(l => l.mst = false);
@@ -11,8 +10,8 @@
     data.links[0].mst = true;
     let nodes_in_tree = [data.links[0].source, data.links[0].target];
     let n = data.links.length;
-    //Note: this is an O(links*nodes) implementation, but this [can be improved](https://en.wikipedia.org/wiki/Prim%27s_algorithm#Time_complexity).
-    while(nodes_in_tree.length < data.nodes.length){
+    //Note: this is an O(n^2) implementation, but this [can be improved](https://en.wikipedia.org/wiki/Prim%27s_algorithm#Time_complexity).
+    for(let j = 0; j < n; j++){
       for(let i = 0; i < n; i++){
         let link = data.links[i];
         if(nodes_in_tree.includes(link.source) && !nodes_in_tree.includes(link.target)){
@@ -25,7 +24,7 @@
           link.mst = true;
           break;
         }
-      });
+      }
     }
     data.links.sort((a, b) => a.index - b.index);
     electron.ipcRenderer.send('update-links-mst', data.links.map(l => l.mst));
