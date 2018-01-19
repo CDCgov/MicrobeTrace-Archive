@@ -1111,7 +1111,7 @@ $(function(){
       .select('path')
       .data(session.data.nodes)
       .classed('selected', d => d.selected);
-    ipcRenderer.send('update-node-selection', session.data.nodes);
+    ipcRenderer.send('update-node-selections', session.data.nodes.map(d => d.selected));
     $('#numberOfSelectedNodes').text(session.data.nodes.filter(d => d.selected).length.toLocaleString());
   });
 
