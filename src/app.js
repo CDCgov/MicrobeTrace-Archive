@@ -419,8 +419,7 @@ $(function(){
       }
     });
     session.state.visible_clusters = session.data.clusters.map(c => c.id);
-    //ipcRenderer.send('update-node-cluster', session.data.nodes);
-    ipcRenderer.send('update-data', session.data);
+    ipcRenderer.send('update-node-clusters', session.data.nodes.map(d => d.cluster));
   }
 
   function DFS(node){
@@ -452,8 +451,7 @@ $(function(){
       c.links_per_node = c.links/c.nodes;
       c.mean_genetic_distance = c.sum_distances/c.links;
     });
-    //ipcRenderer.send('update-clusters', session.data.clusters);
-    ipcRenderer.send('update-data', session.data);
+    ipcRenderer.send('update-clusters', session.data.clusters);
   }
 
   function setNodeVisibility(){

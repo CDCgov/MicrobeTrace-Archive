@@ -111,6 +111,14 @@ ipcMain.on('update-node-selections', (event, selections) => {
   distribute('update-node-selections', selections, event.sender.id);
 });
 
+// nodeClusters is an array of integers representing the cluster to which the i-th node belongs.
+ipcMain.on('update-node-clusters', (event, clusters) => {
+  let n = session.data.nodes.length;
+  if(clusters.length !== n) console.error('Update Node Clusters Error: Length Mismatch');
+  for(let i = 0; i < n; i++) session.data.nodes[i].cluster = clusters[i];
+  distribute('update-node-clusters', clusters, event.sender.id);
+});
+
 ipcMain.on('update-node-visibilities', (event, visibilities) => {
   let n = session.data.nodes.length;
   if(visibilities.length !== n) console.error('Update Node Visibilities Error: Length Mismatch');
@@ -123,6 +131,11 @@ ipcMain.on('update-link-visibilities', (event, visibilities) => {
   if(visibilities.length !== n) console.error('Update Link Visibilities Error: Length Mismatch');
   for(let i = 0; i < n; i++) session.data.links[i].visible = visibilities[i];
   distribute('update-link-visibilities', visibilities, event.sender.id);
+});
+
+ipcMain.on('update-clusters', (event, clusters) => {
+  session.data.clusters = clusters;
+  distribute('update-clusters', session.data.clusters);
 });
 
 ipcMain.on('launch-view', (event, view) => {
