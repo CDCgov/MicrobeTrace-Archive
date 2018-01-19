@@ -372,17 +372,17 @@ $(function(){
     $('#nodeTooltipVariable').val('id');
     $('.linkVariables').html('<option>none</option>\n' + session.data.linkFields.map(key => `<option>${key}</option>`).join('\n'));
     $('#linkSortVariable').val('distance');
-    tagClusters();
+    tagClusters(); //You need the first call to tagClusters to be able to setNodeVisibility.
     setNodeVisibility();
     setLinkVisibility();
     setupNetwork();
     renderNetwork();
+    tagClusters(); //You need the second call to tagClusters to get the Stats right.
     if(session.data.linkFields.includes('origin')){
       $('#linkColorVariable').val('origin');
       setLinkColor();
     }
     computeDegree();
-    session.state.visible_clusters = session.data.clusters.map(c => c.id);
     updateStatistics();
     $('.hidden').removeClass('hidden');
     setTimeout(e => {
