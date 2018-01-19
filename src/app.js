@@ -627,14 +627,6 @@ $(function(){
     session.network.force.force('link').links(vlinks);
   }
 
-  ipcRenderer.on('update-data', data => {
-    console.log('Got update signal');
-    session.data = data;
-    relinkData();
-    renderNetwork();
-    d3.select('g#nodes').selectAll('g.node').data(session.data.nodes).select('path').classed('selected', d => d.selected);
-  });
-
   ipcRenderer.on('update-node-selections', (e, selections) => {
     let i = 0, n = session.data.nodes.length;
     for(i; i < n; i++) session.data.nodes[i].selected = selections[i];

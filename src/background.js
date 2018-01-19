@@ -78,11 +78,9 @@ function distribute(type, sdata, except){
   });
 }
 
-['set-data', 'update-data'].forEach(action => {
-  ipcMain.on(action, (e, newData) => {
-    session.data = newData;
-    distribute(action, session.data, e.sender.id);
-  });
+ipcMain.on('set-data', (e, newData) => {
+  session.data = newData;
+  distribute('set-data', session.data, e.sender.id);
 });
 
 ipcMain.on('get-data', e => {
