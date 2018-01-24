@@ -145,7 +145,7 @@ ipcMain.on('update-links-mst', (event, newLinks) => {
 ipcMain.on('launch-view', (event, view) => {
   const thingWindow = createWindow(view, {
     width: 800,
-    height: 600,
+    height: 610,
     show: true
   });
   thingWindow.loadURL(url.format({
