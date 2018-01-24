@@ -171,6 +171,24 @@ svg{
 
     $(window).on('resize', drawGraph);
 
+    electron.ipcRenderer.on('update-node-clusters', (e, data) => {
+      let n = session.data.nodes.length;
+      for(i = 0; i < n; i++) session.data.nodes[i].cluster = data[i];
+      drawGraph();
+    });
+
+    electron.ipcRenderer.on('update-node-selections', (e, data) => {
+      let n = session.data.nodes.length;
+      for(i = 0; i < n; i++) session.data.nodes[i].selected = data[i];
+      drawGraph();
+    });
+
+    electron.ipcRenderer.on('update-node-visibilities', (e, data) => {
+      let n = session.data.nodes.length;
+      for(i = 0; i < n; i++) session.data.nodes[i].visible = data[i];
+      drawGraph();
+    });
+
     electron.ipcRenderer.send('get-data');
   });
 
