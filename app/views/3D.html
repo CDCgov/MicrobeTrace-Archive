@@ -136,11 +136,7 @@
       let pv = $('#linkSortVariable').val();
       let t = $('#default-link-threshold').val();
       let nodeColor = $('#default-node-color').val();
-      let links = session.data.links.filter(l => l[pv] < t).map(l => {
-        l.source = l.source.id;
-        l.target = l.target.id;
-        return l;
-      });
+      let links = session.data.links.filter(l => l[pv] < t);
       graph
         .backgroundColor($('#network-color').val())
         .nodeRelSize($('#default-node-radius').val())
