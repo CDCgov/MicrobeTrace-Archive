@@ -4,30 +4,74 @@
   <script>
   const electron = require('electron');
 
-  electron.ipcRenderer.on('set-data', (event, data) => {
-    data.links.forEach(l => l.mst = false);
-    data.links.sort((a, b) => a.distance - b.distance);
-    data.links[0].mst = true;
-    let nodes_in_tree = [data.links[0].source, data.links[0].target];
-    let n = data.links.length;
+  function prim(nodes, links){
+    electron.ipcRenderer.send('log', ' - Ding!');
+    let m = nodes.length, n = links.length;
+    links.forEach(l => l.mst = false);
+    links.sort((a, b) => a.distance - b.distance);
+    links[0].mst = true;
+    let nodes_in_tree = [links[0].source, links[0].target];
+    let links_in_tree = [links[0].index];
     //Note: this is an O(n^2) implementation, but this [can be improved](https://en.wikipedia.org/wiki/Prim%27s_algorithm#Time_complexity).
     for(let j = 0; j < n; j++){
       for(let i = 0; i < n; i++){
-        let link = data.links[i];
+        let link = links[i];
         if(nodes_in_tree.includes(link.source) && !nodes_in_tree.includes(link.target)){
           nodes_in_tree.push(link.target);
-          link.mst = true;
+          links_in_tree.push(link.index);
           break;
         }
         if(nodes_in_tree.includes(link.target) && !nodes_in_tree.includes(link.source)){
           nodes_in_tree.push(link.source);
-          link.mst = true;
+          links_in_tree.push(link.index);
           break;
         }
       }
+      if(nodes_in_tree.length === m){ break; }
     }
+    return links_in_tree;
+  }
+
+  electron.ipcRenderer.on('set-data', (e, data) => {
+    data.nodes.forEach(node => delete node.cluster);
+    let cluster = 0;
+
+    let DFS = function(nodeID){
+      let node = data.nodes.find(d => d.id === nodeID);
+      if(typeof node.cluster !== 'undefined') return;
+      node.cluster = cluster;
+      data.links.forEach(l => {
+        if(l.source === nodeID){
+          l.cluster = cluster;
+          DFS(l.source);
+        }
+        if(l.target === nodeID){
+          l.cluster = cluster;
+          DFS(l.target);
+        }
+      });
+    };
+
+    data.nodes.forEach(node => {
+      if(typeof node.cluster === 'undefined'){
+        DFS(node.id);
+        cluster++;
+      }
+    });
+    electron.ipcRenderer.send('log', 'Completed DFS, ' +cluster+ ' Clusters.');
+
+    let mst = [];
+
+    for(let i = 0; i < cluster; i++){
+      electron.ipcRenderer.send('log', 'Running Prim\'s Algorithm');
+      mst = mst.concat(prim(
+        nodes.filter(d => d.cluster === i),
+        links.filter(l => l.cluster === i)
+      ));
+    }
+
     data.links.sort((a, b) => a.index - b.index);
-    electron.ipcRenderer.send('update-links-mst', data.links.map(l => l.mst));
+    electron.ipcRenderer.send('update-links-mst', data.links.map(l => mst.includes(l.index)));
     electron.remote.getCurrentWindow().close();
   });
   </script>
