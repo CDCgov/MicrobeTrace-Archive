@@ -4,18 +4,6 @@ import jetpack from 'fs-jetpack';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import createWindow from './helpers/window';
 
-// Special module holding environment variables which you declared
-// in config/env_xxx.json file.
-import env from './env';
-
-// Save userData in separate folders for each environment.
-// Thanks to this you can use production and development versions of the app
-// on same machine like those are two separate apps.
-if (env.name !== 'production') {
-  const userDataPath = app.getPath('userData');
-  app.setPath('userData', `${userDataPath} (${env.name})`);
-}
-
 var data;
 
 function reset(){
@@ -44,9 +32,6 @@ app.on('ready', () => {
     protocol: 'file:',
     slashes: true,
   }));
-  if(env.name === 'development'){
-    mainWindow.openDevTools();
-  }
   ipcMain.on('tick',    (event, val) => mainWindow.send('tick',    val));
   ipcMain.on('message', (event, msg) => mainWindow.send('message', msg));
 });
@@ -147,9 +132,6 @@ ipcMain.on('launch-view', (event, view) => {
     protocol: 'file:',
     slashes: true
   }));
-  if (env.name === 'development') {
-    thingWindow.openDevTools();
-  }
 });
 
 ipcMain.on('reset', reset);

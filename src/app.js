@@ -5,7 +5,7 @@ import jetpack from 'fs-jetpack';
 import Papa from 'papaparse';
 import './helpers/window.js';
 
-import d3 from 'd3';
+const d3 = require('d3');
 const extraSymbols = require('d3-symbol-extra');
 Object.assign(d3, extraSymbols); //d3-symbol-extra doesn't automatically write to d3
 d3.symbols.concat(Object.values(extraSymbols)); //update the list of available symbols
