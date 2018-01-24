@@ -134,6 +134,12 @@ ipcMain.on('launch-view', (event, view) => {
   }));
 });
 
-ipcMain.on('reset', reset);
+ipcMain.on('reset', () => {
+  BrowserWindow
+    .getAllWindows()
+    .filter(w => w.id != mainWindow.id)
+    .forEach(w => w.close());
+  reset();
+});
 
 app.on('window-all-closed', app.quit);
