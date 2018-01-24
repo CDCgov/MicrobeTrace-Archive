@@ -58,7 +58,7 @@ ipcMain.on('parse-files', (event, instructions) => {
 
 ipcMain.on('cancel-parsing', e => parserWindow.destroy());
 
-ipcMain.on('compute-mst', (event, titles) => {
+ipcMain.on('compute-mst', (event) => {
   const computeWindow = createWindow('MST Computer', {show: false});
   computeWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'workers/compute-mst.html'),

@@ -1016,9 +1016,13 @@ $(function(){
 
   $('#computeMST').click(e => {
     ipcRenderer.send('compute-mst');
-    $('.showForNotMST').fadeOut(e => {
-      $('.showForMST').css('opacity', 0).css('display', 'inline-block').animate({'opacity': 1});
-    });
+    $('.showForNotMST').fadeOut();
+  });
+
+  ipcRenderer.on('update-links-mst', (e, msts) => {
+    let n = msts.length;
+    for(let i = 0; i < n; i++) session.data.links[i].mst = msts[i];
+    $('.showForMST').css('opacity', 0).css('display', 'inline-block').animate({'opacity': 1});
   });
 
   $('#showMSTLinks, #showAllLinks').change(e => {
@@ -1029,7 +1033,7 @@ $(function(){
     computeDegree();
     updateStatistics();
     session.network.force.alpha(0.3).alphaTarget(0).restart();
-  })
+  });
 
   $('#ShowSingletons, #HideSingletons').change(e => {
     tagClusters();
