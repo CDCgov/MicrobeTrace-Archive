@@ -45,7 +45,7 @@ $(function(){
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
       $('#align').prop('checked', false).parent().removeClass('active');
       $('#FastaOrLinkFileName').text('').hide();
-      $('#NodeCSVFileColumn, #main-submit').hide();
+      $('#NodeCSVFileColumn, #main-submit, #NodeSequenceColumnRow').hide();
       $('#NodeCSVFile').val('');
       $('#file_panel').fadeIn();
       app.messages = [];
