@@ -276,24 +276,29 @@ $(function(){
     }
   });
 
-  $('[name="referenceSequence"]').change(e => {
-    if(e.target.id == 'refSeqFirst'){
-      $('#referenceRow #refSeqFile').slideUp();
-    } else {
-      if(e.target.id == 'refSeqLoad'){
-        remote.dialog.showOpenDialog({
-          filters: [{name: 'FASTA Files', extensions:['fas', 'fasta', 'txt']}]
-        }, paths => {
-          if(paths.length > 0){
-            $('#refSeqFile').text(paths[0]).slideDown();
-            $('#reference').val(jetpack.read(paths[0]).split(/[\n>]/)[2]);
-          }
-        });
-      } else {
-        $('#refSeqFile').slideUp();
+  $('#refSeqFirst').click(function(e){
+    $('#referenceRow, #refSeqFile').slideUp();
+    $(this).removeClass('active').attr('aria-pressed', false);
+  });
+
+  $('#refSeqPaste').click(e => {
+    $('#refSeqFirst').removeClass('active').attr('aria-pressed', false);
+    $('#reference').val(electron.clipboard.readText());
+    $('#referenceRow').slideDown();
+    $('#refSeqFile').slideUp();
+  });
+
+  $('#refSeqLoad').click(e => {
+    $('#refSeqFirst').removeClass('active').attr('aria-pressed', false);
+    remote.dialog.showOpenDialog({
+      filters: [{name: 'FASTA Files', extensions:['fas', 'fasta', 'txt']}]
+    }, paths => {
+      if(paths){
+        $('#refSeqFile').text(paths[0].split(/[/\\]/).pop()).slideDown();
+        $('#reference').val(jetpack.read(paths[0]).split(/[\n>]/)[2]);
+        $('#referenceRow').slideDown();
       }
-      $('#referenceRow').slideDown();
-    }
+    });
   });
 
   $('#main-submit').click(function(e){
@@ -301,7 +306,7 @@ $(function(){
       file: $('#FastaOrLinkFile')[0].files[0].path,
       supplement: $('#NodeCSVFile')[0].files.length > 0 ? $('#NodeCSVFile')[0].files[0].path : '',
       align: $('#align').is(':checked'),
-      reference: $('[name="referenceSequence"]:checked')[0].id == 'refSeqFirst' ? 'first' : $('#reference').text(),
+      reference: $('#refSeqFirst').hasClass('active') ? 'first' : $('#reference').text(),
       identifierColumn: $('#NodeIDColumn').val(),
       sequenceColumn: $('#NodeSequenceColumn').val(),
       sourceColumn: $('#LinkSourceColumn').val(),

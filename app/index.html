@@ -164,28 +164,18 @@ performance of this software.</pre>
             <div class="col-sm-2">
               <a href="#" data-toggle="tooltip" title="What sequence should MicrobeTrace align your sequences against?">Reference</a>
             </div>
-            <div class="col-sm-4">
-              <div class="btn-group btn-group-xs" data-toggle="buttons">
-                <label class="btn btn-default active">
-                  <a href="#" data-toggle="tooltip" title="Should MicrobeTrace align against the first sequence in your file?">
-                    <input type="radio" name="referenceSequence" id="refSeqFirst" autocomplete="off" checked> First
-                  </a>
-                </label>
-                <label class="btn btn-default">
-                  <a href="#" data-toggle="tooltip" title="Would you like to paste in an alignment reference sequence?">
-                    <input type="radio" name="referenceSequence" id="refSeqPaste" autocomplete="off"> Paste
-                  </a>
-                </label>
-                <label class="btn btn-default">
-                  <a href="#" data-toggle="tooltip" title="Would you like to paste in an alignment reference sequence?">
-                    <input type="radio" name="referenceSequence" id="refSeqLoad" autocomplete="off"> Load From File
-                  </a>
-                </label>
-              </div>
+            <div class="col-sm-5">
+              <a href="#" data-toggle="tooltip" title="Should MicrobeTrace align against the first sequence in your file?">
+                <button id="refSeqFirst" type="button" class="btn btn-default btn-xs active" data-toggle="button" aria-pressed="true" autocomplete="off">First</button>
+              </a>
+              <a href="#" data-toggle="tooltip" title="Would you like to paste in an alignment reference sequence?">
+                <button id="refSeqPaste" class="btn btn-default btn-xs" autocomplete="off">Paste</button>
+              </a>
+              <a href="#" data-toggle="tooltip" title="Would you like to load a reference sequence from a FASTA file?">
+                <button id="refSeqLoad" class="btn btn-default btn-xs" autocomplete="off">Load From File</button>
+              </a>
             </div>
-            <div class="col-sm-6">
-              <pre id="refSeqFile"></pre>
-            </div>
+            <div id="refSeqFile" class="col-sm-5"></div>
           </div>
           <div class="row" id="referenceRow">
             <div class="col-sm-12">
