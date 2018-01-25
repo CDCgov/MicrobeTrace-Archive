@@ -32,7 +32,7 @@
     "release": "npm test && webpack --config=build/webpack.app.config.js --env=production && electron-builder"
   },
   "dependencies": {
-    "3d-force-graph": "^1.10.1",
+    "3d-force-graph": "^1.12.3",
     "alertifyjs": "^1.11.0",
     "bettermath": "^0.2.4",
     "bioseq": "^0.1.1",
