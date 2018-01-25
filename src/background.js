@@ -4,7 +4,7 @@ import jetpack from 'fs-jetpack';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import createWindow from './helpers/window';
 
-var data;
+var data, mainWindow;
 
 function reset(){
   data = {
@@ -22,7 +22,7 @@ const manifest = jetpack.cwd(app.getAppPath()).read('package.json', 'json');
 ipcMain.on('log', (event, msg) => console.log(msg));
 
 app.on('ready', () => {
-  const mainWindow = createWindow('main', {
+  mainWindow = createWindow('main', {
     width: 1024,
     height: 768,
     show: true
