@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title></title>
+  <title>MicrobeTrace - Sequences</title>
   <link rel="icon" href="img/image32.ico" />
   <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css" />
   <style>
@@ -46,13 +46,6 @@
   require('bootstrap');
 
   $(function(){
-
-    electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
-      $('title').text(manifest.productName + ' v. ' + manifest.version);
-      $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
-      $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
-    });
-    electron.ipcRenderer.send('get-manifest');
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
 

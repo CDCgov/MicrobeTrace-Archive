@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title></title>
+  <title>MicrobeTrace - Map</title>
   <link rel="icon" href="img/image32.ico" />
   <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
   <link rel="stylesheet" type="text/css" href="../css/alertify.min.css" />
@@ -182,13 +182,6 @@
   var countries, states, counties, cities, zipcodes, projection, path, svg;
 
   $(function(){
-
-    electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
-      $('title').text(manifest.productName + ' v. ' + manifest.version);
-      $('#AppName').html('<a href="#">'+manifest.productName+'</a>');
-      $('#AppVersion').html('<a href="#">'+manifest.version+'</a>');
-    });
-    electron.ipcRenderer.send('get-manifest');
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
