@@ -9,11 +9,6 @@
   <link rel="stylesheet" type="text/css" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" type="text/css" href="../../node_modules/alertifyjs/build/css/alertify.min.css" />
   <link rel="stylesheet" type="text/css" href="../stylesheets/main.css" />
-  <style>
-  .showForSequence {
-    display: list-item;
-  }
-  </style>
 </head>
 <body>
   <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" data-backdrop="false">
@@ -88,50 +83,56 @@
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
-    electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
-      window.links = newLinks;
-      if($('#vislinks').is(':checked')){
-        Plotly.update('main_panel', {x: [session.data.links.filter(l => l.visible)]});
+    electron.ipcRenderer.on('update-link-visibilities', (e, newLinks) => {
+      let n = newLinks.length;
+      for(let i = 0; i < n; i++){
+        session.data.links[i].visible = newLinks[i];
       }
+      redraw();
     });
 
     electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
       let links = data.links;
-      $('#variable').html(Object.keys(links[0]).map(key => '<option>' + key + '</option>').join('\n'));
-      let varName = $('#variable').val('distance');
-      window.plot = Plotly.newPlot('main_panel', [{
-        x: links.map(l => l['distance']),
-        type: 'histogram',
-        marker: {
-          color: $('#color').val(),
-          }
-        }], {
-          yaxis: $('#logScale').is(':checked') ? {type: 'log'} : {}
-        }, {
-          displaylogo: false,
-          displayModeBar: false
-      });
-      $(window).on('resize', e => Plotly.relayout('main_panel', {width: $('#main_panel').width(), height: $('#main_panel').height()}));
+      $('#variable').html(data.linkFields.map(key => '<option>' + key + '</option>').join('\n'));
+      $('#variable').val('distance');
+      redraw();
     });
     electron.ipcRenderer.send('get-data');
 
-    $('#alllinks').parent().click(e => {
+    function redraw(){
+      if(window.plot) Plotly.purge('main_panel');
       let varName = $('#variable').val();
-      Plotly.restyle('main_panel', {x: [session.data.links.map(l => l[varName])]});
-    });
+      let visible = $('#vislinks').is(':checked');
+      window.plot = Plotly.newPlot('main_panel', [{
+        x: session.data.links.filter(l => !visible || l.visible).map(l => l[varName]),
+        type: 'histogram',
+        marker: {
+          color: $('#color').val(),
+        }
+      }], {
+        yaxis: {
+          title: 'Number of Nodes',
+          type: $('#logScale').is(':checked') ? 'log' : ''
+        },
+        xaxis: {
+          title: ['distance', 'snps'].includes(varName) ? 'Genetic Distance' : varName
+        }
+      }, {
+        displaylogo: false,
+        displayModeBar: false
+      });
+      $(window).on('resize', e => {
+        Plotly.relayout('main_panel', {
+          width: $('#main_panel').width(),
+          height: $('#main_panel').height()
+        });
+      });
+    }
 
-    $('#vislinks').parent().click(e => {
-      let varName = $('#variable').val();
-      Plotly.restyle('main_panel', {x: [session.data.links.filter(l => l.visible).map(l => l[varName])]});
-    });
-
-    $('#logScale, #linearScale').parent().click(e => Plotly.relayout('main_panel', {yaxis: e.target.outerText === 'Log' ? {type: 'log'} : {}}));
-
-    $('#color').on('input', e => Plotly.restyle('main_panel', {marker : {color: e.target.value}}));
-
+    $('#alllinks, #vislinks, #logScale, #linearScale').change(redraw);
+    $('#variable, #color').change(redraw);
   });
-
   </script>
 </body>
 </html>
