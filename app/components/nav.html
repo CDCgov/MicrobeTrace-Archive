@@ -63,6 +63,7 @@
           <h4 class="modal-title" id="aboutModalLabel">About <span class="title"></span></h4>
         </div>
         <div class="modal-body">
+          <h3>MicrobeTrace <small>Version <span class="version"></span></h3>
           MicrobeTrace is a desktop application that renders existing data from high-risk contact networks in an easy-to-use Graphical User Interface (GUI). The network visualization can be customized according to supplemental data sources and mathematical inferences like the most probable transmission pathways. MicrobeTrace is a highly responsive, visual sequence analytics tool which can reduce the gap between data production and analytics and help you to discover, understand, and display relationships between patients (nodes). As a standalone desktop application, MicrobeTrace can be deployed on laptops to locations without any Internet access, thereby reducing both the startup cost and analysis time and effort.
         </div>
         <div class="modal-footer">
@@ -188,13 +189,16 @@
     electron.ipcRenderer.send('launch-view', 'components/help/index.html');
   });
 
+  const manifest = electron.ipcRenderer.sendSync('get-manifest');
+
+  $('.version').text(manifest.version);
+
   isOnline().then(online => {
-    if(online) electron.ipcRenderer.send('get-manifest');
-    electron.ipcRenderer.on('deliver-manifest', (e, manifest) => {
+    if(online){
       $('#UpdateTab')
-        .click(e => shell.openExternal('https://aaboyles.github.io/MicrobeTrace/checkVersion.html?version='+manifest.version))
-        .show();
-    });
+      .click(e => shell.openExternal('https://aaboyles.github.io/MicrobeTrace/checkVersion.html?version='+manifest.version))
+      .show();
+    }
   });
 
   </script>
