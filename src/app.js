@@ -41,15 +41,16 @@ $(function(){
     window.app = dataSkeleton();
     function resetDom(){
       $('.showForSequence, .showForMST, .showForLinkCSV, .showForNodeFile').slideUp();
-      $('#alignerColumn').removeClass('col-sm-offset-6');
-      $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
-      $('#align').prop('checked', false).parent().removeClass('active');
       $('#FastaOrLinkFileName').text('').hide();
+      $('#alignerColumn').removeClass('col-sm-offset-6');
+      $('#align').prop('checked', false).parent().parent().removeClass('active');
+      $('#doNotAlign').prop('checked', true).parent().parent().addClass('active');
+      $('#alignerRow, #referenceRow, #refSeqFile').hide();
       $('#NodeCSVFileColumn, #main-submit, #NodeSequenceColumnRow').hide();
       $('#NodeCSVFile').val('');
-      $('#file_panel').fadeIn();
-      app.messages = [];
       $('#loadingInformation').empty();
+      $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
+      $('#file_panel').fadeIn();
       $('#network').empty();
       $('.showForNotMST').css('display', 'inline-block');
       $('#groupKey').find('tbody').empty();
@@ -77,42 +78,42 @@ $(function(){
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
-  $('<li id="ExportHIVTraceTab" class="hidden"><a href="#">Export HIVTRACE File</a></li>').click(() => {
-    remote.dialog.showSaveDialog({
-      filters: [
-        {name: 'JSON', extensions: ['json']}
-      ]
-    }, (fileName) => {
-      if (fileName === undefined){
-        return alertify.error('File not exported!');
-      }
-      jetpack.write(fileName, JSON.stringify({
-        trace_results: {
-          'HIV Stages': {},
-          'Degrees': {},
-          'Multiple sequences': {},
-          'Edge Stages': {},
-          'Cluster sizes': app.data.clusters.map(c => c.size),
-          'Settings': {
-            'contaminant-ids': [],
-            'contaminants': 'remove',
-            'edge-filtering': 'remove',
-            'threshold': $('#default-link-threshold').val()
-          },
-          'Network Summary': {
-            'Sequences used to make links': 0,
-            'Clusters': app.data.clusters.length,
-            'Edges': app.data.links.filter(l => l.visible).length,
-            'Nodes': app.data.nodes.length
-          },
-          'Directed Edges': {},
-          'Edges': app.data.links,
-          'Nodes': app.data.nodes
-        }
-      }, null, 2));
-      alertify.success('File Saved!');
-    });
-  })//.insertAfter('#FileTab');
+  // $('<li id="ExportHIVTraceTab" class="hidden"><a href="#">Export HIVTRACE File</a></li>').click(() => {
+  //   remote.dialog.showSaveDialog({
+  //     filters: [
+  //       {name: 'JSON', extensions: ['json']}
+  //     ]
+  //   }, (fileName) => {
+  //     if (fileName === undefined){
+  //       return alertify.error('File not exported!');
+  //     }
+  //     jetpack.write(fileName, JSON.stringify({
+  //       trace_results: {
+  //         'HIV Stages': {},
+  //         'Degrees': {},
+  //         'Multiple sequences': {},
+  //         'Edge Stages': {},
+  //         'Cluster sizes': app.data.clusters.map(c => c.size),
+  //         'Settings': {
+  //           'contaminant-ids': [],
+  //           'contaminants': 'remove',
+  //           'edge-filtering': 'remove',
+  //           'threshold': $('#default-link-threshold').val()
+  //         },
+  //         'Network Summary': {
+  //           'Sequences used to make links': 0,
+  //           'Clusters': app.data.clusters.length,
+  //           'Edges': app.data.links.filter(l => l.visible).length,
+  //           'Nodes': app.data.nodes.length
+  //         },
+  //         'Directed Edges': {},
+  //         'Edges': app.data.links,
+  //         'Nodes': app.data.nodes
+  //       }
+  //     }, null, 2));
+  //     alertify.success('File Saved!');
+  //   });
+  // })//.insertAfter('#FileTab');
 
   $('<li id="ExportTab" class="hidden"><a href="#">Export Data</a></li>').click(e => {
     remote.dialog.showSaveDialog({
@@ -268,28 +269,40 @@ $(function(){
     }
   });
 
+  let hxb2 = '';
+
   $('[name="shouldAlign"]').change(e => {
     if(e.target.id == 'align'){
-      $('#alignerRow').slideDown();
+      hxb2 = ipcRenderer.sendSync('get-component', 'HXB2.txt');
+      $('#reference').val(hxb2);
+      $('#alignerRow, #referenceRow').slideDown();
     } else {
       $('#alignerRow, #referenceRow').slideUp();
     }
   });
 
+  $('#refSeqHXB2').click(function(e){
+    $('#refSeqHXB2, #refSeqFirst').removeClass('active').attr('aria-pressed', false);
+    $('#refSeqFile').slideUp();
+    $('#reference').val(hxb2);
+    $('#referenceRow').slideDown();
+  });
+
   $('#refSeqFirst').click(function(e){
-    $('#referenceRow, #refSeqFile').slideUp();
-    $(this).removeClass('active').attr('aria-pressed', false);
+    $('#refSeqHXB2, #refSeqFirst').removeClass('active').attr('aria-pressed', false);
+    $('#refSeqFile').slideUp();
+    $('#referenceRow').slideUp(e => $('#reference').val('first'));
   });
 
   $('#refSeqPaste').click(e => {
-    $('#refSeqFirst').removeClass('active').attr('aria-pressed', false);
+    $('#refSeqHXB2, #refSeqFirst').removeClass('active').attr('aria-pressed', false);
     $('#reference').val(electron.clipboard.readText());
     $('#referenceRow').slideDown();
     $('#refSeqFile').slideUp();
   });
 
   $('#refSeqLoad').click(e => {
-    $('#refSeqFirst').removeClass('active').attr('aria-pressed', false);
+    $('#refSeqHXB2, #refSeqFirst').removeClass('active').attr('aria-pressed', false);
     remote.dialog.showOpenDialog({
       filters: [{name: 'FASTA Files', extensions:['fas', 'fasta', 'txt']}]
     }, paths => {
@@ -306,7 +319,7 @@ $(function(){
       file: $('#FastaOrLinkFile')[0].files[0].path,
       supplement: $('#NodeCSVFile')[0].files.length > 0 ? $('#NodeCSVFile')[0].files[0].path : '',
       align: $('#align').is(':checked'),
-      reference: $('#refSeqFirst').hasClass('active') ? 'first' : $('#reference').text(),
+      reference: $('#reference').val(),
       identifierColumn: $('#NodeIDColumn').val(),
       sequenceColumn: $('#NodeSequenceColumn').val(),
       sourceColumn: $('#LinkSourceColumn').val(),
