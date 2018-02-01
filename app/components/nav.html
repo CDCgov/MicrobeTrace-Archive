@@ -33,7 +33,7 @@
               <li id="TableTab"><a href="#">Table</a></li>
               <li id="FlowTab"><a href="#">Flow Diagram</a></li>
               <li id="HistogramTab" class="showForSequence"><a href="#">Histogram</a></li>
-              <li id="DistanceMatrixTab" class="showForSequence"><a href="#">Heatmap</a></li>
+              <li id="HeatmapTab" class="showForSequence"><a href="#">Heatmap</a></li>
               <li id="SequencesTab" class="showForSequence"><a href="#">Sequences</a></li>
               <li id="TreeTab" class="showForSequence"><a href="#">Phylogenetic Tree</a></li>
               <li id="MapTab"><a href="#">Map</a></li>
@@ -122,9 +122,9 @@
     }
   });
 
-  $('#DistanceMatrixTab').click(function(){
+  $('#HeatmapTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/distanceMatrix.html');
+      electron.ipcRenderer.send('launch-view', 'views/heatmap.html');
     } else {
       alertify.warning('Please load some data first!');
     }

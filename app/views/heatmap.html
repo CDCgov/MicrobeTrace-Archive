@@ -21,7 +21,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title">Distance Matrix Configuration</h4>
+          <h4 class="modal-title">Heatmap Settings</h4>
         </div>
         <div class="modal-body">
           <div class="row">
@@ -84,8 +84,10 @@
 
   $(function(){
 
+    $('head').append(electron.ipcRenderer.sendSync('get-component', 'titleize.html'));
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
+
     $('<li id="ExportTab"><a href="#">Export Data</a></li>').click(() => {
       electron.remote.dialog.showSaveDialog({
         filters: [
