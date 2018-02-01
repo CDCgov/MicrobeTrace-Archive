@@ -33,6 +33,7 @@
               <li id="TableTab"><a href="#">Table</a></li>
               <li id="FlowTab"><a href="#">Flow Diagram</a></li>
               <li id="HistogramTab" class="showForSequence"><a href="#">Histogram</a></li>
+              <li id="ScatterplotTab"><a href="#">Scatterplot</a></li>
               <li id="HeatmapTab" class="showForSequence"><a href="#">Heatmap</a></li>
               <li id="SequencesTab" class="showForSequence"><a href="#">Sequences</a></li>
               <li id="TreeTab" class="showForSequence"><a href="#">Phylogenetic Tree</a></li>
@@ -137,6 +138,14 @@
   $('#SequencesTab').click(function(){
     if(!$(this).hasClass('disabled')){
       electron.ipcRenderer.send('launch-view', 'views/sequences.html');
+    } else {
+      alertify.warning('Please load some data first!');
+    }
+  });
+
+  $('#ScatterplotTab').click(function(){
+    if(!$(this).hasClass('disabled')){
+      electron.ipcRenderer.send('launch-view', 'views/scatterplot.html');
     } else {
       alertify.warning('Please load some data first!');
     }
