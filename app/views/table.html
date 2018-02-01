@@ -272,6 +272,7 @@
 
     $('#font-size-slider').on('input', resetTextsize);
     $('input[name=nodelink]').on('change', updateTable);
+    $('#link-columns, #node-columns, #cluster-columns').on('change', updateTable);
 
     electron.ipcRenderer.send('get-data');
   });
