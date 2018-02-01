@@ -49,7 +49,7 @@ $(function(){
     $('#main_panel').fadeOut(() => {
       $('#network').empty();
       $('#groupKey').empty();
-      $('#loadCancelButton, .showForMST').hide();
+      $('#loadCancelButton, .showForMST, #alignerControlsButton').hide();
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
       $('.showForNotMST').css('display', 'inline-block');
       $('#loadingInformation').empty();
