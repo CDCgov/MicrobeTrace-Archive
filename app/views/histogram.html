@@ -80,6 +80,7 @@
 
   $(function(){
 
+    $('head').append(electron.ipcRenderer.sendSync('get-component', 'titleize.html'));
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
@@ -116,7 +117,7 @@
           type: $('#logScale').is(':checked') ? 'log' : ''
         },
         xaxis: {
-          title: ['distance', 'snps'].includes(varName) ? 'Genetic Distance' : varName
+          title: titleize(varName)
         }
       }, {
         displaylogo: false,

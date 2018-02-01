@@ -1,0 +1,9 @@
+<script>
+const s = require('underscore.string');
+function titleize(title){
+  let small = title.toLowerCase();
+  if(small === 'id') return 'ID';
+  if(small === 'snps') return 'SNPs';
+  return s.titleize(title);
+}
+</script>
