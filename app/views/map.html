@@ -206,8 +206,16 @@
         let lat = $('#latitudeField').val(),
             lon = $('#longitudeField').val();
         session.data.nodes.forEach(n => {
-          n.lat = n[lat];
-          n.lon = n[lon];
+          if(typeof n[lat] == 'string'){
+            n.lat = (n[lat].includes('S') ? -1 : 1) * parseFloat(n[lat]);
+          } else {
+            n.lat = n[lat];
+          }
+          if(typeof n[lon] == 'string'){
+            n.lon = (n[lon].includes('W') ? -1 : 1) * parseFloat(n[lon]);
+          } else {
+            n.lon = n[lon];
+          }
         });
       } else if($('#zipcodeField').val() !== 'None'){
         if(!zipcodes){
@@ -247,7 +255,7 @@
           if(state) Object.assign(n, {lat: state.lat, lon: state.lon});
         });
       }
-      if(session.data.nodes[0].lat && session.data.nodes[0].lon) drawNodes();
+      drawNodes();
     }
 
     electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
@@ -353,17 +361,17 @@
     }
 
     function drawNodes(){
-      if(session.data.nodes[0].lat && session.data.nodes[0].lon){
-        nodeLayer
-          .selectAll('circle').data(session.data.nodes).enter()
-          .append('circle')
-          .attr('cx', d => projection([d.lon, d.lat])[0])
-          .attr('cy', d => projection([d.lon, d.lat])[1])
-          .attr('r', $('#radius').val())
-          .style('fill', $('#color').val())
-          .on('mouseenter', showToolTip)
-          .on('mouseout', hideTooltip);
-      }
+      let vnodes = session.data.nodes.filter(d => d.lat && d.lon);
+      if(vnodes.length == 0) return;
+      nodeLayer
+        .selectAll('circle').data(vnodes).enter()
+        .append('circle')
+        .attr('cx', d => projection([d.lon, d.lat])[0])
+        .attr('cy', d => projection([d.lon, d.lat])[1])
+        .attr('r', $('#radius').val())
+        .style('fill', $('#color').val())
+        .on('mouseenter', showToolTip)
+        .on('mouseout', hideTooltip);
     }
 
     function drawLinks(){
