@@ -182,13 +182,14 @@
 
   $(function(){
 
+    $('head').append(electron.ipcRenderer.sendSync('get-component', 'titleize.html'));
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
     electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
       let fields = session.data.nodeFields;
-      $('.fields').append(fields.map(field => '<option value="'+field+'">'+field+'</option>').join('\n'));
+      $('.fields').append(fields.map(field => `<option value="${field}">${titleize(field)}</option>`).join('\n'));
       if(fields.includes('lat')) $('#latitudeField').val('lat');
       if(fields.includes('lon')) $('#longitudeField').val('lon');
       if(fields.includes('zipcode')) $('#zipcodeField').val('zipcode');
