@@ -186,6 +186,34 @@
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
+    var width = $(window).width(),
+        height = $(window).height();
+
+    projection = d3.geoMercator();
+
+    path = d3.geoPath().projection(projection);
+
+    svg = d3.select('#main_panel').append('svg')
+        .attr('width', width)
+        .attr('height', height)
+
+    lastTransform = {k:1, x:0, y:0};
+
+    svg.call(d3.zoom().on('zoom', () => {
+      lastTransform = Object.assign({}, d3.event.transform);
+      svg.selectAll('g#countries, g#states, g#counties, g#nodes, g#links, g#cities').attr('transform', d3.event.transform);
+      svg.selectAll('g#countries, g#states, g#counties').selectAll('path').attr('stroke-width', 1 / lastTransform.k);
+      svg.selectAll('g#nodes').selectAll('circle').attr('r', $('#radius').val() / lastTransform.k);
+      svg.selectAll('g#links').selectAll('line').attr('stroke-width', 2 / lastTransform.k);
+    }));
+
+    countryLayer = svg.append('g').attr('id', 'countries');
+    stateLayer   = svg.append('g').attr('id', 'states');
+    countyLayer  = svg.append('g').attr('id', 'counties');
+    cityLayer    = svg.append('g').attr('id', 'cities');
+    linkLayer    = svg.append('g').attr('id', 'links');
+    nodeLayer    = svg.append('g').attr('id', 'nodes');
+
     electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
       let fields = session.data.nodeFields;
@@ -257,39 +285,6 @@
       }
     }
 
-    electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
-      session.data.links.forEach((l, i) => l.visible = newLinks[i].visible);
-      if($('#showLinks').hasClass('active')) drawLinks();
-    });
-
-    var width = $(window).width(),
-        height = $(window).height();
-
-    projection = d3.geoMercator();
-
-    path = d3.geoPath().projection(projection);
-
-    svg = d3.select('#main_panel').append('svg')
-        .attr('width', width)
-        .attr('height', height)
-
-    lastTransform = {k:1, x:0, y:0};
-
-    svg.call(d3.zoom().on('zoom', () => {
-      lastTransform = Object.assign({}, d3.event.transform);
-      svg.selectAll('g#countries, g#states, g#counties, g#nodes, g#links, g#cities').attr('transform', d3.event.transform);
-      svg.selectAll('g#countries, g#states, g#counties').selectAll('path').attr('stroke-width', 1 / lastTransform.k);
-      svg.selectAll('g#nodes').selectAll('circle').attr('r', $('#radius').val() / lastTransform.k);
-      svg.selectAll('g#links').selectAll('line').attr('stroke-width', 2 / lastTransform.k);
-    }));
-
-    countryLayer = svg.append('g').attr('id', 'countries');
-    stateLayer   = svg.append('g').attr('id', 'states');
-    countyLayer  = svg.append('g').attr('id', 'counties');
-    cityLayer    = svg.append('g').attr('id', 'cities');
-    linkLayer    = svg.append('g').attr('id', 'links');
-    nodeLayer    = svg.append('g').attr('id', 'nodes');
-
     function showToolTip(d){
       let tooltiptext = '';
       if(d.properties) tooltiptext = d.properties.name;
@@ -326,7 +321,7 @@
         .attr('stroke-width', 1 / lastTransform.k)
         .on('mouseenter', showToolTip)
         .on('mouseout', hideTooltip);
-      stateLayer.style('opacity', 1);
+      stateLayer.transition().style('opacity', 1);
     }
 
     function drawCounties(){
@@ -336,7 +331,7 @@
         .attr('stroke-width', 1 / lastTransform.k)
         .on('mouseenter', showToolTip)
         .on('mouseout', hideTooltip);
-      countyLayer.style('opacity', 1);
+      countyLayer.transition().style('opacity', 1);
     }
 
     function drawCities(){
@@ -477,6 +472,11 @@
     $('#landColor').on('input', e => svg.selectAll('path').attr('fill', e.target.value));
 
     $('#waterColor').on('input', e => svg.style('background', e.target.value));
+
+    electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
+      session.data.links.forEach((l, i) => l.visible = newLinks[i].visible);
+      if($('#showLinks').hasClass('active')) drawLinks();
+    });
 
     drawCountries();
     drawCities();
