@@ -173,7 +173,6 @@
   const electron = require('electron');
   const Lazy = require('lazy.js');
   const d3 = require('d3');
-  const Papa = require('papaparse');
 
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
@@ -188,7 +187,7 @@
 
     electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
-      var fields = session.data.nodeFields;
+      let fields = session.data.nodeFields;
       $('.fields').append(fields.map(field => '<option value="'+field+'">'+field+'</option>').join('\n'));
       if(fields.includes('lat')) $('#latitudeField').val('lat');
       if(fields.includes('lon')) $('#longitudeField').val('lon');
@@ -198,10 +197,55 @@
       if(fields.includes('country')) $('#countryField').val('country');
       if(fields.includes('id')) $('#nodeTooltipVariable').val('id');
       matchCoordinates();
+      nodeLayer.selectAll('circle').data(session.data.nodes).enter().append('circle');
       $('#settingsModal').modal('show');
     });
 
     function matchCoordinates(){
+      if($('#countryField').val() !== 'None'){
+        let val = $('#countryField').val();
+        session.data.nodes.forEach(n => {
+          let country = countries.features.find(c => c.id == n[val] || c.properties.name == n[val] || c.properties.country == n[val] || c.properties.ccode == n[val]);
+          if(country) Object.assign(n, country.properties);
+        });
+      }
+      if($('#stateField').val() !== 'None'){
+        if(!states) states = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'states.json'));
+        let sval = $('#stateField').val();
+        session.data.nodes.forEach(n => {
+          let state = states.features.find(s => s.properties.usps == n[sval] || s.properties.name == n[sval]);
+          if(state) Object.assign(n, state.properties);
+        });
+        // Counties is nested in states because Counties are typically reported by name (rather than a UID like FIPS code),
+        // but counties names are non-unique (e.g. there are 31 Washington Counties). Accordingly, if we have a state and a county,
+        // We can use county. However, we cannot use county without state.
+        if($('#countyField').val() !== 'None'){
+          if(!counties) counties = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'counties.json'));
+          let cval = $('#countyField').val();
+          session.data.nodes.forEach(n => {
+            let state = states.features.find(s => s.properties.usps == n[sval] || s.properties.name == n[sval]);
+            let county = counties.features.find(c => c.name == n[cval] && c.state == state.properties.usps);
+            if(county) Object.assign(n, county.properties);
+          });
+        }
+      }
+      if($('#zipcodeField').val() !== 'None'){
+        if(!zipcodes){
+          zipcodes = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'zip_codes_states.csv'), d => ({
+            'zipcode':d.zipcode,
+            'lat':+d.lat,
+            'lon':+d.lon,
+            'city':d.city,
+            'state':d.state,
+            'county':d.county
+          }));
+        }
+        let val = $('#zipcodeField').val();
+        session.data.nodes.forEach(n => {
+          let zo = zipcodes.find(z => z.zipcode == n[val]);
+          if(zo) Object.assign(n, zo);
+        });
+      }
       if($('#latitudeField').val() !== 'None' && $('#longitudeField').val() !== 'None'){
         let lat = $('#latitudeField').val(),
             lon = $('#longitudeField').val();
@@ -217,45 +261,7 @@
             n.lon = n[lon];
           }
         });
-      } else if($('#zipcodeField').val() !== 'None'){
-        if(!zipcodes){
-          zipcodes = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'zipcodes.csv'), d => ({
-            'zipcode':d.zipcode,
-            'name':d.zipcode,
-            'lat':+d.lat,
-            'lon':+d.lon
-          }));
-        }
-        let val = $('#zipcodeField').val();
-        session.data.nodes.forEach(n => {
-          let zo = zipcodes.find(z => z.zipcode == n[val]);
-          if(zo) Object.assign(n, zo);
-        });
-      } else if($('#countyField').val() !== 'None'){
-        let val = $('#countyField').val();
-        session.data.nodes.forEach(n => {
-          //TODO: Work out the State Problem.
-          //TODO: Add Fuzzy String matching.
-          let county = counties.find(c => c.name == n[val]);
-          if(zo) Object.assign(n, zo);
-        });
-      } else if($('#stateField').val() !== 'None'){
-        var val = $('#stateField').val();
-        session.data.nodes.forEach(n => {
-          //TODO: Work out the format problem.
-          var state = states.find(s => s.usps == n[val]);
-          if(state) Object.assign(n, {lat: state.lat, lon: state.lon});
-        });
-      } else if($('#countryField').val() !== 'None'){
-        var val = $('#countryField').val();
-        session.data.nodes.forEach(n => {
-          //TODO: Merge content of countries.csv into countries.json
-          //TODO: Work out the format problem.
-          var country = countries.find(c => c.name == n[val]);
-          if(state) Object.assign(n, {lat: state.lat, lon: state.lon});
-        });
       }
-      drawNodes();
     }
 
     electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
@@ -274,14 +280,14 @@
         .attr('width', width)
         .attr('height', height)
 
-    lastTransform = {};
+    lastTransform = {k:1, x:0, y:0};
 
     svg.call(d3.zoom().on('zoom', () => {
-      svg.selectAll('g#countries, g#states, g#counties, g#nodes, g#links, g#cities').attr('transform', d3.event.transform);
-      svg.selectAll('g#countries, g#states, g#counties').selectAll('path').attr('stroke-width', 1 / d3.event.transform.k);
-      svg.selectAll('g#nodes').selectAll('circle').attr('r', $('#radius').val() / d3.event.transform.k);
-      svg.selectAll('g#links').selectAll('line').attr('stroke-width', 2 / d3.event.transform.k);
       lastTransform = Object.assign({}, d3.event.transform);
+      svg.selectAll('g#countries, g#states, g#counties, g#nodes, g#links, g#cities').attr('transform', d3.event.transform);
+      svg.selectAll('g#countries, g#states, g#counties').selectAll('path').attr('stroke-width', 1 / lastTransform.k);
+      svg.selectAll('g#nodes').selectAll('circle').attr('r', $('#radius').val() / lastTransform.k);
+      svg.selectAll('g#links').selectAll('line').attr('stroke-width', 2 / lastTransform.k);
     }));
 
     countryLayer = svg.append('g').attr('id', 'countries');
@@ -292,7 +298,7 @@
     nodeLayer    = svg.append('g').attr('id', 'nodes');
 
     function showToolTip(d){
-      var tooltiptext = '';
+      let tooltiptext = '';
       if(d.properties) tooltiptext = d.properties.name;
       else if($('#nodeTooltipVariable').val() !== 'None' && d[$('#nodeTooltipVariable').val()]) tooltiptext = d[$('#nodeTooltipVariable').val()];
       d3.select('#tooltip')
@@ -304,7 +310,7 @@
     }
 
     function hideTooltip(){
-      var tooltip = d3.select('#tooltip');
+      let tooltip = d3.select('#tooltip');
       tooltip
         .transition().duration(100)
         .style('opacity', 0)
@@ -360,28 +366,27 @@
       cityLayer.transition().style('opacity', 1);
     }
 
-    function drawNodes(){
-      let vnodes = session.data.nodes.filter(d => d.lat && d.lon);
-      if(vnodes.length == 0) return;
+    function redrawNodes(){
+      let jitter = parseFloat($('#jitter').val());
+      let radius = parseFloat($('#radius').val()) / lastTransform.k;
+      let color = $('#color').val();
+      let normal = d3.randomNormal();
       nodeLayer
-        .selectAll('circle').data(vnodes).enter()
-        .append('circle')
-        .attr('cx', d => projection([d.lon, d.lat])[0])
-        .attr('cy', d => projection([d.lon, d.lat])[1])
-        .attr('r', $('#radius').val())
-        .style('fill', $('#color').val())
+        .selectAll('circle').data(session.data.nodes)
+        .attr('cx', d => projection([d.lon, d.lat])[0] + normal() * jitter)
+        .attr('cy', d => projection([d.lon, d.lat])[1] + normal() * jitter)
+        .attr('r', radius)
+        .style('fill', color)
         .on('mouseenter', showToolTip)
         .on('mouseout', hideTooltip);
     }
 
     function drawLinks(){
-      if(typeof session.data.links[0].source !== 'object'){
-        session.data.links.forEach(l => {
-          l.source = session.data.nodes.find(d => d.id === l.source);
-          l.target = session.data.nodes.find(d => d.id === l.target);
-        });
-      }
-      let vlinks = session.data.links.filter(l => l.visible)
+      session.data.links.forEach(l => {
+        if(typeof l.source !== 'object') l.source = session.data.nodes.find(d => d.id === l.source);
+        if(typeof l.target !== 'object') l.target = session.data.nodes.find(d => d.id === l.target);
+      });
+      let vlinks = session.data.links.filter(l => l.visible);
       let ll = linkLayer.selectAll('line').data(vlinks);
       ll.exit().remove();
       ll.enter().append('line').merge(ll)
@@ -394,7 +399,10 @@
         .attr('y2', d => projection([d.target.lon, d.target.lat])[1]);
     }
 
-    $('#longitudeField, #latitudeField, #countyField, #stateField, #countryField, #zipcodeField').change(matchCoordinates);
+    $('.fields').change(e => {
+      matchCoordinates();
+      redrawNodes();
+    });
 
     $('#showStates').click(function(e){
       if(!$(this).hasClass('active')){
@@ -432,38 +440,34 @@
       }
     });
 
-    $('#radius').on('input', e => nodeLayer.selectAll('circle').attr('r', e.target.value));
+    $('#radius').on('input', e => nodeLayer.selectAll('circle').attr('r', e.target.value / lastTransform.k));
 
     $('#color').on('input', e => nodeLayer.selectAll('circle').style('fill', e.target.value));
 
-    $('#jitter').on('input', e => {
-      nodeLayer.selectAll('circle').data(session.data.nodes)
-        .attr('cx', d => projection([d.lon, d.lat])[0] + (Math.random()*2-1)*e.target.value)
-        .attr('cy', d => projection([d.lon, d.lat])[1] + (Math.random()*2-1)*e.target.value);
-    });
+    $('#jitter').on('input', redrawNodes);
 
     $('#nodeColorField').change(e => {
-      var circles = svg.select('g#nodes').selectAll('circle').data(session.data.nodes);
-      var table = $('#groupKey').empty();
+      let circles = svg.select('g#nodes').selectAll('circle').data(session.data.nodes);
+      let table = $('#groupKey').empty();
       if(e.target.value == 'none'){
         circles.style('fill', $('#color').val());
         table.fadeOut();
         return;
       }
       table.append('<tr><th>'+e.target.value+'</th><th>Color</th></tr>');
-      var values = Lazy(session.data.nodes).pluck(e.target.value).uniq().sort().toArray();
+      let values = Lazy(session.data.nodes).pluck(e.target.value).uniq().sort().toArray();
       let colors = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'colors.json'));
-      var o = d3.scaleOrdinal(colors).domain(values);
+      let o = d3.scaleOrdinal(colors).domain(values);
       circles.style('fill', d => o(d[e.target.value]));
       values.forEach(value => {
-        var input = $('<input type="color" value="'+o(value)+'" />')
+        let input = $('<input type="color" value="'+o(value)+'" />')
           .on('input', evt => {
             circles
               .filter(d => d[e.target.value] == value)
               .style('fill', d => evt.target.value);
           });
-        var cell = $('<td></td>').append(input);
-        var row = $('<tr><td>'+value+'</td></tr>').append(cell);
+        let cell = $('<td></td>').append(input);
+        let row = $('<tr><td>'+value+'</td></tr>').append(cell);
         table.append(row);
       });
       table.fadeIn();
