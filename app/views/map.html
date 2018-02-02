@@ -203,6 +203,7 @@
 
     function matchCoordinates(){
       if($('#countryField').val() !== 'None'){
+        if(!countries) countries = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'countries.json'));
         let val = $('#countryField').val();
         session.data.nodes.forEach(n => {
           let country = countries.features.find(c => c.id == n[val] || c.properties.name == n[val] || c.properties.country == n[val] || c.properties.ccode == n[val]);
@@ -230,16 +231,7 @@
         }
       }
       if($('#zipcodeField').val() !== 'None'){
-        if(!zipcodes){
-          zipcodes = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'zip_codes_states.csv'), d => ({
-            'zipcode':d.zipcode,
-            'lat':+d.lat,
-            'lon':+d.lon,
-            'city':d.city,
-            'state':d.state,
-            'county':d.county
-          }));
-        }
+        if(!zipcodes) zipcodes = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'zipcodes.json'));
         let val = $('#zipcodeField').val();
         session.data.nodes.forEach(n => {
           let zo = zipcodes.find(z => z.zipcode == n[val]);
@@ -347,7 +339,7 @@
     }
 
     function drawCities(){
-      if(!cities) cities = d3.csvParse(electron.ipcRenderer.sendSync('get-component', 'cities.csv'));
+      if(!cities) cities = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'cities.json'));
       cityWrappers = cityLayer
         .style('opacity', 0)
         .selectAll('g').attr('class', 'city')
