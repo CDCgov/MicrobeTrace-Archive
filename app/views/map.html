@@ -122,7 +122,7 @@
                 <div class="row">
                   <div class="col-xs-3">Jitter</div>
                   <div class="col-xs-9">
-                    <input type="range" id="jitter" min="0.00" max="30" step="0.1" value="0.00" />
+                    <input type="range" id="jitter" min="0.00" max="100" step="0.5" value="0.00" />
                   </div>
                 </div>
                 <div class="row">
@@ -367,18 +367,23 @@
     }
 
     function redrawNodes(){
-      let jitter = parseFloat($('#jitter').val());
+      let jitter = parseFloat($('#jitter').val()) / lastTransform.k;
+      let normal = d3.randomNormal();
+      session.data.nodes.forEach(d => {
+        d.jx = normal() * jitter;
+        d.jy = normal() * jitter;
+      });
       let radius = parseFloat($('#radius').val()) / lastTransform.k;
       let color = $('#color').val();
-      let normal = d3.randomNormal();
       nodeLayer
         .selectAll('circle').data(session.data.nodes)
-        .attr('cx', d => projection([d.lon, d.lat])[0] + normal() * jitter)
-        .attr('cy', d => projection([d.lon, d.lat])[1] + normal() * jitter)
+        .attr('cx', d => projection([d.lon, d.lat])[0] + d.jx)
+        .attr('cy', d => projection([d.lon, d.lat])[1] + d.jy)
         .attr('r', radius)
         .style('fill', color)
         .on('mouseenter', showToolTip)
         .on('mouseout', hideTooltip);
+      if($('#showLinks').hasClass('active')) drawLinks();
     }
 
     function drawLinks(){
@@ -393,10 +398,11 @@
         .attr('class', 'link')
         .style('stroke', '#ff0000')
         .attr('stroke-width', 2 / lastTransform.k)
-        .attr('x1', d => projection([d.source.lon, d.source.lat])[0])
-        .attr('y1', d => projection([d.source.lon, d.source.lat])[1])
-        .attr('x2', d => projection([d.target.lon, d.target.lat])[0])
-        .attr('y2', d => projection([d.target.lon, d.target.lat])[1]);
+        .attr('x1', d => projection([d.source.lon, d.source.lat])[0] + d.source.jx)
+        .attr('y1', d => projection([d.source.lon, d.source.lat])[1] + d.source.jy)
+        .attr('x2', d => projection([d.target.lon, d.target.lat])[0] + d.target.jx)
+        .attr('y2', d => projection([d.target.lon, d.target.lat])[1] + d.target.jy);
+      linkLayer.transition().style('opacity', 1);
     }
 
     $('.fields').change(e => {
