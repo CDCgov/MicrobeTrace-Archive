@@ -124,6 +124,13 @@ ipcMain.on('update-node-visibilities', (event, visibilities) => {
   distribute('update-node-visibilities', visibilities, event.sender.id);
 });
 
+ipcMain.on('update-node-degrees', (event, degrees) => {
+  let n = session.data.nodes.length;
+  if(degrees.length !== n) console.error('Update Node Degrees Error: Length Mismatch');
+  for(let i = 0; i < n; i++) session.data.nodes[i].degree = degrees[i];
+  distribute('update-node-degrees', degrees, event.sender.id);
+});
+
 ipcMain.on('update-link-visibilities', (event, visibilities) => {
   let n = session.data.links.length;
   if(visibilities.length !== n) console.error('Update Link Visibilities Error: Length Mismatch');

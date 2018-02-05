@@ -446,6 +446,7 @@ $(function(){
       c.mean_genetic_distance = c.sum_distances/c.links;
     });
     ipcRenderer.send('update-clusters', session.data.clusters);
+    ipcRenderer.send('update-node-degrees', session.data.nodes.map(d => d.degree));
   }
 
   function setNodeVisibility(){
