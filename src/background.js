@@ -170,4 +170,6 @@ ipcMain.on('reset', () => {
   session = dataSkeleton();
 });
 
+mainWindow.on('closed', app.quit);
+
 app.on('window-all-closed', app.quit);
