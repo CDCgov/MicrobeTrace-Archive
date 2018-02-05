@@ -56,13 +56,14 @@ svg{
 
   $(function(){
 
+    $('head').append(electron.ipcRenderer.sendSync('get-component', 'titleize.html'));
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
 
     electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
-      $('#source_side').html(session.data.nodeFields.map((field, i) => `<option${i==1?' selected ':''}>${field}</option>`));
-      $('#target_side').html(session.data.nodeFields.map((field, i) => `<option${i==2?' selected ':''}>${field}</option>`));
+      $('#source_side').html(session.data.nodeFields.map((field, i) => `<option value='${field}'${i==1?' selected ':''}>${titleize(field)}</option>`));
+      $('#target_side').html(session.data.nodeFields.map((field, i) => `<option value='${field}'${i==2?' selected ':''}>${titleize(field)}</option>`));
       drawGraph();
     });
 
