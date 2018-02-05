@@ -26,6 +26,19 @@
             <div role="tabpanel" class="tab-pane fade in active" id="histogramConfigurations">
               <div class="panel-body">
                 <div class="row">
+                  <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="Which axis should the histogram be drawn across?">Axis</a></div>
+                  <div class="col-xs-9">
+                    <div class="btn-group btn-group-xs" data-toggle="buttons">
+                      <label class="btn btn-default active">
+                        <input type="radio" name="axis" id="xAxis" autocomplete="off" checked> X
+                      </label>
+                      <label class="btn btn-default">
+                        <input type="radio" name="axis" id="yAxis" autocomplete="off"> Y
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
                   <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="Which dataset should the histogram be drawn from?">Dataset</a></div>
                   <div class="col-xs-9">
                     <div class="btn-group btn-group-xs" data-toggle="buttons">
@@ -105,21 +118,24 @@
       if(window.plot) Plotly.purge('main_panel');
       let varName = $('#variable').val();
       let visible = $('#vislinks').is(':checked');
-      window.plot = Plotly.newPlot('main_panel', [{
-        x: session.data.links.filter(l => !visible || l.visible).map(l => l[varName]),
+      let axis = $('#xAxis').is(':checked') ? 'x' : 'y';
+      let nonaxis = $('#yAxis').is(':checked') ? 'x' : 'y';
+      let data = {
         type: 'histogram',
         marker: {
           color: $('#color').val(),
         }
-      }], {
-        yaxis: {
-          title: 'Number of Nodes',
-          type: $('#logScale').is(':checked') ? 'log' : ''
-        },
-        xaxis: {
-          title: titleize(varName)
-        }
-      }, {
+      };
+      data[axis] = session.data.links.filter(l => !visible || l.visible).map(l => l[varName]);
+      let layout = {};
+      layout[axis + 'axis'] = {
+        title: titleize(varName)
+      }
+      layout[nonaxis + 'axis'] = {
+        title: 'Number of Nodes',
+        type: $('#logScale').is(':checked') ? 'log' : ''
+      };
+      window.plot = Plotly.newPlot('main_panel', [data], layout, {
         displaylogo: false,
         displayModeBar: false
       });
@@ -131,7 +147,7 @@
       });
     }
 
-    $('#alllinks, #vislinks, #logScale, #linearScale').change(redraw);
+    $('#alllinks, #vislinks, #logScale, #linearScale, #xAxis, #yAxis').change(redraw);
     $('#variable, #color').change(redraw);
   });
   </script>
