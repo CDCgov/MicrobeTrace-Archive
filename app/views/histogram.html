@@ -39,14 +39,14 @@
                   </div>
                 </div>
                 <div class="row">
-                  <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="Which dataset should the histogram be drawn from?">Dataset</a></div>
+                  <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="Should the histogram be drawn from only stuff thats visible in the network, or all the data?">Dataset</a></div>
                   <div class="col-xs-9">
                     <div class="btn-group btn-group-xs" data-toggle="buttons">
                       <label class="btn btn-default active">
-                        <input type="radio" name="set" id="vislinks" autocomplete="off" checked> Visible Links
+                        <input type="radio" name="set" id="vislinks" autocomplete="off" checked> Only Visible Elements
                       </label>
                       <label class="btn btn-default">
-                        <input type="radio" name="set" id="alllinks" autocomplete="off"> All Links
+                        <input type="radio" name="set" id="alllinks" autocomplete="off"> All Elements
                       </label>
                     </div>
                   </div>
@@ -108,15 +108,19 @@
     electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
       let links = data.links;
-      $('#variable').html(data.linkFields.map(key => `<option value='${key}'>${titleize(key)}</option>`).join('\n'));
-      $('#variable').val('distance');
+      $('#variable').html(
+        data.linkFields.map(key => `<option value='links-${key}'>Links ${titleize(key)}</option>`).concat(
+        data.nodeFields.map(key => `<option value='nodes-${key}'>Nodes ${titleize(key)}</option>`)).join('\n')
+      );
+      $('#variable').val('links-distance');
       redraw();
     });
     electron.ipcRenderer.send('get-data');
 
     function redraw(){
       if(window.plot) Plotly.purge('main_panel');
-      let varName = $('#variable').val();
+      let varName, varSource;
+      [varSource, varName] = $('#variable').val().split('-');
       let visible = $('#vislinks').is(':checked');
       let axis = $('#xAxis').is(':checked') ? 'x' : 'y';
       let nonaxis = $('#yAxis').is(':checked') ? 'x' : 'y';
@@ -126,13 +130,13 @@
           color: $('#color').val(),
         }
       };
-      data[axis] = session.data.links.filter(l => !visible || l.visible).map(l => l[varName]);
+      data[axis] = session.data[varSource].filter(l => !visible || l.visible).map(l => l[varName]);
       let layout = {};
       layout[axis + 'axis'] = {
         title: titleize(varName)
       }
       layout[nonaxis + 'axis'] = {
-        title: 'Number of Nodes',
+        title: 'Number of ' + titleize(varSource),
         type: $('#logScale').is(':checked') ? 'log' : ''
       };
       window.plot = Plotly.newPlot('main_panel', [data], layout, {
