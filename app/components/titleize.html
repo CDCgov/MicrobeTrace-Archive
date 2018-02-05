@@ -1,9 +1,9 @@
 <script>
 const s = require('underscore.string');
 function titleize(title){
-  let small = title.toLowerCase();
+  let small = title.toLowerCase().replace(/_/g, ' ');
   if(small === 'id') return 'ID';
   if(small === 'snps') return 'SNPs';
-  return s.titleize(title);
+  return s.titleize(small);
 }
 </script>
