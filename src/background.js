@@ -145,6 +145,7 @@ ipcMain.on('update-clusters', (event, clusters) => {
 
 ipcMain.on('update-links-mst', (event, newLinks) => {
   let n = session.data.links.length;
+  if(newLinks.length !== n) console.error('Update Link MST Error: Length Mismatch');
   for(let i = 0; i < n; i++) session.data.links[i].mst = newLinks[i];
   distribute('update-links-mst', newLinks);
 });
