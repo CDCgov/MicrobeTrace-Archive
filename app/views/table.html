@@ -40,7 +40,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    #node-columns, #link-columns {
+    #node-columns, #link-columns, #cluster-columns {
       width: 100%;
     }
     .showForMST{
@@ -144,7 +144,10 @@
 
   $(function(){
 
+    $('head').append(electron.ipcRenderer.sendSync('get-component', 'titleize.html'));
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
+    $('body').append(electron.ipcRenderer.sendSync('get-component', 'search.html'));
+
     $('#FileTab').after(
       $('<li id="ExportTab"><a href="#">Save As</a></li>').click(() => {
         electron.remote.dialog.showSaveDialog({
@@ -159,8 +162,6 @@
         });
       })
     );
-
-    $('body').append(electron.ipcRenderer.sendSync('get-component', 'search.html'));
 
     window.table = { destroy: () => {} };
 
@@ -182,7 +183,7 @@
       let options = {
         dom: 'lrtip',
         data: session.data[data_type],
-        columns: columns.map(k => ({title:k, data:k, mData:k, sTitle:k})),
+        columns: columns.map(k => ({title:titleize(k), data:k, mData:k, sTitle:titleize(k)})),
         deferRender: true,
         colReorder: true,
         select: {
@@ -215,7 +216,7 @@
         $('#'+thing+'-columns').html(
           session.data[thing+'Fields'].map((d, i) => {
             if(meta.includes(d)) return;
-            return `<option value="${i}"${(i < 7) ? " selected" : ""}>${d}</option>`
+            return `<option value="${i}"${(i < 7) ? " selected" : ""}>${titleize(d)}</option>`
           }).join('\n')
         ).change(e => {
           if($('input[name=nodelink]:checked')[0].id === thing){
