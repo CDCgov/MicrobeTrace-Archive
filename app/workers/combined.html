@@ -173,14 +173,17 @@
       electron.ipcRenderer.send('message', 'Computing New Distance Matrices...');
       let n = subset.length;
       let k = 0;
-      data.distance_matrix.tn93 = Array(n);
-      data.distance_matrix.snps = Array(n);
+      data.distance_matrix.tn93 = new Array(n);
+      data.distance_matrix.snps = new Array(n);
+      for(let i = 0; i < n; i++){
+        data.distance_matrix.tn93[i] = new Array(n);
+        data.distance_matrix.snps[i] = new Array(n);
+      }
       data.distance_matrix.labels = subset.map(d => d.id);
       for(let i = 0; i < n; i++){
-        data.distance_matrix.tn93[i] = Array(n);
-        data.distance_matrix.snps[i] = Array(n);
-        data.distance_matrix.tn93[i][i] = data.distance_matrix.snps[i][i] = 0;
-        for(var j = 0; j < i; j++){
+        data.distance_matrix.tn93[i][i] = 0;
+        data.distance_matrix.snps[i][i] = 0;
+        for(let j = 0; j < i; j++){
           let newLink = {
             'source': subset[j].id,
             'target': subset[i].id,
