@@ -108,7 +108,7 @@
     electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};
       let links = data.links;
-      $('#variable').html(data.linkFields.map(key => '<option>' + key + '</option>').join('\n'));
+      $('#variable').html(data.linkFields.map(key => `<option value='${key}'>${titleize(key)}</option>`).join('\n'));
       $('#variable').val('distance');
       redraw();
     });
