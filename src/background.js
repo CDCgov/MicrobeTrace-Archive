@@ -42,6 +42,7 @@ app.on('ready', () => {
   }));
   ipcMain.on('tick',    (event, val) => mainWindow.send('tick',    val));
   ipcMain.on('message', (event, msg) => mainWindow.send('message', msg));
+  mainWindow.on('closed', app.quit);
 });
 
 ipcMain.on('parse-files', (event, instructions) => {
@@ -170,7 +171,5 @@ ipcMain.on('reset', () => {
     .forEach(w => w.close());
   session = dataSkeleton();
 });
-
-mainWindow.on('closed', app.quit);
 
 app.on('window-all-closed', app.quit);
