@@ -64,6 +64,7 @@ $(function(){
     .click(() => reset())
     .insertBefore('#CloseTab');
 
+  $('head').append(electron.ipcRenderer.sendSync('get-component', 'titleize.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
@@ -231,7 +232,7 @@ $(function(){
                 if(['"', "'"].includes(h[0])) h = h.substring(1, h.length-1);
                 headers.push(h);
               });
-              options = '<option>None</option>' + headers.map(h => '<option>'+h+'</option>').join('');
+              options = '<option>None</option>' + headers.map(h => `<option value="${h}">${titleize(h)}</option>`).join('');
               $(`
                 <div class='col-xs-4 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
                   <label style="width:65px">${isNode?'ID':'Source'}</label><span>&nbsp;</span><select style="width:calc(100% - 69px)">${options}</select>
@@ -362,9 +363,9 @@ $(function(){
     session.data = data;
     clearTimeout(messageTimeout);
     $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab, #FiltersTab').removeClass('disabled');
-    $('.nodeVariables').html('<option>none</option>\n' + session.data.nodeFields.map(key => `<option>${key}</option>`).join('\n'));
+    $('.nodeVariables').html('<option value="none">None</option>\n' + session.data.nodeFields.map(key => `<option value="${key}">${titleize(key)}</option>`).join('\n'));
     $('#nodeTooltipVariable').val('id');
-    $('.linkVariables').html('<option>none</option>\n' + session.data.linkFields.map(key => `<option>${key}</option>`).join('\n'));
+    $('.linkVariables').html('<option value="none">None</option>\n' + session.data.linkFields.map(key => `<option value="${key}">${titleize(key)}</option>`).join('\n'));
     $('#linkSortVariable').val('distance');
     tagClusters(); //You need the first call to tagClusters to be able to setNodeVisibility.
     setNodeVisibility();
