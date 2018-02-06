@@ -53,7 +53,7 @@ $(function(){
       $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
       $('.showForNotMST').css('display', 'inline-block');
       $('#loadingInformation').empty();
-      $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('disabled');
+      $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab, #FiltersTab').addClass('disabled');
       $('#file_panel').fadeIn();
     });
   }
@@ -139,7 +139,7 @@ $(function(){
     setNodeVisibility();
     renderNetwork();
     session.network.force.alpha(0.3).alphaTarget(0).restart();
-  }).insertBefore('#SettingsTab');
+  }).insertBefore('#FiltersTab');
 
   $('<li id="ZoomToSelectedTab"><a href="#">Zoom To Selected</a></li>')
     .click(e => {
@@ -155,13 +155,13 @@ $(function(){
         x: (maxX-minX)/2 + bbox.x,
         y: (maxY-minY)/2 - bbox.y
       });
-    })//.insertBefore('#SettingsTab');
+    })//.insertBefore('#FiltersTab');
 
   $('<li id="ZoomToFitTab"><a href="#">Zoom To Fit</a></li>')
     .click(e => session.network.fit())
-    .insertBefore('#SettingsTab');
+    .insertBefore('#FiltersTab');
 
-  $('<li role="separator" class="divider"></li>').insertBefore('#SettingsTab');
+  $('<li role="separator" class="divider"></li>').insertBefore('#FiltersTab');
 
   reset();
 
@@ -361,7 +361,7 @@ $(function(){
   ipcRenderer.on('set-data', (e, data) => {
     session.data = data;
     clearTimeout(messageTimeout);
-    $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').removeClass('disabled');
+    $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab, #FiltersTab').removeClass('disabled');
     $('.nodeVariables').html('<option>none</option>\n' + session.data.nodeFields.map(key => `<option>${key}</option>`).join('\n'));
     $('#nodeTooltipVariable').val('id');
     $('.linkVariables').html('<option>none</option>\n' + session.data.linkFields.map(key => `<option>${key}</option>`).join('\n'));
