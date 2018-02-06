@@ -98,7 +98,7 @@
 
   $('#FiltersTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/filters.html');
+      electron.ipcRenderer.send('launch-view', 'filters.html');
     } else {
       alertify.warning('Please load some data first!');
     }
@@ -114,7 +114,7 @@
 
   $('#3DNetworkTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/3D.html');
+      electron.ipcRenderer.send('launch-view', '3D.html');
     } else {
       alertify.warning('Please load some data first!');
     }
@@ -122,7 +122,7 @@
 
   $('#TableTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/table.html');
+      electron.ipcRenderer.send('launch-view', 'table.html');
     } else {
       alertify.warning('Please load some data first!');
     }
@@ -130,7 +130,7 @@
 
   $('#FlowTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/flowDiagram.html');
+      electron.ipcRenderer.send('launch-view', 'flowDiagram.html');
     } else {
       alertify.warning('Please load some data first!');
     }
@@ -138,7 +138,7 @@
 
   $('#HeatmapTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/heatmap.html');
+      electron.ipcRenderer.send('launch-view', 'heatmap.html');
     } else {
       alertify.warning('Please load some data first!');
     }
@@ -146,7 +146,7 @@
 
   $('#SequencesTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/sequences.html');
+      electron.ipcRenderer.send('launch-view', 'sequences.html');
     } else {
       alertify.warning('Please load some data first!');
     }
@@ -154,7 +154,7 @@
 
   $('#ScatterplotTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/scatterplot.html');
+      electron.ipcRenderer.send('launch-view', 'scatterplot.html');
     } else {
       alertify.warning('Please load some data first!');
     }
@@ -162,7 +162,7 @@
 
   $('#HistogramTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/histogram.html');
+      electron.ipcRenderer.send('launch-view', 'histogram.html');
     } else {
       alertify.warning('Please load some data first!');
     }
@@ -170,7 +170,7 @@
 
   $('#TreeTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/phylogeneticTree.html');
+      electron.ipcRenderer.send('launch-view', 'phylogeneticTree.html');
     } else {
       alertify.warning('Please load some data first!');
     }
@@ -178,7 +178,7 @@
 
   $('#MapTab').click(function(){
     if(!$(this).hasClass('disabled')){
-      electron.ipcRenderer.send('launch-view', 'views/map.html');
+      electron.ipcRenderer.send('launch-view', 'map.html');
     } else {
       alertify.warning('Please load some data first!');
     }

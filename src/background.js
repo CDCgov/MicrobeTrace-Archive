@@ -155,10 +155,11 @@ ipcMain.on('launch-view', (event, view) => {
   const thingWindow = createWindow(view, {
     width: 800,
     height: 610,
-    show: true
+    show: true,
+    alwaysOnTop: view == 'filter.html'
   });
   thingWindow.loadURL(url.format({
-    pathname: path.join(__dirname, view),
+    pathname: path.join(__dirname, 'views/' + view),
     protocol: 'file:',
     slashes: true
   }));
