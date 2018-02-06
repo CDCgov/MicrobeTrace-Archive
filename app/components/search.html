@@ -11,13 +11,17 @@
 </div>
 
 <script>
+  function activateSearch(){
+    $('#searchBox').slideDown().find('#search').focus();
+  }
+
   $('<li id="FindTab"><a href="#">Find</a></li>')
-    .click(e => $('#search').focus())
+    .click(activateSearch)
     .append('<li role="separator" class="divider"></li>')
-    .insertBefore('#SettingsTab');
+    .insertBefore('#FiltersTab');
 
   $(document).on('keydown', e => {
-    if(e.ctrlKey && e.key === 'f') $('#searchBox').slideDown().find('#search').focus();
+    if(e.ctrlKey && e.key === 'f') activateSearch();
+    if(e.key === 'Escape') $('#searchBox').slideUp();
   });
-
 </script>

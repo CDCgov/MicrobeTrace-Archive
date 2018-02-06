@@ -127,6 +127,8 @@ body{
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append( electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
+    $('body').append( electron.ipcRenderer.sendSync('get-component', 'search.html'));
+
     $('<li id="ExportTab"><a href="#">Export Newick</a></li>').click(() => {
       electron.remote.dialog.showSaveDialog({
         filters: [
@@ -141,7 +143,6 @@ body{
       });
     }).insertAfter('#FileTab');
     $('<li role="separator" class="divider"></li>').insertAfter('#FileTab');
-    $('body').append( electron.ipcRenderer.sendSync('get-component', 'search.html'));
 
     function hide_search(){
       $('#searchBox').slideUp();

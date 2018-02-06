@@ -1116,9 +1116,4 @@ $(function(){
 
   $('[data-toggle="tooltip"]').tooltip();
 
-  $(document).on('keydown', e => {
-    if(e.key === 'Escape'){
-      $('#searchBox').slideUp();
-    }
-  });
 });
