@@ -201,9 +201,10 @@
 
     svg.call(d3.zoom().on('zoom', () => {
       lastTransform = Object.assign({}, d3.event.transform);
+      let radius = parseFloat($('#radius').val());
       svg.selectAll('g#countries, g#states, g#counties, g#nodes, g#links, g#cities').attr('transform', d3.event.transform);
       svg.selectAll('g#countries, g#states, g#counties').selectAll('path').attr('stroke-width', 1 / lastTransform.k);
-      svg.selectAll('g#nodes').selectAll('circle').attr('r', $('#radius').val() / lastTransform.k);
+      svg.selectAll('g#nodes').selectAll('circle').attr('r', radius / lastTransform.k);
       svg.selectAll('g#links').selectAll('line').attr('stroke-width', 2 / lastTransform.k);
     }));
 
@@ -226,7 +227,14 @@
       if(fields.includes('country')) $('#countryField').val('country');
       if(fields.includes('id')) $('#nodeTooltipVariable').val('id');
       matchCoordinates();
-      nodeLayer.selectAll('circle').data(session.data.nodes).enter().append('circle');
+      let radius = parseFloat($('#radius').val()) / lastTransform.k;
+      let color = $('#color').val();
+      nodeLayer.selectAll('circle')
+        .attr('r',  radius)
+        .style('fill', color)
+        .on('mouseenter', showToolTip)
+        .on('mouseout', hideTooltip);
+      redrawNodes();
       $('#settingsModal').modal('show');
     });
 
@@ -283,6 +291,7 @@
           }
         });
       }
+      nodeLayer.selectAll('circle').data(session.data.nodes.filter(d => d.lat && d.lon)).enter().append('circle');
     }
 
     function showToolTip(d){
@@ -354,27 +363,22 @@
       cityLayer.transition().style('opacity', 1);
     }
 
+    var normal = d3.randomNormal();
+
     function redrawNodes(){
       let jitter = parseFloat($('#jitter').val()) / lastTransform.k;
-      let normal = d3.randomNormal();
       session.data.nodes.forEach(d => {
         d.jx = normal() * jitter;
         d.jy = normal() * jitter;
       });
-      let radius = parseFloat($('#radius').val()) / lastTransform.k;
-      let color = $('#color').val();
       nodeLayer
-        .selectAll('circle').data(session.data.nodes)
+        .selectAll('circle').data(session.data.nodes.filter(d => d.lon && d.lat))
         .attr('cx', d => projection([d.lon, d.lat])[0] + d.jx)
-        .attr('cy', d => projection([d.lon, d.lat])[1] + d.jy)
-        .attr('r', radius)
-        .style('fill', color)
-        .on('mouseenter', showToolTip)
-        .on('mouseout', hideTooltip);
-      if($('#showLinks').hasClass('active')) drawLinks();
+        .attr('cy', d => projection([d.lon, d.lat])[1] + d.jy);
     }
 
     function drawLinks(){
+      if(!$('#showLinks').hasClass('active')) return;
       session.data.links.forEach(l => {
         if(typeof l.source !== 'object') l.source = session.data.nodes.find(d => d.id === l.source);
         if(typeof l.target !== 'object') l.target = session.data.nodes.find(d => d.id === l.target);
@@ -396,6 +400,7 @@
     $('.fields').change(e => {
       matchCoordinates();
       redrawNodes();
+      drawLinks();
     });
 
     $('#showStates').click(function(e){
@@ -438,7 +443,10 @@
 
     $('#color').on('input', e => nodeLayer.selectAll('circle').style('fill', e.target.value));
 
-    $('#jitter').on('input', redrawNodes);
+    $('#jitter').on('input', e => {
+      redrawNodes();
+      drawLinks();
+    });
 
     $('#nodeColorField').change(e => {
       let circles = svg.select('g#nodes').selectAll('circle').data(session.data.nodes);
@@ -475,7 +483,7 @@
 
     electron.ipcRenderer.on('update-link-visibility', (e, newLinks) => {
       session.data.links.forEach((l, i) => l.visible = newLinks[i].visible);
-      if($('#showLinks').hasClass('active')) drawLinks();
+      drawLinks();
     });
 
     drawCountries();
