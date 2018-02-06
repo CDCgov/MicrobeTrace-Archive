@@ -208,16 +208,16 @@ $(function(){
           root.append(`
             <div class="col-xs-4 text-right" style="padding-bottom:5px;">
               <div class="btn-group btn-group-xs" data-toggle="buttons">
-                <label class="btn btn-primary${!isFasta&!isNode?' active':''}">
+                <label class="btn btn-default${!isFasta&!isNode?' active':''}">
                   <input type="radio" name="options-${filename}" data-type="link" autocomplete="off"${!isFasta&!isNode?' checked':''}>Link</input>
                 </label>
-                <label class="btn btn-primary${!isFasta&isNode?' active':''}">
+                <label class="btn btn-default${!isFasta&isNode?' active':''}">
                   <input type="radio" name="options-${filename}" data-type="node" autocomplete="off"${!isFasta&isNode?' checked':''}>Node</input>
                 </label>
-                <label class="btn btn-primary">
+                <label class="btn btn-default">
                   <input type="radio" name="options-${filename}" data-type="distmat" autocomplete="off">Dist. Mat.</input>
                 </label>
-                <label class="btn btn-primary${isFasta?' active':''}">
+                <label class="btn btn-default${isFasta?' active':''}">
                   <input type="radio" name="options-${filename}" data-type="fasta" autocomplete="off"${isFasta?' checked':''}>FASTA</input>
                 </label>
               </div>
