@@ -4,6 +4,22 @@
   <script>
   const electron = require('electron');
 
+  function DFS(nodeID){
+    let node = data.nodes.find(d => d.id === nodeID);
+    if(typeof node.cluster !== 'undefined') return;
+    node.cluster = cluster;
+    data.links.forEach(l => {
+      if(l.source === nodeID){
+        l.cluster = cluster;
+        DFS(l.source);
+      }
+      if(l.target === nodeID){
+        l.cluster = cluster;
+        DFS(l.target);
+      }
+    });
+  }
+
   function prim(nodes, links){
     electron.ipcRenderer.send('log', ' - Ding!');
     let m = nodes.length, n = links.length;
@@ -36,29 +52,13 @@
     data.nodes.forEach(node => delete node.cluster);
     let cluster = 0;
 
-    let DFS = function(nodeID){
-      let node = data.nodes.find(d => d.id === nodeID);
-      if(typeof node.cluster !== 'undefined') return;
-      node.cluster = cluster;
-      data.links.forEach(l => {
-        if(l.source === nodeID){
-          l.cluster = cluster;
-          DFS(l.source);
-        }
-        if(l.target === nodeID){
-          l.cluster = cluster;
-          DFS(l.target);
-        }
-      });
-    };
-
     data.nodes.forEach(node => {
       if(typeof node.cluster === 'undefined'){
         DFS(node.id);
         cluster++;
       }
     });
-    electron.ipcRenderer.send('log', 'Completed DFS, ' +cluster+ ' Clusters.');
+    electron.ipcRenderer.send('log', `Completed DFS, ${cluster} Clusters.`);
 
     let mst = [];
 
@@ -74,6 +74,8 @@
     electron.ipcRenderer.send('update-links-mst', data.links.map(l => mst.includes(l.index)));
     electron.remote.getCurrentWindow().close();
   });
+
+  electron.ipcRenderer.send('get-data');
   </script>
 </head>
 </html>

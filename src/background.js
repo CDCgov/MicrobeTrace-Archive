@@ -59,16 +59,13 @@ ipcMain.on('parse-files', (event, instructions) => {
 
 ipcMain.on('cancel-parsing', e => parserWindow.destroy());
 
-ipcMain.on('compute-mst', (event) => {
+ipcMain.on('compute-mst', () => {
   const computeWindow = createWindow('MST Computer', {show: false});
   computeWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'workers/compute-mst.html'),
     protocol: 'file:',
     slashes: true
   }));
-  computeWindow.on('ready-to-show', e => {
-    computeWindow.send('set-data', session.data);
-  });
 });
 
 function distribute(type, sdata, except){
