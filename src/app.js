@@ -1046,8 +1046,11 @@ $(function(){
     session.network.force.alpha(0.3).alphaTarget(0).restart();
   });
 
-  $('#default-link-threshold').on('input', e => {
-    setLinkVisibility();
+  ipcRenderer.on('update-link-visibilities', (e, visibilities) => {
+    let n = session.data.links.length;
+    if(visibilities.length !== n) alertify.error('Update Link Visibilities Error: Length Mismatch');
+    for(let i = 0; i < n; i++) session.data.links[i].visible = visibilities[i];
+    //setLinkVisibility();
     tagClusters();
     if($('#HideSingletons').is(':checked')) setNodeVisibility();
     renderNetwork();
