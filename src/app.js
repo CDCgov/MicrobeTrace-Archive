@@ -1046,7 +1046,7 @@ $(function(){
   $('#showMSTLinks, #showAllLinks').change(e => {
     setLinkVisibility();
     tagClusters();
-    if($('#HideSingletons').is(':checked')) setNodeVisibility();
+    setNodeVisibility();
     renderNetwork();
     computeDegree();
     updateStatistics();
@@ -1066,9 +1066,8 @@ $(function(){
     let n = session.data.links.length;
     if(visibilities.length !== n) alertify.error('Update Link Visibilities Error: Length Mismatch');
     for(let i = 0; i < n; i++) session.data.links[i].visible = visibilities[i];
-    //setLinkVisibility();
     tagClusters();
-    if($('#HideSingletons').is(':checked')) setNodeVisibility();
+    setNodeVisibility();
     renderNetwork();
     computeDegree();
     updateStatistics();
@@ -1099,6 +1098,7 @@ $(function(){
     session.state.alpha += 0.2;
     session.network.force.alphaTarget(session.state.alpha).restart();
   });
+
   $('#slower').click(e => {
     session.state.alpha = Math.max(session.state.alpha - 0.2, 0.1);
     session.network.force.alphaTarget(session.state.alpha).restart();
