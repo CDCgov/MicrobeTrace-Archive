@@ -367,6 +367,9 @@ $(function(){
     $('#nodeTooltipVariable').val('id');
     $('.linkVariables').html('<option value="none">None</option>\n' + session.data.linkFields.map(key => `<option value="${key}">${titleize(key)}</option>`).join('\n'));
     $('#linkSortVariable').val('distance');
+    $('#default-link-threshold')
+      .attr('min', math.min(session.data.links.map(l => l.distance)))
+      .attr('max', math.max(session.data.links.map(l => l.distance)));
     tagClusters(); //You need the first call to tagClusters to be able to setNodeVisibility.
     setNodeVisibility();
     setLinkVisibility();
@@ -1010,7 +1013,10 @@ $(function(){
       $('#computeMST').fadeOut();
       $('#default-link-threshold').css('visibility', 'hidden');
     } else {
-      //$('#default-link-threshold').attr('step', math.meanAbsoluteDeviation(session.data.links.map(l => l[e.target.value])));
+      $('#default-link-threshold')
+        .attr('min', math.min(session.data.links.map(l => l[e.target.value])))
+        //.attr('step', math.stdDeviation(session.data.links.map(l => l[e.target.value]))) //Some Mad Science...
+        .attr('max', math.max(session.data.links.map(l => l[e.target.value])));
       $('#computeMST').css('display', 'inline-block');
       $('#default-link-threshold').css('visibility', 'visible');
     }
