@@ -1016,6 +1016,16 @@ $(function(){
     }
   });
 
+  $('#default-link-threshold').on('input', e => {
+    setLinkVisibility();
+    tagClusters();
+    setNodeVisibility();
+    renderNetwork();
+    computeDegree();
+    updateStatistics();
+    session.network.force.alpha(0.3).alphaTarget(0).restart();
+  });
+
   $('#computeMST').click(e => {
     ipcRenderer.send('compute-mst');
     $('.showForNotMST').fadeOut();
