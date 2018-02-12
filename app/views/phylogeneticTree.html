@@ -39,6 +39,19 @@ body{
         </div>
         <div class="modal-body">
           <div class="row">
+            <div class="col-xs-3">Distance Metric</div>
+            <div class="col-xs-9">
+              <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default btn-xs active">
+                  <input type="radio" name="distanceMetric" id="tn93" autocomplete="off" checked> TN93
+                </label>
+                <label class="btn btn-default btn-xs">
+                  <input type="radio" name="distanceMetric" id="snps" autocomplete="off"> SNPs
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="row">
             <div class="col-xs-3">Layout Tweaks</div>
             <div class="col-xs-9">
               <div class="btn-group">
@@ -157,6 +170,13 @@ body{
 
     function drawTree(){
       svg.html(null);
+      var taxa = session.data.nodes.filter(d => d.seq).map(d => ({
+        name: d.id,
+        genotype: d.id
+      }));
+      var RNJ = new nj.RapidNeighborJoining(session.data.distance_matrix[$('[name="distanceMetric"]:checked')[0].id], taxa);
+      RNJ.run();
+      session.data.tree = RNJ.getAsNewick();
       tree(session.data.tree).svg(svg).layout();
       tree.branch_length(null);
       tree.branch_name(null);
@@ -234,6 +254,8 @@ body{
       });
       tree.resort_children((a, b) => (a['count_depth'] - b['count_depth']) * (asc ? 1 : -1));
     }
+
+    $('input[name="distanceMetric"]').change(drawTree);
 
     $('#sort_original').click(e => tree.resort_children((a,b) => a['original_child_order'] - b['original_child_order']));
     $('#sort_ascending, #sort_descending').click(e => sort_nodes(e.target.id === 'sort_ascending'));

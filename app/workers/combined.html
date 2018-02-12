@@ -198,17 +198,6 @@
         }
       }
       electron.ipcRenderer.send('message', ` - Found ${k} New Links while computing Distance Matrices`);
-
-      electron.ipcRenderer.send('message', 'Computing Neighbor-Joining Tree...');
-      var RNJ = new nj.RapidNeighborJoining(
-        data.distance_matrix.tn93,
-        subset.map(d => ({
-          name: d.id,
-          genotype: d.id
-        }))
-      );
-      RNJ.run();
-      data.tree = RNJ.getAsNewick();
     }
 
     function defaultNode(){
