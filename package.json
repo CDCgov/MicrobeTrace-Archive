@@ -1,10 +1,10 @@
 {
   "name": "microbetrace",
-  "productName": "MicrobeTRACE",
+  "productName": "MicrobeTrace",
   "description": "A Platform for Genomic Network Analysis",
   "version": "0.2.0",
   "author": "Tony Boyles <NSP3@cdc.gov>",
-  "copyright": "©2017 CDC",
+  "copyright": "©2017-2018 Centers for Disease Control and Prevention (CDC)",
   "homepage": "http://aaboyles.github.io/MicrobeTrace",
   "license": "Apache-2.0",
   "repository": "http://github.com/CDCgov/MicrobeTrace",
@@ -19,7 +19,24 @@
     "directories": {
       "buildResources": "resources"
     },
-    "publish": null
+    "publish": null,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64","ia32"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64","ia32"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64","ia32"]
+        }
+      ],
+      "publisherName": "Centers for Disease Control and Prevention (CDC)"
+    }
   },
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
