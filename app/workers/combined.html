@@ -190,8 +190,10 @@
             'distance': tn93(subset[j]['seq'], subset[i]['seq'], 'AVERAGE'),
             'snps': hamming(subset[j]['seq'], subset[i]['seq'])
           };
-          data.distance_matrix.tn93[i][j] = data.distance_matrix.tn93[j][i] = newLink.distance;
-          data.distance_matrix.snps[i][j] = data.distance_matrix.snps[j][i] = newLink.snps;
+          data.distance_matrix.snps[i][j] = newLink.snps;
+          data.distance_matrix.snps[j][i] = newLink.snps;
+          data.distance_matrix.tn93[i][j] = newLink.distance;
+          data.distance_matrix.tn93[j][i] = newLink.distance;
           k += addLink(newLink);
         }
       }
