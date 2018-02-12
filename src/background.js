@@ -9,9 +9,12 @@ function dataSkeleton(){
     files: [],
     data: {
       nodes: [],
+      nodeFields: [],
       links: [],
+      linkFields: [],
       clusters: [],
-      distance_matrix: {}
+      distance_matrix: {},
+      tree: {}
     },
     state: {
       visible_clusters: [],
@@ -60,9 +63,18 @@ ipcMain.on('parse-files', (event, instructions) => {
 ipcMain.on('cancel-parsing', e => parserWindow.destroy());
 
 ipcMain.on('compute-mst', () => {
-  const computeWindow = createWindow('MST Computer', {show: false});
+  let computeWindow = createWindow('MST Computer', {show: false});
   computeWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'workers/compute-mst.html'),
+    protocol: 'file:',
+    slashes: true
+  }));
+});
+
+ipcMain.on('compute-tree', () => {
+  let computeWindow = createWindow('Tree Computer', {show: false});
+  computeWindow.loadURL(url.format({
+    pathname: path.join(__dirname, 'workers/compute-tree.html'),
     protocol: 'file:',
     slashes: true
   }));
@@ -79,6 +91,11 @@ function distribute(type, sdata, except){
 ipcMain.on('set-data', (e, newData) => {
   session.data = newData;
   distribute('set-data', session.data, e.sender.id);
+});
+
+ipcMain.on('set-tree', (e, newData) => {
+  session.data.tree = newData;
+  distribute('set-tree', session.data.tree, e.sender.id);
 });
 
 ipcMain.on('get-data', e => {

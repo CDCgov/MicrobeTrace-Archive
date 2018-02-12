@@ -20,11 +20,12 @@ function dataSkeleton(){
     files: [],
     data: {
       nodes: [],
+      nodeFields: [],
       links: [],
+      linkFields: [],
       clusters: [],
       distance_matrix: {},
-      nodeFields: [],
-      linkFields: []
+      tree: {}
     },
     state: {
       visible_clusters: [],
@@ -73,14 +74,17 @@ $(function(){
   $('<li id="ExportTab"><a href="#">Export Data</a></li>').click(e => {
     remote.dialog.showSaveDialog({
       filters: [
-        {name: 'Link JSON', extensions: ['links.json']},
         {name: 'Link CSV', extensions: ['links.csv']},
-        {name: 'Node JSON', extensions: ['nodes.json']},
         {name: 'Node CSV', extensions: ['nodes.csv']},
+        {name: 'TN93-based Distance Matrix CSV', extensions: ['tn93.dm.csv']},
+        {name: 'SNP-based Distance Matrix CSV', extensions: ['snps.dm.csv']},
         {name: 'FASTA', extensions: ['fas', 'fasta']},
         {name: 'MEGA', extensions: ['meg', 'mega']},
-        {name: 'Distance Matrix CSV', extensions: ['dm.csv']},
-        {name: 'HIVTrace', extensions: ['hivtrace.json']}
+        {name: 'Link JSON', extensions: ['links.json']},
+        {name: 'Node JSON', extensions: ['nodes.json']},
+        {name: 'HIVTrace', extensions: ['hivtrace.json']},
+        session.data.tree.tn93 ? {name: 'TN93-based Tree Newick', extensions: ['tn93.nwk']} : undefined,
+        session.data.tree.snps ? {name: 'SNP-based Tree Newick', extensions: ['snps.nwk']} : undefined
       ]
     }, filename => {
       if (filename === undefined){
@@ -129,12 +133,22 @@ $(function(){
             'Nodes': session.data.nodes
           }
         }, null, 2);
-      } else if(filename.slice(-6) == 'dm.csv') {
+      } else if(filename.slice(-11) == 'tn93.dm.csv') {
         let labels = session.data.distance_matrix.labels;
         content = ',' + labels.join(',') + '\n' +
           session.data.distance_matrix.tn93
             .map((row, i) => labels[i] + ',' + row.join(','))
             .join('\n');
+      } else if(filename.slice(-11) == 'snps.dm.csv') {
+        let labels = session.data.distance_matrix.labels;
+        content = ',' + labels.join(',') + '\n' +
+          session.data.distance_matrix.snps
+            .map((row, i) => labels[i] + ',' + row.join(','))
+            .join('\n');
+      } else if(filename.slice(-8) == 'tn93.nwk') {
+        content = session.data.tree.tn93;
+      } else if(filename.slice(-8) == 'snps.nwk') {
+        content = session.data.tree.snps;
       }
       jetpack.write(filename, content);
       alertify.success('File Saved!');
@@ -1089,6 +1103,8 @@ $(function(){
     updateStatistics();
     session.network.force.alpha(0.3).alphaTarget(0).restart();
   });
+
+  ipcRenderer.on('set-tree', (e, tree) => session.data.tree = tree);
 
   $('#hideNetworkStatistics').parent().click(() => $('#networkStatistics').fadeOut());
   $('#showNetworkStatistics').parent().click(() => {

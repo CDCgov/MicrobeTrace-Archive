@@ -129,7 +129,6 @@ body{
   <script>
   const electron = require('electron');
   const _ = require('underscore');
-  const nj = require('neighbor-joining');
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
   var d3 = require('../vendor/d3v3.js');
@@ -154,8 +153,8 @@ body{
         jetpack.write(fileName, session.data.newick);
         alertify.success('File Saved!');
       });
-    }).insertAfter('#FileTab');
-    $('<li role="separator" class="divider"></li>').insertAfter('#FileTab');
+    }).insertBefore('#CloseTab');
+    $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
 
     function hide_search(){
       $('#searchBox').slideUp();
@@ -170,14 +169,16 @@ body{
 
     function drawTree(){
       svg.html(null);
-      var taxa = session.data.nodes.filter(d => d.seq).map(d => ({
-        name: d.id,
-        genotype: d.id
-      }));
-      var RNJ = new nj.RapidNeighborJoining(session.data.distance_matrix[$('[name="distanceMetric"]:checked')[0].id], taxa);
-      RNJ.run();
-      session.data.tree = RNJ.getAsNewick();
-      tree(session.data.tree).svg(svg).layout();
+      let type = $('[name="distanceMetric"]:checked')[0].id;
+      if(!session.data.tree){
+        electron.ipcRenderer.on('set-tree', (e, tree) => {
+          session.data.tree = tree;
+          drawTree();
+        });
+        electron.ipcRenderer.send('compute-tree');
+        return;
+      }
+      tree(session.data.tree[type]).svg(svg).layout();
       tree.branch_length(null);
       tree.branch_name(null);
       tree.node_span('equal');
