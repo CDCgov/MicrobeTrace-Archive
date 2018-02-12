@@ -10,6 +10,8 @@ Object.assign(d3, extraSymbols); //d3-symbol-extra doesn't automatically write t
 d3.symbols.concat(Object.values(extraSymbols)); //update the list of available symbols
 import { forceAttract } from 'd3-force-attract';
 
+import Papa from 'papaparse';
+
 window.jquery = window.jQuery = window.$ = require('jquery');
 require('bootstrap');
 
@@ -68,59 +70,73 @@ $(function(){
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
-  $('<li id="ExportHIVTraceTab"><a href="#">Export HIVTRACE File</a></li>').click(() => {
-    remote.dialog.showSaveDialog({
-      filters: [
-        {name: 'JSON', extensions: ['json']}
-      ]
-    }, (fileName) => {
-      if (fileName === undefined){
-        return alertify.error('File not exported!');
-      }
-      jetpack.write(fileName, JSON.stringify({
-        trace_results: {
-          'HIV Stages': {},
-          'Degrees': {},
-          'Multiple sequences': {},
-          'Edge Stages': {},
-          'Cluster sizes': session.data.clusters.map(c => c.size),
-          'Settings': {
-            'contaminant-ids': [],
-            'contaminants': 'remove',
-            'edge-filtering': 'remove',
-            'threshold': $('#default-link-threshold').val()
-          },
-          'Network Summary': {
-            'Sequences used to make links': 0,
-            'Clusters': session.data.clusters.length,
-            'Edges': session.data.links.filter(l => l.visible).length,
-            'Nodes': session.data.nodes.length
-          },
-          'Directed Edges': {},
-          'Edges': session.data.links,
-          'Nodes': session.data.nodes
-        }
-      }, null, 2));
-      alertify.success('File Saved!');
-    });
-  })//.insertAfter('#FileTab');
-
   $('<li id="ExportTab"><a href="#">Export Data</a></li>').click(e => {
     remote.dialog.showSaveDialog({
       filters: [
+        {name: 'Link JSON', extensions: ['links.json']},
+        {name: 'Link CSV', extensions: ['links.csv']},
+        {name: 'Node JSON', extensions: ['nodes.json']},
+        {name: 'Node CSV', extensions: ['nodes.csv']},
         {name: 'FASTA', extensions: ['fas', 'fasta']},
-        {name: 'MEGA', extensions: ['meg', 'mega']}
+        {name: 'MEGA', extensions: ['meg', 'mega']},
+        {name: 'Distance Matrix CSV', extensions: ['dm.csv']},
+        {name: 'HIVTrace', extensions: ['hivtrace.json']}
       ]
-    }, fileName => {
-      if (fileName === undefined){
+    }, filename => {
+      if (filename === undefined){
         return alertify.error('File not exported!');
       }
-      let extension = fileName.split('.').pop();
-      if(extension === 'fas' || extension === 'fasta'){
-        jetpack.write(fileName, session.data.nodes.map(n => '>'+n.id+'\n'+n.seq).join('\n'));
-      } else {
-        jetpack.write(fileName, '#MEGA\nTitle: '+fileName+'\n\n'+session.data.nodes.map(n => '#'+n.id+'\n'+n.seq).join('\n'));
+      let extension = filename.split('.').pop();
+      let content = '';
+      if(filename.slice(-10) == 'links.json'){
+        content = JSON.stringify(session.data.links);
+      } else if(filename.slice(-9) == 'links.csv'){
+        content = Papa.unparse(session.data.links.map(l => {
+          if(typeof l.source == 'object') l.source = l.source.id;
+          if(typeof l.target == 'object') l.target = l.target.id;
+          return l
+        }));
+      } else if(filename.slice(-10) == 'nodes.json'){
+        content = JSON.stringify(session.data.nodes);
+      } else if(filename.slice(-9) == 'nodes.csv'){
+        content = Papa.unparse(session.data.nodes);
+      } else if(extension === 'fas' || extension === 'fasta'){
+        content = session.data.nodes.filter(n => n.seq).map(n => '>'+n.id+'\n'+n.seq).join('\n');
+      } else if(extension === 'meg' || extension === 'mega') {
+        content = '#MEGA\nTitle: '+filename+'\n\n'+session.data.nodes.filter(n => n.seq).map(n => '#'+n.id+'\n'+n.seq).join('\n');
+      } else if(filename.slice(-13) == 'hivtrace.json') {
+        content = JSON.stringify({
+          'trace_results': {
+            'HIV Stages': {},
+            'Degrees': {},
+            'Multiple sequences': {},
+            'Edge Stages': {},
+            'Cluster sizes': session.data.clusters.map(c => c.size),
+            'Settings': {
+              'contaminant-ids': [],
+              'contaminants': 'remove',
+              'edge-filtering': 'remove',
+              'threshold': $('#default-link-threshold').val()
+            },
+            'Network Summary': {
+              'Sequences used to make links': 0,
+              'Clusters': session.data.clusters.length,
+              'Edges': session.data.links.filter(l => l.visible).length,
+              'Nodes': session.data.nodes.length
+            },
+            'Directed Edges': {},
+            'Edges': session.data.links,
+            'Nodes': session.data.nodes
+          }
+        }, null, 2);
+      } else if(filename.slice(-6) == 'dm.csv') {
+        let labels = session.data.distance_matrix.labels;
+        content = ',' + labels.join(',') + '\n' +
+          session.data.distance_matrix.tn93
+            .map((row, i) => labels[i] + ',' + row.join(','))
+            .join('\n');
       }
+      jetpack.write(filename, content);
       alertify.success('File Saved!');
     });
   }).insertAfter('#FileTab');

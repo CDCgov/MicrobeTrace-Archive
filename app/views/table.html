@@ -148,21 +148,6 @@
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'search.html'));
 
-    $('#FileTab').after(
-      $('<li id="ExportTab"><a href="#">Save As</a></li>').click(() => {
-        electron.remote.dialog.showSaveDialog({
-          filters: [
-            {name: 'CSV', extensions: ['csv']}
-          ]
-        }, (fileName) => {
-          if (fileName === undefined){
-            return alertify.error('File not exported!');
-          }
-          jetpack.write(fileName, Papa.unparse(session.data[$('input[name=nodelink]:checked')[0].id + 's']));
-        });
-      })
-    );
-
     window.table = { destroy: () => {} };
 
     function reorder(){ table.draw(false); }
