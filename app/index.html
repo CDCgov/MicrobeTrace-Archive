@@ -278,7 +278,7 @@ performance of this software.</pre>
                 <div class="row">
                   <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="By what variable would you like to prune links from the network?">Pruning</a></div>
                   <div class="col-xs-3"><select id="linkSortVariable" class="linkVariables numeric"><option value="distance">Distance</option></select></div>
-                  <div class="col-xs-6"><a href="#" data-toggle="tooltip" title="What's the maximum genetic distance you're willing to call a link?"><input type="number" id="default-link-threshold" value="0.015" step="0.001" /></a>
+                  <div class="col-xs-6"><a href="#" data-toggle="tooltip" title="What's the maximum genetic distance you're willing to call a link?"><input type="number" id="default-link-threshold" min="0" step="0.001" value="0.015" /></a>
                       <button id="computeMST" class="btn btn-default btn-xs showForNotMST">Compute MST</button>
                       <div class="btn-group btn-group-xs showForMST" data-toggle="buttons">
                         <label class="btn btn-default active">

@@ -38,39 +38,15 @@ function dataSkeleton(){
 
 $(function(){
 
-  // We're going to use this function in a variety of contexts. It's purpose is
-  // to restore the app to the state it was in when launched.
-  // The argument indicates whether the contents of the file inputs should be
-  // flushed. Obviously, this should not happen when the fileinput change
-  // callbacks invoke this function.
-  function reset(soft){
-    if(!soft){
-      window.session = dataSkeleton();
-      $('#file_panel .panel-body').empty();
-      ipcRenderer.send('reset');
-      $('#main-submit').hide();
-    }
-    $('#main_panel').fadeOut(() => {
-      $('#network').empty();
-      $('#groupKey').empty();
-      $('#loadCancelButton, .showForMST, #alignerControlsButton').hide();
-      $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
-      $('.showForNotMST').css('display', 'inline-block');
-      $('#loadingInformation').empty();
-      $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('disabled');
-      $('#file_panel').fadeIn();
-    });
-  }
+  $('head').append(ipcRenderer.sendSync('get-component', 'titleize.html'));
+  $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
+  $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
   $('body').prepend(ipcRenderer.sendSync('get-component', 'nav.html'));
   //Since the navbar is a reused component, we can only change it per view by injecting elements, like so:
   $('<li id="FileTab"><a href="#settings">New</a></li>')
     .click(() => reset())
     .insertBefore('#CloseTab');
-
-  $('head').append(electron.ipcRenderer.sendSync('get-component', 'titleize.html'));
-  $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
-  $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
   $('<li id="ExportTab"><a href="#">Export Data</a></li>').click(e => {
     remote.dialog.showSaveDialog({
@@ -194,6 +170,30 @@ $(function(){
     .insertBefore('#SettingsTab');
 
   $('<li role="separator" class="divider"></li>').insertBefore('#SettingsTab');
+
+  // We're going to use this function in a variety of contexts. It's purpose is
+  // to restore the app to the state it was in when launched.
+  // The argument indicates whether the contents of the file inputs should be
+  // flushed. Obviously, this should not happen when the fileinput change
+  // callbacks invoke this function.
+  function reset(soft){
+    if(!soft){
+      window.session = dataSkeleton();
+      $('#file_panel .panel-body').empty();
+      ipcRenderer.send('reset');
+      $('#main-submit').hide();
+    }
+    $('#main_panel').fadeOut(() => {
+      $('#network').empty();
+      $('#groupKey').empty();
+      $('#loadCancelButton, .showForMST, #alignerControlsButton').hide();
+      $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
+      $('.showForNotMST').css('display', 'inline-block');
+      $('#loadingInformation').empty();
+      $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').addClass('disabled');
+      $('#file_panel').fadeIn();
+    });
+  }
 
   reset();
 
@@ -398,9 +398,7 @@ $(function(){
     $('#nodeTooltipVariable').val('id');
     $('.linkVariables').html('<option value="none">None</option>\n' + session.data.linkFields.map(key => `<option value="${key}">${titleize(key)}</option>`).join('\n'));
     $('#linkSortVariable').val('distance');
-    $('#default-link-threshold')
-      .attr('min', math.min(session.data.links.map(l => l.distance)))
-      .attr('max', math.max(session.data.links.map(l => l.distance)));
+    $('#default-link-threshold').attr('max', math.max(session.data.links.map(l => l.distance)));
     tagClusters(); //You need the first call to tagClusters to be able to setNodeVisibility.
     setNodeVisibility();
     setLinkVisibility();
@@ -1079,10 +1077,7 @@ $(function(){
       $('#computeMST').fadeOut();
       $('#default-link-threshold').css('visibility', 'hidden');
     } else {
-      $('#default-link-threshold')
-        .attr('min', math.min(session.data.links.map(l => l[e.target.value])))
-        //.attr('step', math.stdDeviation(session.data.links.map(l => l[e.target.value]))) //Some Mad Science...
-        .attr('max', math.max(session.data.links.map(l => l[e.target.value])));
+      $('#default-link-threshold').attr('max', math.max(session.data.links.map(l => l.distance)));
       $('#computeMST').css('display', 'inline-block');
       $('#default-link-threshold').css('visibility', 'visible');
     }
@@ -1143,6 +1138,7 @@ $(function(){
   ipcRenderer.on('set-tree', (e, tree) => session.data.tree = tree);
 
   $('#hideNetworkStatistics').parent().click(() => $('#networkStatistics').fadeOut());
+
   $('#showNetworkStatistics').parent().click(() => {
     updateStatistics();
     $('#networkStatistics').fadeIn();
