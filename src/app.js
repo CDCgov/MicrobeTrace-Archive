@@ -607,7 +607,6 @@ $(function(){
       .on('mouseenter', showLinkToolTip)
       .on('mouseout', hideTooltip);
 
-    setLinkPattern();
     setLinkColor();
     scaleLinkThing($('#default-link-opacity').val(), $('#linkOpacityVariable').val(), 'opacity', .1);
     scaleLinkThing($('#default-link-width').val(),   $('#linkWidthVariable').val(),  'stroke-width');
@@ -977,19 +976,6 @@ $(function(){
   $('#UndirectedLinks').parent().click(e => {
     session.network.svg.select('g#links').selectAll('line').attr('marker-end', null);
   });
-
-  function setLinkPattern(){
-    let linkWidth = $('#default-link-width').val();
-    let mappings = {
-      'None': 'none',
-      'Dotted': linkWidth + ',' + 2 * linkWidth,
-      'Dashed': linkWidth * 5,
-      'Dot-Dashed': linkWidth * 5 + ',' + linkWidth * 5 + ',' + linkWidth  + ',' + linkWidth * 5
-    }
-    session.network.svg.select('g#links').selectAll('line').attr('stroke-dasharray', mappings[$('#default-link-pattern').val()]);
-  }
-
-  $('#default-link-pattern').on('change', setLinkPattern);
 
   $('#default-link-length').on('input', e => {
     session.network.force.force('link').distance(e.target.value);
