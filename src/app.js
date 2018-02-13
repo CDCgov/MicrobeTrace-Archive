@@ -3,6 +3,7 @@ import Lazy from 'lazy.js';
 import math from 'bettermath';
 import jetpack from 'fs-jetpack';
 import './helpers/window.js';
+import _ from 'lodash';
 
 const d3 = require('d3');
 const extraSymbols = require('d3-symbol-extra');
@@ -456,12 +457,14 @@ $(function(){
     node.cluster = session.data.clusters.length;
     session.data.clusters[session.data.clusters.length - 1].nodes++;
     session.data.links.forEach(l => {
-      if(l.visible && (l.source.id == node.id || l.target.id == node.id)){
+      if(l.visible && (l.source == node.id || l.target == node.id)){
         l.cluster = session.data.clusters.length;
         session.data.clusters[session.data.clusters.length - 1].links++;
         session.data.clusters[session.data.clusters.length - 1].sum_distances += l[lsv];
-        if(!l.source.cluster) DFS(l.source);
-        if(!l.target.cluster) DFS(l.target);
+        let source = session.data.nodes.find(d => d.id === l.source);
+        if(!source.cluster) DFS(source);
+        let target = session.data.nodes.find(d => d.id === l.target);
+        if(!target.cluster) DFS(target);
       }
     });
   }
@@ -471,8 +474,8 @@ $(function(){
     session.data.links
       .filter(l => l.visible)
       .forEach(l => {
-        l.source.degree++;
-        l.target.degree++;
+        session.data.nodes.find(d => d.id == l.source).degree++;
+        session.data.nodes.find(d => d.id == l.target).degree++;
       });
     session.data.clusters.forEach(c => {
       c.links = c.links/2;
@@ -575,8 +578,26 @@ $(function(){
     session.network.svg.append('g').attr('id', 'nodes');
   }
 
+  function getVLinks(){
+    let vlinks = _.cloneDeep(session.data.links.filter(link => link.visible));
+    let output = [];
+    let n = vlinks.length;
+    for(let i = 0; i < n; i++){
+      vlinks[i].origin.forEach((o, j, l) => {
+        output.push(Object.assign({}, vlinks[i], {
+          origin: o,
+          oNum: j,
+          origins: l.length,
+          source: session.data.nodes.find(d => d.id == vlinks[i].source),
+          target: session.data.nodes.find(d => d.id == vlinks[i].target)
+        }));
+      });
+    }
+    return output;
+  }
+
   function renderNetwork(){
-    let vlinks = session.data.links.filter(link => link.visible);
+    let vlinks = getVLinks();
 
     // Links are considerably simpler.
     let link = d3.select('g#links').selectAll('line').data(vlinks);
@@ -635,10 +656,10 @@ $(function(){
 
     session.network.force.nodes(vnodes).on('tick', () => {
       allLinks
-        .attr('x1', d => d.source.x)
-        .attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y);
+        .attr('x1', l => l.source.x)
+        .attr('y1', l => l.source.y)
+        .attr('x2', l => l.target.x)
+        .attr('y2', l => l.target.y);
       allNodes
         .attr('transform', d => {
           if(d.fixed){
@@ -986,14 +1007,28 @@ $(function(){
       return;
     }
     $('#default-link-color').fadeOut();
-    let links = session.network.svg.select('g#links').selectAll('line').data(session.data.links.filter(l => l.visible));
+    let vlinks = getVLinks();
+    let links = session.network.svg.select('g#links').selectAll('line').data(vlinks);
     $('#linkColors').remove();
     let table = $('<tbody id="linkColors"></tbody>').appendTo('#groupKey');
     table.append('<tr><th>'+variable+'</th><th>Color</th><tr>');
-    let values = Lazy(session.data.links).pluck(variable).uniq().sort().toArray();
+    let values = Lazy(vlinks).pluck(variable).uniq().sort().toArray();
     let colors = JSON.parse(ipcRenderer.sendSync('get-component', 'colors.json'));
     let o = d3.scaleOrdinal(colors).domain(values);
-    links.style('stroke', d => o(d[variable]));
+    links
+      .style('stroke', d => o(d[variable]))
+      .attr('stroke-dasharray', l => {
+        let out = new Array(l.origins * 2);
+        let ofs = new Array(l.origins).fill(1);
+        let ons = new Array(l.origins).fill(0);
+        ons[l.oNum] = 1;
+        ofs[l.oNum] = 0;
+        for(let i = 0; i < l.origins; i++){
+          out[2*i] = ons[i];
+          out[2*i + 1] = ofs[i];
+        }
+        return math.multiply(out, 6).join(', ');
+      });
     values.forEach(value => {
       let input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
         .on('input', evt => {
@@ -1012,14 +1047,15 @@ $(function(){
   $('#linkColorVariable').change(setLinkColor);
 
   function scaleLinkThing(scalar, variable, attribute, floor){
-    let links = session.network.svg.select('g#links').selectAll('line').data(session.data.links.filter(l => l.visible));
+    let vlinks = getVLinks();
+    let links = session.network.svg.select('g#links').selectAll('line').data(vlinks);
     if(variable === 'none'){
       return links.attr(attribute, scalar);
     }
     if(!floor){floor = 1;}
-    let values = Lazy(session.data.links).pluck(variable).without(undefined).sort().uniq().toArray();
-    let min = math.min(values);
-    let max = math.max(values);
+    let values = Lazy(session.data.links).pluck(variable).without(undefined);
+    let min = values.min();
+    let max = values.max();
     let rng = max - min;
     let recip = $('#reciprocal-link-width').is(':checked');
     links.attr(attribute, d => {

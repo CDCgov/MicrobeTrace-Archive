@@ -48,7 +48,7 @@
         let n = 0, contents = fs.readFileSync(file.path, 'utf-8');
         let seqs = parseFASTA(contents);
         seqs.forEach(node => {
-          node['origin'] = filename;
+          node.origin = filename;
           n += addNode(node);
         });
         electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${seqs.length} Total Nodes from FASTA.`);
@@ -67,7 +67,7 @@
             source: link[file.field1],
             target: link[file.field2],
             distance: (file.field3 === "None") ? 0 : link[file.field3],
-            origin: filename,
+            origin: [filename],
             visible: true
           }, link));
         });
@@ -80,8 +80,8 @@
         let nodeIDs = llinks.pluck(file.field1).union(llinks.pluck(file.field2));
         let t = nodeIDs.size();
         nodeIDs.forEach(d => n += addNode({
-          'id': d,
-          'origin': filename
+          id: d,
+          origin: filename
         }));
         electron.ipcRenderer.send('message', ` - Parsed ${n} New, ${t} Total Nodes from Link CSV.`);
 
@@ -98,7 +98,7 @@
         results.data.forEach(node => {
           node.id = node[file.field1];
           if(file.field2 !== 'None') node.seq = node[file.field2];
-          node['origin'] = filename;
+          node.origin = filename;
           n += addNode(node);
         });
         Object.keys(results.data[0]).forEach(key => data.nodeFields.add(key));
@@ -134,7 +134,7 @@
                   source: nodeIDs[i],
                   target: nodeIDs[j],
                   distance: cell,
-                  origin: filename
+                  origin: [filename]
                 });
               }
             });
@@ -185,10 +185,11 @@
         data.distance_matrix.snps[i][i] = 0;
         for(let j = 0; j < i; j++){
           let newLink = {
-            'source': subset[j].id,
-            'target': subset[i].id,
-            'distance': tn93(subset[j]['seq'], subset[i]['seq'], 'AVERAGE'),
-            'snps': hamming(subset[j]['seq'], subset[i]['seq'])
+            source: subset[j].id,
+            target: subset[i].id,
+            distance: tn93(subset[j]['seq'], subset[i]['seq'], 'AVERAGE'),
+            snps: hamming(subset[j]['seq'], subset[i]['seq']),
+            origin: ['Genetic Distance']
           };
           data.distance_matrix.snps[i][j] = newLink.snps;
           data.distance_matrix.snps[j][i] = newLink.snps;
@@ -233,7 +234,7 @@
         snps: Number.INFINITY,
         visible: false,
         cluster: 1,
-        origin: 'Genetic Distance',
+        origin: [],
         index: data.links.length
       }
     }
@@ -241,6 +242,7 @@
     function addLink(newLink){
       let oldLink = data.links.find(l => l.source === newLink.source & l.target === newLink.target);
       if(oldLink){
+        if(newLink.origin) newLink.origin = newLink.origin.concat(oldLink.origin);
         Object.assign(oldLink, newLink);
         return 0;
       } else {
