@@ -140,6 +140,51 @@ $(function(){
 
   $('<li role="separator" class="divider"></li>').insertAfter('#FileTab');
 
+  $('<li id="OpenTab"><a href="#">Open Session</a></li>').click(e => {
+    remote.dialog.showOpenDialog({
+      filters: [
+        {name: 'MicrobeTrace Session', extensions: ['microbetrace']}
+      ],
+    }, filepaths => {
+      $('#file_panel').fadeOut(() => {
+        session = JSON.parse(jetpack.read(filepaths[0]));
+        $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').removeClass('disabled');
+        $('.nodeVariables').html('<option value="none">None</option>\n' + session.data.nodeFields.map(key => `<option value="${key}">${titleize(key)}</option>`).join('\n'));
+        $('#nodeTooltipVariable').val('id');
+        $('.linkVariables').html('<option value="none">None</option>\n' + session.data.linkFields.map(key => `<option value="${key}">${titleize(key)}</option>`).join('\n'));
+        $('#linkSortVariable').val('distance');
+        $('#default-link-threshold').attr('max', math.max(session.data.links.map(l => l.distance)));
+        tagClusters(); //You need the first call to tagClusters to be able to setNodeVisibility.
+        setNodeVisibility();
+        setLinkVisibility();
+        setupNetwork();
+        renderNetwork();
+        tagClusters(); //You need the second call to tagClusters to get the Stats right.
+        if(session.data.linkFields.includes('origin')){
+          $('#linkColorVariable').val('origin');
+          setLinkColor();
+        }
+        computeDegree();
+        updateStatistics();
+        $('.hidden').removeClass('hidden');
+        $('#main_panel').fadeIn();
+      });
+      setTimeout(e => session.network.fit(), 1500);
+      alertify.success('File Loaded!');
+    });
+  }).insertAfter('#FileTab');
+
+  $('<li id="SaveTab"><a href="#">Save Session</a></li>').click(e => {
+    remote.dialog.showSaveDialog({
+      filters: [
+        {name: 'MicrobeTrace Session', extensions: ['microbetrace']}
+      ],
+    }, filename => {
+      jetpack.write(filename, JSON.stringify(session));
+      alertify.success('File Saved!');
+    });
+  }).insertAfter('#FileTab');
+
   $('<li id="AddDataTab"><a href="#">Add Data</a></li>').click(reset).insertAfter('#FileTab');
 
   $('body').append(ipcRenderer.sendSync('get-component', 'search.html'));
