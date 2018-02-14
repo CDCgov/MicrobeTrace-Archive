@@ -95,7 +95,7 @@ td {
   -o-transition: all 0.5s ease;
   transition: all 0.5s ease;
 }
-#network {
+#main_panel svg {
   width: 100%;
   height: 100%;
 }
