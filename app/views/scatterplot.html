@@ -87,6 +87,8 @@
     $('head').append(electron.ipcRenderer.sendSync('get-component', 'titleize.html'));
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
+    $('#ScreenshotTab').insertBefore('#CloseTab');
+    $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
 
     electron.ipcRenderer.on('set-data', (e, data) => {
       window.session = {data: data};

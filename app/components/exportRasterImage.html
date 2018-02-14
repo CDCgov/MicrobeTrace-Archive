@@ -1,3 +1,5 @@
+<li id="ScreenshotTab"><a href="#">Save Image</a></li>
+
 <script type="text/javascript">
 if(typeof electron === 'undefined'){
   electron = require('electron');
@@ -9,7 +11,7 @@ if(typeof alertify === 'undefined'){
   alertify = require('alertifyjs');
 }
 
-$('<li id="ScreenshotTab"><a href="#">Save Image</a></li>').click(() => {
+$('#ScreenshotTab').click(() => {
   electron.remote.dialog.showSaveDialog({
     filters: [
       {name: 'PNG', extensions: ['png']},
@@ -34,8 +36,5 @@ $('<li id="ScreenshotTab"><a href="#">Save Image</a></li>').click(() => {
       alertify.success('File Saved!');
     });
   });
-}).insertBefore('#CloseTab');
-
-$('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
-
+});
 </script>

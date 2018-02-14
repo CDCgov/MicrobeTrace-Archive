@@ -44,9 +44,6 @@ function dataSkeleton(){
 $(function(){
 
   $('head').append(ipcRenderer.sendSync('get-component', 'titleize.html'));
-  $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
-  $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
-
   $('body').prepend(ipcRenderer.sendSync('get-component', 'nav.html'));
 
   //Since the navbar is a reused component, we can only change it per view by injecting elements, like so:
@@ -184,6 +181,12 @@ $(function(){
       alertify.success('File Saved!');
     });
   }).insertBefore('#CloseTab');
+
+  $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
+  $('#ScreenshotTab').insertBefore('#CloseTab');
+
+  $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
+  $('#VectorTab').insertBefore('#CloseTab');
 
   $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
 

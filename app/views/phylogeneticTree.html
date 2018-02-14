@@ -139,6 +139,9 @@ body{
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append( electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
+    $('#ScreenshotTab').insertBefore('#CloseTab');
+    $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
+
     $('body').append( electron.ipcRenderer.sendSync('get-component', 'search.html'));
 
     $('<li id="ExportTab"><a href="#">Export Newick</a></li>').click(() => {
