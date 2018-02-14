@@ -264,7 +264,7 @@
           let cval = $('#countyField').val();
           session.data.nodes.forEach(n => {
             let state = states.features.find(s => s.properties.usps == n[sval] || s.properties.name == n[sval]);
-            let county = counties.features.find(c => c.name == n[cval] && c.state == state.properties.usps);
+            let county = counties.features.find(c => c.properties.NAME.includes(n[cval]) && c.properties.USPS == state.properties.usps);
             if(county) Object.assign(n, county.properties);
           });
         }
