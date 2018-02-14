@@ -43,6 +43,8 @@
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Window</a>
             <ul class="dropdown-menu">
+              <li id="ReloadTab"><a href="#">Reload</a></li>
+              <li role="separator" class="divider"></li>
               <li id="FullScreenTab"><a href="#">Toggle Full Screen</a></li>
             </ul>
           </li>
@@ -96,7 +98,7 @@
   $('#ExitTab').click(() => electron.remote.app.quit());
 
   $('#NetworkTab').click(function(){
-    if(!$(this).hasClass('disabled')){
+    if(session.data.nodes.length > 0){
       $('#settingsModal').modal('show');
     } else {
       alertify.warning('Please load some data first!');
@@ -104,7 +106,7 @@
   });
 
   $('#3DNetworkTab').click(function(){
-    if(!$(this).hasClass('disabled')){
+    if(session.data.nodes.length > 0){
       electron.ipcRenderer.send('launch-view', '3D.html');
     } else {
       alertify.warning('Please load some data first!');
@@ -112,7 +114,7 @@
   });
 
   $('#TableTab').click(function(){
-    if(!$(this).hasClass('disabled')){
+    if(session.data.nodes.length > 0){
       electron.ipcRenderer.send('launch-view', 'table.html');
     } else {
       alertify.warning('Please load some data first!');
@@ -120,7 +122,7 @@
   });
 
   $('#FlowTab').click(function(){
-    if(!$(this).hasClass('disabled')){
+    if(session.data.nodes.length > 0){
       electron.ipcRenderer.send('launch-view', 'flowDiagram.html');
     } else {
       alertify.warning('Please load some data first!');
@@ -128,7 +130,7 @@
   });
 
   $('#HeatmapTab').click(function(){
-    if(!$(this).hasClass('disabled')){
+    if(session.data.nodes.length > 0){
       electron.ipcRenderer.send('launch-view', 'heatmap.html');
     } else {
       alertify.warning('Please load some data first!');
@@ -136,7 +138,7 @@
   });
 
   $('#SequencesTab').click(function(){
-    if(!$(this).hasClass('disabled')){
+    if(session.data.nodes.length > 0){
       electron.ipcRenderer.send('launch-view', 'sequences.html');
     } else {
       alertify.warning('Please load some data first!');
@@ -144,7 +146,7 @@
   });
 
   $('#ScatterplotTab').click(function(){
-    if(!$(this).hasClass('disabled')){
+    if(session.data.nodes.length > 0){
       electron.ipcRenderer.send('launch-view', 'scatterplot.html');
     } else {
       alertify.warning('Please load some data first!');
@@ -152,7 +154,7 @@
   });
 
   $('#HistogramTab').click(function(){
-    if(!$(this).hasClass('disabled')){
+    if(session.data.nodes.length > 0){
       electron.ipcRenderer.send('launch-view', 'histogram.html');
     } else {
       alertify.warning('Please load some data first!');
@@ -160,7 +162,7 @@
   });
 
   $('#TreeTab').click(function(){
-    if(!$(this).hasClass('disabled')){
+    if(session.data.nodes.length > 0){
       electron.ipcRenderer.send('launch-view', 'phylogeneticTree.html');
     } else {
       alertify.warning('Please load some data first!');
@@ -168,12 +170,23 @@
   });
 
   $('#MapTab').click(function(){
-    if(!$(this).hasClass('disabled')){
+    if(session.data.nodes.length > 0){
       electron.ipcRenderer.send('launch-view', 'map.html');
     } else {
       alertify.warning('Please load some data first!');
     }
   });
+
+  $('#ReloadTab').click(reset);
+
+  $('#FullScreenTab').click(toggleFullScreen);
+
+  $('#HelpTab').click(() => {
+    electron.ipcRenderer.send('launch-view', 'components/help/index.html');
+  });
+
+  const manifest = electron.ipcRenderer.sendSync('get-manifest');
+  $('.version').text(manifest.version);
 
   function reset(){
     electron.remote.getCurrentWindow().reload();
@@ -184,6 +197,14 @@
     win.setFullScreen(!win.isFullScreen());
   }
 
+  isOnline().then(online => {
+    if(online){
+      $('#UpdateTab')
+      .click(e => shell.openExternal('https://aaboyles.github.io/MicrobeTrace/checkVersion.html?version='+manifest.version))
+      .show();
+    }
+  });
+
   $(document).on('keydown', e => {
     if(e.key === 'F5'){
       reset();
@@ -193,24 +214,6 @@
     }
     if(e.key === 'F12'){
       electron.remote.getCurrentWindow().toggleDevTools();
-    }
-  });
-
-  $('#FullScreenTab').click(toggleFullScreen);
-
-  $('#HelpTab').click(() => {
-    electron.ipcRenderer.send('launch-view', 'components/help/index.html');
-  });
-
-  const manifest = electron.ipcRenderer.sendSync('get-manifest');
-
-  $('.version').text(manifest.version);
-
-  isOnline().then(online => {
-    if(online){
-      $('#UpdateTab')
-      .click(e => shell.openExternal('https://aaboyles.github.io/MicrobeTrace/checkVersion.html?version='+manifest.version))
-      .show();
     }
   });
 
