@@ -99,6 +99,7 @@ $(function(){
   $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
 
   $('<li id="ExportTab"><a href="#">Export Data</a></li>').click(e => {
+    if(session.data.nodes.length == 0) return alertify.warning('Please load some data first!');
     remote.dialog.showSaveDialog({
       filters: [
         {name: 'Link CSV', extensions: ['links.csv']},
@@ -110,33 +111,38 @@ $(function(){
         {name: 'Link JSON', extensions: ['links.json']},
         {name: 'Node JSON', extensions: ['nodes.json']},
         {name: 'HIVTrace', extensions: ['hivtrace.json']},
-        session.data.tree.tn93 ? {name: 'TN93-based Tree Newick', extensions: ['tn93.nwk']} : undefined,
-        session.data.tree.snps ? {name: 'SNP-based Tree Newick', extensions: ['snps.nwk']} : undefined
+        {name: 'TN93-based Tree Newick', extensions: ['tn93.nwk']},
+        {name: 'SNP-based Tree Newick', extensions: ['snps.nwk']}
       ]
     }, filename => {
       if (filename === undefined){
         return alertify.error('File not exported!');
       }
       let extension = filename.split('.').pop();
-      let content = '';
       if(filename.slice(-10) == 'links.json'){
-        content = JSON.stringify(session.data.links);
+        jetpack.write(filename, JSON.stringify(session.data.links));
+        alertify.success('File Saved!');
       } else if(filename.slice(-9) == 'links.csv'){
-        content = Papa.unparse(session.data.links.map(l => {
+        jetpack.write(filename, Papa.unparse(session.data.links.map(l => {
           if(typeof l.source == 'object') l.source = l.source.id;
           if(typeof l.target == 'object') l.target = l.target.id;
           return l
-        }));
+        })));
+        alertify.success('File Saved!');
       } else if(filename.slice(-10) == 'nodes.json'){
-        content = JSON.stringify(session.data.nodes);
+        jetpack.write(filename, JSON.stringify(session.data.nodes));
+        alertify.success('File Saved!');
       } else if(filename.slice(-9) == 'nodes.csv'){
-        content = Papa.unparse(session.data.nodes);
+        jetpack.write(filename, Papa.unparse(session.data.nodes));
+        alertify.success('File Saved!');
       } else if(extension === 'fas' || extension === 'fasta'){
-        content = session.data.nodes.filter(n => n.seq).map(n => '>'+n.id+'\n'+n.seq).join('\n');
+        jetpack.write(filename, session.data.nodes.filter(n => n.seq).map(n => '>'+n.id+'\n'+n.seq).join('\n'));
+        alertify.success('File Saved!');
       } else if(extension === 'meg' || extension === 'mega') {
-        content = '#MEGA\nTitle: '+filename+'\n\n'+session.data.nodes.filter(n => n.seq).map(n => '#'+n.id+'\n'+n.seq).join('\n');
+        jetpack.write(filename, '#MEGA\nTitle: '+filename+'\n\n'+session.data.nodes.filter(n => n.seq).map(n => '#'+n.id+'\n'+n.seq).join('\n'));
+        alertify.success('File Saved!');
       } else if(filename.slice(-13) == 'hivtrace.json') {
-        content = JSON.stringify({
+        jetpack.write(filename, JSON.stringify({
           'trace_results': {
             'HIV Stages': {},
             'Degrees': {},
@@ -159,26 +165,34 @@ $(function(){
             'Edges': session.data.links,
             'Nodes': session.data.nodes
           }
-        }, null, 2);
+        }, null, 2));
+        alertify.success('File Saved!');
       } else if(filename.slice(-11) == 'tn93.dm.csv') {
         let labels = session.data.distance_matrix.labels;
-        content = ',' + labels.join(',') + '\n' +
+        jetpack.write(filename, ',' + labels.join(',') + '\n' +
           session.data.distance_matrix.tn93
             .map((row, i) => labels[i] + ',' + row.join(','))
-            .join('\n');
+            .join('\n'));
+        alertify.success('File Saved!');
       } else if(filename.slice(-11) == 'snps.dm.csv') {
         let labels = session.data.distance_matrix.labels;
-        content = ',' + labels.join(',') + '\n' +
+        jetpack.write(filename, ',' + labels.join(',') + '\n' +
           session.data.distance_matrix.snps
             .map((row, i) => labels[i] + ',' + row.join(','))
-            .join('\n');
-      } else if(filename.slice(-8) == 'tn93.nwk') {
-        content = session.data.tree.tn93;
-      } else if(filename.slice(-8) == 'snps.nwk') {
-        content = session.data.tree.snps;
+            .join('\n'));
+        alertify.success('File Saved!');
+      } else if(extension == 'nwk'){
+        let type = filename.split('.');
+        type = type[type.length-2];
+        if(!session.data.tree[type]){
+          ipcRenderer.on('set-tree', (e, tree) => {
+            session.data.tree = tree;
+            jetpack.write(filename, session.data.tree[type]);
+            alertify.success('File Saved!');
+          });
+          ipcRenderer.send('compute-tree');
+        }
       }
-      jetpack.write(filename, content);
-      alertify.success('File Saved!');
     });
   }).insertBefore('#CloseTab');
 
