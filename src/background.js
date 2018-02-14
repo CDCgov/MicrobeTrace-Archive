@@ -20,6 +20,11 @@ function dataSkeleton(){
       visible_clusters: [],
       alpha: 0.3
     },
+    style: {
+      background: '#ffffff',
+      linkcolors: ["#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac"],
+      nodecolors: ["#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac"]
+    },
     messages: []
   };
 };
@@ -103,6 +108,11 @@ ipcMain.on('get-data', e => {
   e.sender.send('set-data', session.data);
 });
 
+ipcMain.on('get-style', e => {
+  e.returnValue = session.style;
+  e.sender.send('deliver-style', session.style);
+});
+
 ipcMain.on('get-manifest', e => {
   e.returnValue = manifest;
   e.sender.send('deliver-manifest', manifest);
@@ -163,6 +173,11 @@ ipcMain.on('update-links-mst', (event, newLinks) => {
   if(newLinks.length !== n) console.error('Update Link MST Error: Length Mismatch');
   for(let i = 0; i < n; i++) session.data.links[i].mst = newLinks[i];
   distribute('update-links-mst', newLinks);
+});
+
+ipcMain.on('update-style', (event, newStyle) => {
+  session.style = newStyle;
+  distribute('update-style', newStyle);
 });
 
 ipcMain.on('launch-view', (event, view) => {

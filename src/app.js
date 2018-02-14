@@ -32,6 +32,11 @@ function dataSkeleton(){
       visible_clusters: [],
       alpha: 0.3
     },
+    style: {
+      background: '#ffffff',
+      linkcolors: ["#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac"],
+      nodecolors: ["#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac"]
+    },
     messages: []
   };
 }
@@ -43,6 +48,7 @@ $(function(){
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
 
   $('body').prepend(ipcRenderer.sendSync('get-component', 'nav.html'));
+
   //Since the navbar is a reused component, we can only change it per view by injecting elements, like so:
   $('<li id="FileTab"><a href="#settings">New</a></li>')
     .click(() => reset())
@@ -947,18 +953,19 @@ $(function(){
     }
     table.append('<tr><th>'+e.target.value+'</th><th>Color</th><tr>');
     let values = Lazy(session.data.nodes).pluck(e.target.value).uniq().sortBy().toArray();
-    let colors = JSON.parse(ipcRenderer.sendSync('get-component', 'colors.json'));
-    let o = d3.scaleOrdinal(colors).domain(values);
+    let o = d3.scaleOrdinal(session.style.nodecolors).domain(values);
     circles.attr('fill', d => o(d[e.target.value]));
-    values.forEach(value => {
-      let input = $('<input type="color" value="'+o(value)+'" />')
-        .on('input', evt => {
+    values.forEach((value, i) => {
+      let input = $(`<input type="color" value="${o(value)}" data-num="${i}" />`)
+        .on('input', function(evt){
           circles
             .filter(d => d[e.target.value] == value)
             .attr('fill', d => evt.target.value);
+          session.style.nodecolors[$(this).data('num')] = evt.target.value;
+          ipcRenderer.send('update-style', session.style);
         });
       let cell = $('<td></td>').append(input);
-      let row = $('<tr><td>'+value+'</td></tr>').append(cell);
+      let row = $(`<tr><td>${value}</td></tr>`).append(cell);
       table.append(row);
     });
     table.fadeIn();
@@ -997,8 +1004,7 @@ $(function(){
     let table = $('<tbody id="linkColors"></tbody>').appendTo('#groupKey');
     table.append('<tr><th>'+variable+'</th><th>Color</th><tr>');
     let values = Lazy(vlinks).pluck(variable).uniq().sort().toArray();
-    let colors = JSON.parse(ipcRenderer.sendSync('get-component', 'colors.json'));
-    let o = d3.scaleOrdinal(colors).domain(values);
+    let o = d3.scaleOrdinal(session.style.linkcolors).domain(values);
     links
       .style('stroke', d => o(d[variable]))
       .attr('stroke-dasharray', l => {
@@ -1013,12 +1019,14 @@ $(function(){
         }
         return math.multiply(out, 6).join(', ');
       });
-    values.forEach(value => {
-      let input = $('<input type="color" name="'+value+'-node-color-setter" value="'+o(value)+'" />')
-        .on('input', evt => {
+    values.forEach((value, i) => {
+      let input = $(`<input type="color" name="${value}-node-color-setter" value="${o(value)}" data-num="${i}" />`)
+        .on('input', function(evt){
           links
             .filter(d => d[variable] === value)
             .style('stroke', d => evt.target.value);
+          session.style.linkcolors[$(this).data('num')] = evt.target.value;
+          ipcRenderer.send('update-style', session.style);
         });
       let cell = $('<td></td>').append(input);
       let row = $('<tr><td>'+value+'</td></tr>').append(cell);
@@ -1142,7 +1150,11 @@ $(function(){
 
   $('#main_panel').css('background-color', $('#network-color').val());
 
-  $('#network-color').on('input', e => $('#main_panel').css('background-color', e.target.value));
+  $('#network-color').on('input', e => {
+    $('#main_panel').css('background-color', e.target.value);
+    session.style.background = e.target.value;
+    ipcRenderer.send('update-style', session.style);
+  });
 
   $('#faster').click(e => {
     session.state.alpha += 0.2;
