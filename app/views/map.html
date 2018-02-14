@@ -180,6 +180,8 @@
   //TODO: Get rid of some of these globals!
   var countries, states, counties, cities, zipcodes, projection, path, svg;
 
+  window.session = {};
+
   $(function(){
 
     $('head').append(electron.ipcRenderer.sendSync('get-component', 'titleize.html'));
@@ -211,7 +213,7 @@
     nodeLayer    = svg.append('g').attr('id', 'nodes');
 
     electron.ipcRenderer.on('set-data', (e, data) => {
-      window.session = {data: data};
+      window.session.data = data;
       let fields = session.data.nodeFields;
       $('.fields').append(fields.map(field => `<option value="${field}">${titleize(field)}</option>`).join('\n'));
       if(fields.includes('lat')) $('#latitudeField').val('lat');
@@ -232,6 +234,11 @@
       redrawNodes();
       $('#settingsModal').modal('show');
     });
+
+    electron.ipcRenderer.on('deliver-style', (e, style) => {
+      window.session.style = style;
+    });
+    electron.ipcRenderer.send('get-style');
 
     function matchCoordinates(){
       if($('#countryField').val() !== 'None'){
@@ -453,7 +460,7 @@
       }
       table.append('<tr><th>'+e.target.value+'</th><th>Color</th></tr>');
       let values = Lazy(session.data.nodes).pluck(e.target.value).uniq().sort().toArray();
-      let colors = JSON.parse(electron.ipcRenderer.sendSync('get-component', 'colors.json'));
+      let colors = session.style.nodecolors;
       let o = d3.scaleOrdinal(colors).domain(values);
       circles.style('fill', d => o(d[e.target.value]));
       values.forEach(value => {
