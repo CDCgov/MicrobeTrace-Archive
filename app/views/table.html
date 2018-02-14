@@ -18,11 +18,13 @@
     }
     .dataTables_wrapper{
       padding: 1em;
+      padding-top: 2em;
     }
     table{
       width: 100% !important;
       white-space: nowrap;
       table-layout: fixed;
+
     }
     .odd{
       background-color: #e9e9e9;
@@ -138,6 +140,7 @@
   require('bootstrap');
   require('datatables.net-bs')(window, $);
   require('datatables.net-select')(window, $);
+  require('datatables.net-scroller')(window, $);
   const Papa = require('papaparse');
 
   const meta = ['index', 'padding', 'selected', 'visible', 'orig', 'mst'];
@@ -166,10 +169,13 @@
       let columns = session.data[data_type.slice(0,-1) + 'Fields'];
       table.destroy();
       let options = {
-        dom: 'lrtip',
+        dom: 'rti',
         data: session.data[data_type],
         columns: columns.map(k => ({title:titleize(k), data:k, mData:k, sTitle:titleize(k)})),
         deferRender: true,
+        scrollY:        $(window).height() - 164,
+        scrollCollapse: true,
+        scroller:       true,
         colReorder: true,
         select: {
           style: 'multi'

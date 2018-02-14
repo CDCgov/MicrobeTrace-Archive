@@ -1876,6 +1876,13 @@ datatables.net-colreorder@^1.4.1:
     datatables.net "^1.10.15"
     jquery ">=1.7"
 
+datatables.net-scroller@^1.4.4:
+  version "1.4.4"
+  resolved "https://registry.yarnpkg.com/datatables.net-scroller/-/datatables.net-scroller-1.4.4.tgz#fbb3acefa021290fd833bfa022c39bb064d2c018"
+  dependencies:
+    datatables.net "^1.10.15"
+    jquery ">=1.7"
+
 datatables.net-select-bs@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/datatables.net-select-bs/-/datatables.net-select-bs-1.2.4.tgz#2ad26a00a8d99de6a0fafdaabbcb95fa30eeb4b3"

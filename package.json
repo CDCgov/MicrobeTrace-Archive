@@ -72,6 +72,7 @@
     "datatables.net": "^1.10.16",
     "datatables.net-bs": "^1.10.16",
     "datatables.net-colreorder": "^1.4.1",
+    "datatables.net-scroller": "^1.4.4",
     "datatables.net-select": "^1.2.3",
     "datatables.net-select-bs": "^1.2.4",
     "fs-jetpack": "^0.12.0",
