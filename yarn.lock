@@ -5551,7 +5551,7 @@ underscore.string@^3.3.4:
     sprintf-js "^1.0.3"
     util-deprecate "^1.0.2"
 
-underscore@1.x, underscore@^1.7.*, underscore@^1.7.0, underscore@^1.8.3:
+underscore@1.x, underscore@^1.7.*, underscore@^1.7.0:
   version "1.8.3"
   resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.8.3.tgz#4f3fb53b106e6097fcf9cb4109f2a5e9bdfa5022"
 
