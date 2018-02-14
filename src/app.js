@@ -895,9 +895,9 @@ $(function(){
     let size = defaultSize;
     let sizeVariable = $('#nodeRadiusVariable').val();
     if(sizeVariable !== 'none'){
-      let values = Lazy(session.data.nodes).pluck(sizeVariable).without(undefined).uniq().sort().toArray();
-      var min = math.min(values);
-      var max = math.max(values);
+      let values = Lazy(session.data.nodes).pluck(sizeVariable).without(undefined);
+      var min = values.min();
+      var max = values.max();
       var oldrng = max - min;
       var med = oldrng / 2;
     }
@@ -969,9 +969,9 @@ $(function(){
     if(variable === 'none'){
       return circles.attr('opacity', scalar);
     }
-    let values = Lazy(session.data.nodes).pluck(variable).without(undefined).sort().uniq().toArray();
-    let min = math.min(values);
-    let max = math.max(values);
+    let values = Lazy(session.data.nodes).pluck(variable).without(undefined);
+    let min = values.min();
+    let max = values.max();
     let rng = max - min;
     let med = rng / 2 + min;
     circles.attr('opacity', d => {
