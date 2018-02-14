@@ -1243,4 +1243,6 @@ $(function(){
 
   $('[data-toggle="tooltip"]').tooltip();
 
+  $('#CloseTab').remove();
+
 });
