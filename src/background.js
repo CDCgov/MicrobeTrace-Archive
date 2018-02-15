@@ -50,7 +50,6 @@ app.on('ready', () => {
     protocol: 'file:',
     slashes: true,
   }));
-  ipcMain.on('tick',    (event, val) => mainWindow.send('tick',    val));
   ipcMain.on('message', (event, msg) => mainWindow.send('message', msg));
   mainWindow.on('closed', app.quit);
 });
@@ -65,9 +64,8 @@ ipcMain.on('parse-files', (event, instructions) => {
   parserWindow.on('ready-to-show', e => {
     parserWindow.send('deliver-instructions', instructions);
   });
+  ipcMain.on('cancel-parsing', e => parserWindow.destroy());
 });
-
-ipcMain.on('cancel-parsing', e => parserWindow.destroy());
 
 ipcMain.on('compute-mst', () => {
   let computeWindow = createWindow('MST Computer', {show: false});
@@ -95,9 +93,10 @@ function distribute(type, sdata, except){
   });
 }
 
-ipcMain.on('set-data', (e, newData) => {
-  session.data = newData;
-  distribute('set-data', session.data, e.sender.id);
+//Used by app.js to propagate old session from parsed JSON
+ipcMain.on('set-session', (e, s) => {
+  session = s;
+  distribute('set-session', session);
 });
 
 ipcMain.on('merge-data', (e, newData) => {

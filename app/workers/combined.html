@@ -10,21 +10,19 @@
   const math     = require('bettermath');
   const hamming  = require('plain-hamming');
   const Lazy     = require('lazy.js');
-  const nj       = require('neighbor-joining');
 
   const hierarchy = ['distmat', 'link', 'node', 'fasta'];
 
   var data = {
     nodes: [],
+    nodeFields: new Set(['id', 'padding', 'cluster', 'degree', 'visible', 'selected', 'origin']),
     links: [],
+    linkFields: new Set(['source', 'target', 'cluster', 'visible', 'distance', 'snps', 'origin']),
     distance_matrix: {
       labels: [],
       tn93: [],
       snps: []
-    },
-    tree: '',
-    nodeFields: new Set(['id', 'padding', 'cluster', 'degree', 'visible', 'selected', 'origin']),
-    linkFields: new Set(['source', 'target', 'cluster', 'visible', 'distance', 'snps', 'origin'])
+    }
   };
 
   var instructions = {
