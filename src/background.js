@@ -3,6 +3,7 @@ import url from 'url';
 import jetpack from 'fs-jetpack';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import createWindow from './helpers/window';
+import _ from 'lodash';
 
 function dataSkeleton(){
   return {
@@ -95,6 +96,28 @@ function distribute(type, sdata, except){
 
 ipcMain.on('set-data', (e, newData) => {
   session.data = newData;
+  distribute('set-data', session.data, e.sender.id);
+});
+
+ipcMain.on('merge-data', (e, newData) => {
+  newData.nodes.forEach(newNode => {
+    let oldNode = session.data.nodes.find(d => d.id == newNode.id);
+    if(oldNode){
+      Object.assign(oldNode, newNode);
+    } else {
+      session.data.nodes.push(newNode);
+    }
+  });
+  newData.links.forEach(newLink => {
+    let oldLink = session.data.links.find(l => l.source == newLink.source && l.target == newLink.target);
+    if(oldLink){
+      Object.assign(oldLink, newLink);
+    } else {
+      session.data.links.push(newLink);
+    }
+  });
+  session.data.nodeFields = _.uniq(session.data.nodeFields.concat(newData.nodeFields));
+  session.data.linkFields = _.uniq(session.data.linkFields.concat(newData.linkFields));
   distribute('set-data', session.data, e.sender.id);
 });
 
