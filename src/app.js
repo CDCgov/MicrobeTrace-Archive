@@ -328,14 +328,13 @@ $(function(){
             </div>
           `);
           let data = '', options = '', headers = [];
-          let stream = jetpack.createReadStream(path);
-          stream.on('data', chunk => {
-            data += chunk;
-            if(chunk.includes('\n')){
-              data.substring(0, data.indexOf('\n')).split(',').forEach(h => {
-                if(['"', "'"].includes(h[0])) h = h.substring(1, h.length-1);
-                headers.push(h);
-              });
+          Papa.parse(jetpack.createReadStream(path), {
+            header: true,
+            step: function(row, parser){
+              headers = row.meta.fields;
+              parser.abort();
+            },
+            complete: function(){
               options = '<option>None</option>' + headers.map(h => `<option value="${h}">${titleize(h)}</option>`).join('');
               $(`
                 <div class='col-xs-4 text-right'${isFasta?' style="display: none;"':''} data-file='${filename}'>
@@ -358,12 +357,9 @@ $(function(){
                   }
                 });
               });
-              stream.pause();
-            }
-          });
-          root.appendTo('#file_panel .panel-body').slideDown();
-          let refit = function(e){
-            let type = $(e ? e.target : `[name="options-${filename}"]:checked`).data('type'),
+              root.appendTo('#file_panel .panel-body').slideDown();
+              let refit = function(e){
+                let type = $(e ? e.target : `[name="options-${filename}"]:checked`).data('type'),
                 these = $(`[data-file='${filename}']`),
                 first = $(these.get(0)),
                 second = $(these.get(1)),
@@ -371,29 +367,31 @@ $(function(){
                 a = ['SOURCE', 'Source', 'source'],
                 b = ['TARGET', 'Target', 'target'],
                 c = ['SNPs', 'TN93', 'snps', 'tn93', 'length', 'distance'];
-            if(type === 'node'){
-              a = ['ID', 'Id', 'id'];
-              b = ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq'];
-              first.slideDown().find('label').text('ID');
-              second.slideDown().find('label').text('Sequence');
-              third.slideUp();
-            } else if(type === 'link'){
-              first.slideDown().find('label').text('Source');
-              second.slideDown().find('label').text('Target');
-              third.slideDown();
-            } else {
-              these.slideUp();
-            }
-            [a, b, c].forEach((list, i) => {
-              list.forEach(title => {
-                if(headers.includes(title)){
-                  $(these.find('select').get(i)).find('select').val(title);
+                if(type === 'node'){
+                  a = ['ID', 'Id', 'id'];
+                  b = ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq'];
+                  first.slideDown().find('label').text('ID');
+                  second.slideDown().find('label').text('Sequence');
+                  third.slideUp();
+                } else if(type === 'link'){
+                  first.slideDown().find('label').text('Source');
+                  second.slideDown().find('label').text('Target');
+                  third.slideDown();
+                } else {
+                  these.slideUp();
                 }
-              });
-            });
-          };
-          $(`[name="options-${filename}"]`).change(refit);
-          refit();
+                [a, b, c].forEach((list, i) => {
+                  list.forEach(title => {
+                    if(headers.includes(title)){
+                      $(these.find('select').get(i)).find('select').val(title);
+                    }
+                  });
+                });
+              };
+              $(`[name="options-${filename}"]`).change(refit);
+              refit();
+            }
+          });
         });
         $('#main-submit').slideDown();
       }
