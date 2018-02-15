@@ -426,6 +426,7 @@ $(function(){
     });
 
     $('#file_panel').fadeOut(() => {
+      $('#file_panel .panel-body').empty();
       $('#main_panel').fadeIn(() => {
         $('#loadingInformationModal').modal({
           keyboard: false,

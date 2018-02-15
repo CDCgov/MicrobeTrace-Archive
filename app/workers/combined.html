@@ -271,7 +271,7 @@
     data.nodeFields = Array.from(data.nodeFields);
     data.linkFields = Array.from(data.linkFields);
 
-    electron.ipcRenderer.send('set-data', data);
+    electron.ipcRenderer.send('merge-data', data);
     electron.remote.getCurrentWindow().close();
 
   });
