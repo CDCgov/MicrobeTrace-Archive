@@ -139,8 +139,8 @@
       });
     }
 
-    electron.ipcRenderer.on('set-data', (e, data) => {
-      window.session = { data: data };
+    electron.ipcRenderer.on('set-session', (e, session) => {
+      window.session = session;
       $('#distanceMetric').html(
         Object.keys(session.data.distance_matrix).filter(k => k !== 'labels').map((k, i) => `
           <label class="btn btn-default btn-xs${(i===0)? ' active':''}">
@@ -151,7 +151,7 @@
       $('input[name="distanceMetric"]').change(replot);
       replot();
     });
-    electron.ipcRenderer.send('get-data');
+    electron.ipcRenderer.send('get-session');
 
     $('input[name="axisLabels"]').change(replot);
     $('input[type="color"]').change(replot);

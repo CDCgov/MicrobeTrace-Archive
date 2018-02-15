@@ -214,8 +214,8 @@
     linkLayer    = svg.append('g').attr('id', 'links');
     nodeLayer    = svg.append('g').attr('id', 'nodes');
 
-    electron.ipcRenderer.on('set-data', (e, data) => {
-      window.session.data = data;
+    electron.ipcRenderer.on('set-session', (e, session) => {
+      window.session = session;
       let fields = session.data.nodeFields;
       $('.fields').append(fields.map(field => `<option value="${field}">${titleize(field)}</option>`).join('\n'));
       if(fields.includes('lat')) $('#latitudeField').val('lat');
@@ -493,7 +493,7 @@
     drawCountries();
     drawCities();
 
-    electron.ipcRenderer.send('get-data');
+    electron.ipcRenderer.send('get-session');
   });
 
   </script>

@@ -84,12 +84,12 @@
     $('#ScreenshotTab').insertBefore('#CloseTab');
     $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
 
-    electron.ipcRenderer.on('set-data', (e, d) => {
-      window.session = {data: d};
+    let graph = ForceGraph3D()($('#main_panel')[0]);
+
+    electron.ipcRenderer.on('set-session', (e, d) => {
+      window.session = d;
       drawGraph();
     });
-
-    let graph = ForceGraph3D()($('#main_panel')[0]);
 
     function drawGraph(){
       let lc = $('#default-link-color').val();
@@ -106,14 +106,6 @@
         });
     }
 
-    $('#button').click(() => $('#options').modal('show'));
-
-    $('.triggers').change(drawGraph);
-
-    $('[data-toggle="tooltip"]').tooltip();
-
-    $(window).on('resize', drawGraph);
-
     electron.ipcRenderer.on('update-link-visibilities', (e, visibilities) => {
       let n = session.data.links.length;
       if(visibilities.length !== n) console.error('Update Link Visibilities Error: Length Mismatch');
@@ -128,7 +120,15 @@
       drawGraph();
     });
 
-    electron.ipcRenderer.send('get-data');
+    $('#button').click(() => $('#options').modal('show'));
+
+    $('.triggers').change(drawGraph);
+
+    $('[data-toggle="tooltip"]').tooltip();
+
+    $(window).on('resize', drawGraph);
+
+    electron.ipcRenderer.send('get-session');
   });
 
   </script>

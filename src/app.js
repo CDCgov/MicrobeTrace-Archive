@@ -461,8 +461,8 @@ $(function(){
     $('#loadingInformation').html(session.messages.join('<br />'));
   });
 
-  ipcRenderer.on('set-data', (e, data) => {
-    session.data = data;
+  ipcRenderer.on('set-session', (e, s) => {
+    session = s;
     clearTimeout(messageTimeout);
     $('#FileTab', '#ExportHIVTraceTab', '#ExportTab', '#ScreenshotTab', '#VectorTab', '#TableTab, #FlowTab, #SequencesTab, #HistogramTab, #MapTab, #SettingsTab').removeClass('disabled');
     $('.nodeVariables').html('<option value="none">None</option>\n' + session.data.nodeFields.map(key => `<option value="${key}">${titleize(key)}</option>`).join('\n'));

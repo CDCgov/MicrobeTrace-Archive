@@ -164,11 +164,11 @@ body{
       tree.modify_selection(n => false, "tag");
     }
 
-    electron.ipcRenderer.on('set-data', (e, data) => {
-      window.session = {data: data};
+    electron.ipcRenderer.on('set-session', (e, session) => {
+      window.session = session;
       drawTree();
     });
-    electron.ipcRenderer.send('get-data');
+    electron.ipcRenderer.send('get-session');
 
     function drawTree(){
       svg.html(null);

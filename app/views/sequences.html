@@ -55,8 +55,8 @@
 
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
 
-    electron.ipcRenderer.on('set-data', (e, data) => {
-      window.session = {data: data};
+    electron.ipcRenderer.on('set-session', (e, session) => {
+      window.session = session;
       var m = new msa.msa({
         el: $('#main_panel')[0],
         vis: {
@@ -83,7 +83,7 @@
       let menubuttons = $('.smenubar > div');
       [0,2,3,6,7,8].forEach(i => $(menubuttons.get(i)).hide());
     });
-    electron.ipcRenderer.send('get-data');
+    electron.ipcRenderer.send('get-session');
 
   });
 

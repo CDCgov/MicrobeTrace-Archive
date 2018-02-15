@@ -62,8 +62,8 @@ svg{
     $('#ScreenshotTab').insertBefore('#CloseTab');
     $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
 
-    electron.ipcRenderer.on('set-data', (e, data) => {
-      window.session = {data: data};
+    electron.ipcRenderer.on('set-session', (e, session) => {
+      window.session = session;
       $('#source_side').html(session.data.nodeFields.map((field, i) => `<option value='${field}'${i==1?' selected ':''}>${titleize(field)}</option>`));
       $('#target_side').html(session.data.nodeFields.map((field, i) => `<option value='${field}'${i==2?' selected ':''}>${titleize(field)}</option>`));
       drawGraph();
@@ -163,11 +163,7 @@ svg{
       node.append("title").text(d => d.name + "\n" + format(d.value));
     }
 
-    $('.fields').change(drawGraph);
 
-    $('#button').click(() => $('#options').modal('show'));
-
-    $(window).on('resize', drawGraph);
 
     electron.ipcRenderer.on('update-node-clusters', (e, data) => {
       let n = session.data.nodes.length;
@@ -187,7 +183,13 @@ svg{
       drawGraph();
     });
 
-    electron.ipcRenderer.send('get-data');
+    $('.fields').change(drawGraph);
+
+    $('#button').click(() => $('#options').modal('show'));
+
+    $(window).on('resize', drawGraph);
+
+    electron.ipcRenderer.send('get-session');
   });
 
   </script>

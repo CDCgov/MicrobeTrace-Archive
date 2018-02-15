@@ -126,9 +126,9 @@ ipcMain.on('set-tree', (e, newData) => {
   distribute('set-tree', session.data.tree, e.sender.id);
 });
 
-ipcMain.on('get-data', e => {
-  e.returnValue = session.data;
-  e.sender.send('set-data', session.data);
+ipcMain.on('get-session', e => {
+  e.returnValue = session;
+  e.sender.send('set-session', session);
 });
 
 ipcMain.on('get-style', e => {

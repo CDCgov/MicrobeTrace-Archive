@@ -200,8 +200,8 @@
       resetTextsize();
     }
 
-    electron.ipcRenderer.on('set-data', (e, data) => {
-      window.session = {data: data};
+    electron.ipcRenderer.on('set-session', (e, session) => {
+      window.session = session;
       session.data.clusterFields = Object.keys(session.data.clusters[0]);
       ['node', 'link', 'cluster'].forEach(thing => {
         $('#'+thing+'-columns').html(
@@ -266,7 +266,7 @@
     $('input[name=nodelink]').on('change', updateTable);
     $('#link-columns, #node-columns, #cluster-columns').on('change', updateTable);
 
-    electron.ipcRenderer.send('get-data');
+    electron.ipcRenderer.send('get-session');
   });
 
   $.fn.dataTable.ext.errMode = 'none';

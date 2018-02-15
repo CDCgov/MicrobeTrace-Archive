@@ -107,17 +107,17 @@
       redraw();
     });
 
-    electron.ipcRenderer.on('set-data', (e, data) => {
-      window.session = {data: data};
-      let links = data.links;
+    electron.ipcRenderer.on('set-session', (e, session) => {
+      window.session = session;
+      let links = session.data.links;
       $('#variable').html(
-        data.linkFields.map(key => `<option value='links-${key}'>Links ${titleize(key)}</option>`).concat(
-        data.nodeFields.map(key => `<option value='nodes-${key}'>Nodes ${titleize(key)}</option>`)).join('\n')
+        session.data.linkFields.map(key => `<option value='links-${key}'>Links ${titleize(key)}</option>`).concat(
+        session.data.nodeFields.map(key => `<option value='nodes-${key}'>Nodes ${titleize(key)}</option>`)).join('\n')
       );
       $('#variable').val('links-distance');
       redraw();
     });
-    electron.ipcRenderer.send('get-data');
+    electron.ipcRenderer.send('get-session');
 
     function redraw(){
       if(window.plot) Plotly.purge('main_panel');

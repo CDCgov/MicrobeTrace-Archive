@@ -90,16 +90,16 @@
     $('#ScreenshotTab').insertBefore('#CloseTab');
     $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
 
-    electron.ipcRenderer.on('set-data', (e, data) => {
-      window.session = {data: data};
-      let links = data.links;
-      let options = data.linkFields.map(key => `<option value='${key}'>${titleize(key)}</option>`).join('\n');
+    electron.ipcRenderer.on('set-session', (e, session) => {
+      window.session = session;
+      let links = session.data.links;
+      let options = session.data.linkFields.map(key => `<option value='${key}'>${titleize(key)}</option>`).join('\n');
       $('#xVar, #yVar').html(options);
       $('#xVar').val('snps');
       $('#yVar').val('distance');
       redraw();
     });
-    electron.ipcRenderer.send('get-data');
+    electron.ipcRenderer.send('get-session');
 
     function redraw(){
       if(window.plot) Plotly.purge('main_panel');
