@@ -54,7 +54,7 @@
               <li id="HelpTab"><a href="#">Help</a></li>
               <li id="UpdateTab"><a href="#">Check For Update</a></li>
               <li role="separator" class="divider"></li>
-              <li id="AboutTab"><a href="#" data-toggle="modal" data-target="#aboutModal">About</a></li>
+              <li id="AboutTab"><a href="#">About</a></li>
             </ul>
           </li>
         </ul>
@@ -185,8 +185,16 @@
     electron.ipcRenderer.send('launch-view', 'components/help/index.html');
   });
 
-  const manifest = electron.ipcRenderer.sendSync('get-manifest');
-  $('.version').text(manifest.version);
+  $('#AboutTab').click(() => {
+    let manifest = {version: 'unknown'};
+    if(session.manifest){
+      manifest = session.manifest;
+    } else {
+      manifest = electron.ipcRenderer.sendSync('get-manifest');
+    }
+    $('.version').text(manifest.version);
+    $('#aboutModal').modal('show');
+  });
 
   function reset(){
     electron.remote.getCurrentWindow().reload();
