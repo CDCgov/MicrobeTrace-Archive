@@ -108,6 +108,7 @@ ipcMain.on('merge-data', (e, newData) => {
       session.data.nodes.push(newNode);
     }
   });
+  session.data.nodeFields = _.uniq(session.data.nodeFields.concat(newData.nodeFields));
   newData.links.forEach(newLink => {
     let oldLink = session.data.links.find(l => l.source == newLink.source && l.target == newLink.target);
     if(oldLink){
@@ -116,9 +117,10 @@ ipcMain.on('merge-data', (e, newData) => {
       session.data.links.push(newLink);
     }
   });
-  session.data.nodeFields = _.uniq(session.data.nodeFields.concat(newData.nodeFields));
   session.data.linkFields = _.uniq(session.data.linkFields.concat(newData.linkFields));
-  distribute('set-data', session.data, e.sender.id);
+  //TODO: Need a better strategy for Distance Matrices. Probably need to recompute them.
+  session.data.distance_matrix = newData.distance_matrix;
+  distribute('set-session', session, e.sender.id);
 });
 
 ipcMain.on('set-tree', (e, newData) => {
