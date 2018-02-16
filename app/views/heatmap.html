@@ -54,6 +54,10 @@
             </div>
           </div>
           <div class="row">
+            <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="What color would you like the background to be?">Background Color</a></div>
+            <div class="col-xs-9"><input type="color" id="network-color" class="triggers" value="#ffffff" /></div>
+          </div>
+          <div class="row">
             <div class="col-xs-3">Axis Labels</div>
             <div class="col-xs-9">
               <div class="btn-group" data-toggle="buttons">
@@ -150,14 +154,33 @@
       );
       $('input[name="distanceMetric"]').change(replot);
       replot();
+      restyle();
     });
-    electron.ipcRenderer.send('get-session');
+
+    electron.ipcRenderer.on('update-style', (e, style) => {
+      session.style = style;
+      restyle();
+    });
+
+    function restyle(){
+      $('#network-color').val(session.style.background);
+      $('svg.main-svg:first').css('background-color', session.style.background);
+    }
+
+    $('#network-color').on('input change', e => {
+      session.style.background = e.target.value;
+      $('svg.main-svg:first').css('background-color', session.style.background);
+      electron.ipcRenderer.send('update-style', session.style);
+    });
+
 
     $('input[name="axisLabels"]').change(replot);
     $('input[type="color"]').change(replot);
     $('#invertX, #invertY').change(replot);
 
     $(window).on('resize', replot);
+
+    electron.ipcRenderer.send('get-session');
   });
 
   </script>

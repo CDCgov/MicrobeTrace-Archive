@@ -202,15 +202,14 @@ ipcMain.on('update-links-mst', (event, newLinks) => {
 
 ipcMain.on('update-style', (event, newStyle) => {
   session.style = newStyle;
-  distribute('update-style', newStyle);
+  distribute('update-style', session.style, event.sender.id);
 });
 
 ipcMain.on('launch-view', (event, view) => {
   const thingWindow = createWindow(view, {
     width: 800,
     height: 610,
-    show: true,
-    alwaysOnTop: view == 'filter.html'
+    show: true
   });
   thingWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'views/' + view),

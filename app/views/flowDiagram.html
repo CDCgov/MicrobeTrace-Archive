@@ -33,6 +33,12 @@ svg{
             </div>
             <div class="col-xs-6 text-right">
               <select id='target_side' class='fields'></select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="What color would you like the background to be?">Background Color</a></div>
+                  <div class="col-xs-9"><input type="color" id="network-color" class="triggers" value="#ffffff" /></div>
+                </div>
             </div>
           </div>
         </div>
@@ -66,6 +72,7 @@ svg{
       window.session = session;
       $('#source_side').html(session.data.nodeFields.map((field, i) => `<option value='${field}'${i==1?' selected ':''}>${titleize(field)}</option>`));
       $('#target_side').html(session.data.nodeFields.map((field, i) => `<option value='${field}'${i==2?' selected ':''}>${titleize(field)}</option>`));
+      restyle();
       drawGraph();
     });
 
@@ -163,8 +170,6 @@ svg{
       node.append("title").text(d => d.name + "\n" + format(d.value));
     }
 
-
-
     electron.ipcRenderer.on('update-node-clusters', (e, data) => {
       let n = session.data.nodes.length;
       for(i = 0; i < n; i++) session.data.nodes[i].cluster = data[i];
@@ -181,6 +186,22 @@ svg{
       let n = session.data.nodes.length;
       for(i = 0; i < n; i++) session.data.nodes[i].visible = data[i];
       drawGraph();
+    });
+
+    electron.ipcRenderer.on('update-style', (e, style) => {
+      session.style = style;
+      restyle();
+    });
+
+    function restyle(){
+      $('#network-color').val(session.style.background);
+      $('#main_panel').css('background-color', session.style.background);
+    }
+
+    $('#network-color').on('input', e => {
+      session.style.background = e.target.value;
+      $('#main_panel').css('background-color', session.style.background);
+      electron.ipcRenderer.send('update-style', session.style);
     });
 
     $('.fields').change(drawGraph);

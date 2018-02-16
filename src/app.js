@@ -1181,6 +1181,18 @@ $(function(){
 
   ipcRenderer.on('set-tree', (e, tree) => session.data.tree = tree);
 
+  ipcRenderer.on('update-style', (e, style) => {
+    session.style = style;
+    restyle();
+  });
+
+  function restyle(){
+    redrawNodes();
+    setLinkColor();
+    $('#main_panel').css('background-color', session.style.background);
+    $('#network-color').val(session.style.background);
+  }
+
   $('#hideNetworkStatistics').parent().click(() => $('#networkStatistics').fadeOut());
 
   $('#showNetworkStatistics').parent().click(() => {
@@ -1201,8 +1213,8 @@ $(function(){
   $('#main_panel').css('background-color', $('#network-color').val());
 
   $('#network-color').on('input', e => {
-    $('#main_panel').css('background-color', e.target.value);
     session.style.background = e.target.value;
+    $('#main_panel').css('background-color', session.style.background);
     ipcRenderer.send('update-style', session.style);
   });
 

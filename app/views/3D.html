@@ -95,7 +95,7 @@
       let lc = $('#default-link-color').val();
       let nodeColor = $('#default-node-color').val();
       graph
-        .backgroundColor($('#network-color').val())
+        .backgroundColor(session.style.background)
         .nodeRelSize($('#default-node-radius').val())
         .colorField(d => nodeColor)
         .lineOpacity($('#default-link-opacity').val())
@@ -118,6 +118,21 @@
       if(visibilities.length !== n) console.error('Update Node Visibilities Error: Length Mismatch');
       for(let i = 0; i < n; i++) session.data.nodes[i].visible = visibilities[i];
       drawGraph();
+    });
+
+    electron.ipcRenderer.on('update-style', (e, style) => {
+      session.style = style;
+      restyle();
+    });
+
+    function restyle(){
+      $('#network-color').val(session.style.background);
+      drawGraph();
+    }
+
+    $('#network-color').on('input', e => {
+      session.style.background = e.target.value;
+      electron.ipcRenderer.send('update-style', session.style);
     });
 
     $('#button').click(() => $('#options').modal('show'));

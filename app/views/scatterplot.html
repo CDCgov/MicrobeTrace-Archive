@@ -63,6 +63,10 @@
                   <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="What color should the histogram be?">Color</a></div>
                   <div class="col-xs-9"><input type="color" id="color" value="#5656ff" /></div>
                 </div>
+                <div class="row">
+                  <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="What color would you like the background to be?">Background Color</a></div>
+                  <div class="col-xs-9"><input type="color" id="network-color" class="triggers" value="#ffffff" /></div>
+                </div>
               </div>
             </div>
           </div>
@@ -98,6 +102,7 @@
       $('#xVar').val('snps');
       $('#yVar').val('distance');
       redraw();
+      restyle();
     });
     electron.ipcRenderer.send('get-session');
 
@@ -142,7 +147,26 @@
       redraw();
     });
 
+    electron.ipcRenderer.on('update-style', (e, style) => {
+      session.style = style;
+      restyle();
+    });
+
+    function restyle(){
+      $('#network-color').val(session.style.background);
+      $('svg.main-svg:first').css('background-color', session.style.background);
+      $('rect.bg').css('fill', session.style.background);
+    }
+
+    $('#network-color').on('input', e => {
+      session.style.background = e.target.value;
+      $('#main_panel').css('background-color', session.style.background);
+      $('rect.bg').css('fill', session.style.background);
+      electron.ipcRenderer.send('update-style', session.style);
+    });
+
     $('#alllinks, #vislinks, #logScale, #linearScale').change(redraw);
+
     $('#xVar, #yVar, #color').change(redraw);
   });
   </script>
