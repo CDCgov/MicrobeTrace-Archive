@@ -27,18 +27,30 @@ svg{
           <h4 class="modal-title">Flow Diagram Settings</h4>
         </div>
         <div class="modal-body">
-          <div class="row">
-            <div class="col-xs-6">
-              <select id='source_side' class='fields'></select>
-            </div>
-            <div class="col-xs-6 text-right">
-              <select id='target_side' class='fields'></select>
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#networkConfigurations" aria-controls="profile" role="tab" data-toggle="tab">Flow Diagram</a></li>
+          </ul>
+          <!-- Tab panes -->
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade in active" id="networkConfigurations">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="What variable would you like the left side to represent?">Left Variable</a></div>
+                  <div class="col-xs-9">
+                    <select id='source_side' class='fields'></select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="What variable would you like the right side to represent?">Right Variable</a></div>
+                  <div class="col-xs-9">
+                    <select id='target_side' class='fields'></select>
                   </div>
                 </div>
                 <div class="row">
                   <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="What color would you like the background to be?">Background Color</a></div>
                   <div class="col-xs-9"><input type="color" id="network-color" class="triggers" value="#ffffff" /></div>
                 </div>
+              </div>
             </div>
           </div>
         </div>

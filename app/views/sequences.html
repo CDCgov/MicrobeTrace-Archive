@@ -35,7 +35,18 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title">Sequences Settings</h4>
         </div>
-        <div class="modal-body"></div>
+        <div class="modal-body">
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#sequencesConfigurations" aria-controls="sequencesConfigurations" role="tab" data-toggle="tab">Sequences</a></li>
+          </ul>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade in active" id="sequencesConfigurations">
+              <div class="panel-body">
+                <div class="row" id="msa-controls"></div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
         </div>
@@ -79,14 +90,14 @@
       });
       m.addView("menu", new msa.menu.defaultmenu({msa: m}));
       m.render();
-      $('.smenubar').detach().appendTo('#settingsModal .modal-body');
+      $('.smenubar').detach().appendTo('#msa-controls');
       let menubuttons = $('.smenubar > div');
       [0,2,3,6,7,8].forEach(i => $(menubuttons.get(i)).hide());
     });
+
     electron.ipcRenderer.send('get-session');
 
   });
-
   </script>
   </body>
 </html>
