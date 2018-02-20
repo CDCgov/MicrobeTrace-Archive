@@ -5,22 +5,25 @@
   const electron = require('electron');
   const nj = require('neighbor-joining');
 
-  electron.ipcRenderer.on('set-data', (e, data) => {
-    var taxa = data.nodes.filter(d => d.seq).map(d => ({
+  electron.ipcRenderer.on('set-session', (e, session) => {
+    electron.ipcRenderer.send('log', 'Got session, computing trees...');
+    tree = {};
+    var taxa = session.data.nodes.filter(d => !/^-*$/.test(d.seq)).map(d => ({
       name: d.id,
       genotype: d.id
     }));
-    tree = {};
+    electron.ipcRenderer.send('log', 'Taxa: ', taxa.length);
     ['tn93', 'snps'].forEach(type => {
-      var RNJ = new nj.RapidNeighborJoining(data.distance_matrix[type], taxa);
+      var RNJ = new nj.RapidNeighborJoining(session.data.distance_matrix[type], taxa);
       RNJ.run();
       tree[type] = RNJ.getAsNewick();
+      electron.ipcRenderer.send('log', tree[type]);
     });
     electron.ipcRenderer.send('set-tree', tree);
     electron.remote.getCurrentWindow().close();
   });
 
-  electron.ipcRenderer.send('get-data');
+  electron.ipcRenderer.send('get-session');
   </script>
 </head>
 </html>
