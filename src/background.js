@@ -218,6 +218,19 @@ ipcMain.on('launch-view', (event, view) => {
   }));
 });
 
+ipcMain.on('launch-help', (event, view) => {
+  const helpWindow = createWindow('MicrobeTrace - Help', {
+    width: 800,
+    height: 610,
+    show: true
+  });
+  helpWindow.loadURL(url.format({
+    pathname: path.join(__dirname, 'components/help/index.html'),
+    protocol: 'file:',
+    slashes: true
+  }));
+});
+
 ipcMain.on('reset', () => {
   BrowserWindow
     .getAllWindows()

@@ -181,9 +181,7 @@
 
   $('#FullScreenTab').click(toggleFullScreen);
 
-  $('#HelpTab').click(() => {
-    electron.ipcRenderer.send('launch-view', 'components/help/index.html');
-  });
+  $('#HelpTab').click(() => electron.ipcRenderer.send('launch-help'));
 
   $('#AboutTab').click(() => {
     let manifest = {version: 'unknown'};
