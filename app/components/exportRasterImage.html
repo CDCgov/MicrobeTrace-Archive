@@ -21,20 +21,24 @@ $('#ScreenshotTab').click(() => {
     if (fileName === undefined){
       return alertify.error('File not exported!');
     }
-    electron.remote.getCurrentWindow().capturePage({
-      x: 0,
-      y: 50,
-      width: window.innerWidth,
-      height: window.innerHeight
-    }, (img) => {
-      var extension = fileName.slice(-3);
-      if(extension === 'jpg') {
-        jetpack.write(fileName, img.toJPEG(100));
-      } else {
-        jetpack.write(fileName, img.toPNG());
-      }
-      alertify.success('File Saved!');
-    });
+    $('.hide-for-screenshot').hide();
+    setTimeout(() => {
+      electron.remote.getCurrentWindow().capturePage({
+        x: 0,
+        y: 50,
+        width: window.innerWidth,
+        height: window.innerHeight
+      }, (img) => {
+        var extension = fileName.slice(-3);
+        if(extension === 'jpg') {
+          jetpack.write(fileName, img.toJPEG(100));
+        } else {
+          jetpack.write(fileName, img.toPNG());
+        }
+        $('.hide-for-screenshot').show();
+        alertify.success('File Saved!');
+      });
+    }, 80);
   });
 });
 </script>
