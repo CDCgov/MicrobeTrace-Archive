@@ -415,17 +415,17 @@
     }
 
     function drawLinks(){
-      if(!$('#showLinks').hasClass('active')) return;
+      if(!$('#showLinks').hasClass('active')) return linkLayer.html(null);
       session.data.links.forEach(l => {
         if(typeof l.source !== 'object') l.source = session.data.nodes.find(d => d.id === l.source);
         if(typeof l.target !== 'object') l.target = session.data.nodes.find(d => d.id === l.target);
       });
-      let vlinks = session.data.links.filter(l => l.visible);
+      let vlinks = session.data.links.filter(l => l.visible && !Number.isNaN(l.source.lat) && !Number.isNaN(l.source.lon) && !Number.isNaN(l.target.lat) && !Number.isNaN(l.target.lon));
       let ll = linkLayer.selectAll('line').data(vlinks);
       ll.exit().remove();
       ll.enter().append('line').merge(ll)
         .attr('class', 'link')
-        .style('stroke', '#ff0000')
+        .style('stroke', session.style.linkcolors[0])
         .attr('stroke-width', 2 / lastTransform.k)
         .attr('x1', d => projection([d.source.lon, d.source.lat])[0] + d.source.jx)
         .attr('y1', d => projection([d.source.lon, d.source.lat])[1] + d.source.jy)
@@ -468,13 +468,7 @@
       }
     });
 
-    $('#showLinks').click(function(e){
-      if(!$(this).hasClass('active')){
-        drawLinks();
-      } else {
-        linkLayer.transition().style('opacity', 0).on('end', e => linkLayer.html(null));
-      }
-    });
+    $('#showLinks').on('mouseup', e => setTimeout(drawLinks, 80));
 
     $('#radius').on('input', e => nodeLayer.selectAll('circle').attr('r', e.target.value / lastTransform.k));
 
