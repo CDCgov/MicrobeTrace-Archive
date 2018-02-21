@@ -1069,7 +1069,7 @@ $(function(){
           out[2*i] = ons[i];
           out[2*i + 1] = ofs[i];
         }
-        return math.multiply(out, 6).join(', ');
+        return math.multiply(out, 15).join(', ');
       });
     values.forEach((value, i) => {
       let input = $(`<input type="color" name="${value}-node-color-setter" value="${o(value)}" data-num="${i}" />`)
