@@ -12,9 +12,17 @@
   <style>
 #main_panel{
   padding: 10px;
+  padding-top: 45px;
 }
-svg{
-  margin: 10px;
+#source_side{
+  position:absolute;
+  top: 65px;
+  left: 15px;
+}
+#target_side{
+  position:absolute;
+  top: 65px;
+  right: 15px;
 }
   </style>
 </head>
@@ -35,20 +43,8 @@ svg{
             <div role="tabpanel" class="tab-pane fade in active" id="networkConfigurations">
               <div class="panel-body">
                 <div class="row">
-                  <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="What variable would you like the left side to represent?">Left Variable</a></div>
-                  <div class="col-xs-9">
-                    <select id='source_side' class='fields'></select>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="What variable would you like the right side to represent?">Right Variable</a></div>
-                  <div class="col-xs-9">
-                    <select id='target_side' class='fields'></select>
-                  </div>
-                </div>
-                <div class="row">
                   <div class="col-xs-3"><a href="#" data-toggle="tooltip" title="What color would you like the background to be?">Background Color</a></div>
-                  <div class="col-xs-9"><input type="color" id="network-color" class="triggers" value="#ffffff" /></div>
+                  <div class="col-xs-6"><input type="color" id="network-color" class="triggers" value="#ffffff" /></div>
                 </div>
               </div>
             </div>
@@ -60,6 +56,8 @@ svg{
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
+  <select id='source_side' class='fields'></select>
+  <select id='target_side' class='fields'></select>
   <div id="main_panel">
     <svg></svg>
   </div>
@@ -89,33 +87,33 @@ svg{
     });
 
     function drawGraph(){
-      var width = $(window).width() - 40,
+      var width = $(window).width() - 30,
           height = $(window).height() - 100;
 
       svg = d3.select('svg').html(null)
           .attr('width', width)
           .attr('height', height);
 
-      var format = d3.format(",.0f"),
-          color = d3.scaleOrdinal(d3.schemeCategory10);
+      var format = d3.format(',.0f'),
+          color = d3.scaleOrdinal(session.style.nodecolors);
 
       var sankey = d3.sankey()
           .nodeWidth(15)
           .nodePadding(10)
           .extent([[1, 1], [width - 1, height - 6]]);
 
-      var link = svg.append("g")
-          .attr("class", "links")
-          .attr("fill", "none")
-          .attr("stroke", "#000")
-          .attr("stroke-opacity", 0.2)
-        .selectAll("path");
+      var link = svg.append('g')
+          .attr('class', 'links')
+          .attr('fill', 'none')
+          .attr('stroke', '#000000')
+          .attr('stroke-opacity', 0.2)
+        .selectAll('path');
 
-      var node = svg.append("g")
-          .attr("class", "nodes")
-          .attr("font-family", "sans-serif")
-          .attr("font-size", 10)
-        .selectAll("g");
+      var node = svg.append('g')
+          .attr('class', 'nodes')
+          .attr('font-family', 'sans-serif')
+          .attr('font-size', 10)
+        .selectAll('g');
 
       var onlyUnique = (value, index, self) => self.indexOf(value) === index;
 
@@ -150,36 +148,36 @@ svg{
 
       link = link
         .data(wrapper.links)
-        .enter().append("path")
-          .attr("d", d3.sankeyLinkHorizontal())
-          .attr("stroke-width", d => Math.max(1, d.width));
+        .enter().append('path')
+          .attr('d', d3.sankeyLinkHorizontal())
+          .attr('stroke-width', d => Math.max(1, d.width));
 
-      link.append("title")
-          .text(d => d.source.name + " → " + d.target.name + "\n" + format(d.value));
+      link.append('title')
+          .text(d => d.source.name + ' → ' + d.target.name + '\n' + format(d.value));
 
       node = node
         .data(wrapper.nodes)
-        .enter().append("g");
+        .enter().append('g');
 
-      node.append("text")
-          .attr("x", d => d.x0 - 6)
-          .attr("y", d => (d.y1 + d.y0) / 2)
-          .attr("dy", "0.35em")
-          .attr("text-anchor", "end")
+      node.append('text')
+          .attr('x', d => d.x0 - 6)
+          .attr('y', d => (d.y1 + d.y0) / 2)
+          .attr('dy', '0.35em')
+          .attr('text-anchor', 'end')
           .text(d => d.name)
         .filter(d => d.x0 < width / 2)
-          .attr("x", d => d.x1 + 6)
-          .attr("text-anchor", "start");
+          .attr('x', d => d.x1 + 6)
+          .attr('text-anchor', 'start');
 
-      node.append("rect")
-          .attr("x", d => d.x0)
-          .attr("y", d => d.y0)
-          .attr("height", d => Math.abs(d.y1 - d.y0))
-          .attr("width", d => d.x1 - d.x0)
-          .attr("fill", d => color((d.name+'').replace(/ .*/, "")))
-          .attr("stroke", "#000");
+      node.append('rect')
+          .attr('x', d => d.x0)
+          .attr('y', d => d.y0)
+          .attr('height', d => Math.abs(d.y1 - d.y0))
+          .attr('width', d => d.x1 - d.x0)
+          .attr('fill', d => color((d.name+'').replace(/ .*/, '')))
+          .attr('stroke', '#000');
 
-      node.append("title").text(d => d.name + "\n" + format(d.value));
+      node.append('title').text(d => d.name + '\n' + format(d.value));
     }
 
     electron.ipcRenderer.on('update-node-clusters', (e, data) => {
@@ -217,8 +215,6 @@ svg{
     });
 
     $('.fields').change(drawGraph);
-
-    $('#button').click(() => $('#options').modal('show'));
 
     $(window).on('resize', drawGraph);
 
