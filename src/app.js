@@ -47,10 +47,12 @@ $(function(){
   $('head').append(ipcRenderer.sendSync('get-component', 'titleize.html'));
   $('body').prepend(ipcRenderer.sendSync('get-component', 'nav.html'));
 
-  //Since the navbar is a reused component, we can only change it per view by injecting elements, like so:
-  $('<li id="FileTab"><a href="#settings">New</a></li>')
+  $('#CloseTab, #ReloadTab').remove();
+
+  //Or, more likely, by injecting elements:
+  $('<li id="FileTab"><a href="#">New</a></li>')
     .click(() => reset())
-    .insertBefore('#CloseTab');
+    .insertBefore('#ExitTab');
 
   $('<li id="SaveTab"><a href="#">Save</a></li>').click(e => {
     remote.dialog.showSaveDialog({
@@ -61,7 +63,7 @@ $(function(){
       jetpack.write(filename, JSON.stringify(session));
       alertify.success('File Saved!');
     });
-  }).insertBefore('#CloseTab');
+  }).insertBefore('#ExitTab');
 
   $('<li id="OpenTab"><a href="#">Open</a></li>').click(e => {
     remote.dialog.showOpenDialog({
@@ -79,9 +81,9 @@ $(function(){
         });
       });
     });
-  }).insertBefore('#CloseTab');
+  }).insertBefore('#ExitTab');
 
-  $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
+  $('<li role="separator" class="divider"></li>').insertBefore('#ExitTab');
 
   $('<li id="ExportTab"><a href="#">Export Data</a></li>').click(e => {
     if(session.data.nodes.length == 0) return alertify.warning('Please load some data first!');
@@ -179,15 +181,15 @@ $(function(){
         }
       }
     });
-  }).insertBefore('#CloseTab');
+  }).insertBefore('#ExitTab');
 
   $('body').append(ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
-  $('#ScreenshotTab').insertBefore('#CloseTab');
+  $('#ScreenshotTab').insertBefore('#ExitTab');
 
   $('body').append(ipcRenderer.sendSync('get-component', 'exportVectorImage.html'));
-  $('#VectorTab').insertBefore('#CloseTab');
+  $('#VectorTab').insertBefore('#ExitTab');
 
-  $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
+  $('<li role="separator" class="divider"></li>').insertBefore('#ExitTab');
 
   $('body').append(ipcRenderer.sendSync('get-component', 'search.html'));
   $('#searchBox').hide();
@@ -1259,7 +1261,5 @@ $(function(){
   });
 
   $('[data-toggle="tooltip"]').tooltip();
-
-  $('#CloseTab, #ReloadTab').remove();
 
 });
