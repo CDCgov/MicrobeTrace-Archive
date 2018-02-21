@@ -173,9 +173,12 @@
   const electron = require('electron');
   const Lazy = require('lazy.js');
   const d3 = require('d3');
+  const jetpack = require('fs-jetpack');
 
   window.jQuery = window.$ = require('jquery');
   require('bootstrap');
+
+  const shpwrite = require('shp-write');
 
   //TODO: Get rid of some of these globals!
   var countries, states, counties, cities, zipcodes, projection, path, svg;
@@ -188,6 +191,36 @@
     $('body').prepend(electron.ipcRenderer.sendSync('get-component', 'nav.html'));
     $('body').append(electron.ipcRenderer.sendSync('get-component', 'exportRasterImage.html'));
     $('#ScreenshotTab').insertBefore('#CloseTab');
+
+    $('<li id="ExportTab"><a href="#">Export Geospatial Data</a></li>').click(e => {
+      electron.remote.dialog.showSaveDialog({
+        filters: [
+          {name: 'Zipped Shapefile', extensions: ['zip']},
+          {name: 'GeoJSON', extensions: ['geojson']}
+        ],
+      }, filename => {
+        let geojson = {
+          type: 'FeatureCollection',
+          features:	session.data.nodes.map(d => ({
+      			type: 'Feature',
+      			geometry: {
+      				type: 'Point',
+      				coordinates: [d.lon, d.lat]
+            },
+            properties: d
+      		}))
+        };
+        let out;
+        if(filename.split('.').pop() == 'zip'){
+          out = shpwrite.zip(geojson);
+        } else {
+          out = JSON.stringify(geojson);
+        }
+        jetpack.write(filename, out);
+        alertify.success('File Saved!');
+      });
+    }).insertBefore('#CloseTab');
+
     $('<li role="separator" class="divider"></li>').insertBefore('#CloseTab');
 
     projection = d3.geoMercator();
