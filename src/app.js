@@ -349,30 +349,37 @@ $(function(){
                 these = $(`[data-file='${filename}']`),
                 first = $(these.get(0)),
                 second = $(these.get(1)),
-                third = $(these.get(2)),
-                a = ['SOURCE', 'Source', 'source'],
-                b = ['TARGET', 'Target', 'target'],
-                c = ['SNPs', 'TN93', 'snps', 'tn93', 'length', 'distance'];
+                third = $(these.get(2));
                 if(type === 'node'){
                   a = ['ID', 'Id', 'id'];
                   b = ['SEQUENCE', 'SEQ', 'Sequence', 'sequence', 'seq'];
+                  [a, b].forEach((list, i) => {
+                    list.forEach(title => {
+                      if(headers.includes(title)){
+                        $(these.find('select').get(i)).find('select').val(title);
+                      }
+                    });
+                  });
                   first.slideDown().find('label').text('ID');
                   second.slideDown().find('label').text('Sequence');
                   third.slideUp();
                 } else if(type === 'link'){
+                  a = ['SOURCE', 'Source', 'source'],
+                  b = ['TARGET', 'Target', 'target'],
+                  c = ['SNPs', 'TN93', 'snps', 'tn93', 'length', 'distance'];
+                  [a, b, c].forEach((list, i) => {
+                    list.forEach(title => {
+                      if(headers.includes(title)){
+                        $(these.find('select').get(i)).find('select').val(title);
+                      }
+                    });
+                  });
                   first.slideDown().find('label').text('Source');
                   second.slideDown().find('label').text('Target');
                   third.slideDown();
                 } else {
                   these.slideUp();
                 }
-                [a, b, c].forEach((list, i) => {
-                  list.forEach(title => {
-                    if(headers.includes(title)){
-                      $(these.find('select').get(i)).find('select').val(title);
-                    }
-                  });
-                });
               };
               $(`[name="options-${filename}"]`).change(refit);
               refit();
