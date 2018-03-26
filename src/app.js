@@ -192,6 +192,13 @@ $(function(){
     });
   }
 
+  function striptags(inp){
+    return inp
+      .replace(/<[^>]+?>.*?<\/[^>]+?>/g, '') //Closed Tags
+      .replace(/<[^>]+?\/\s*>/g, '') //Self-Closing Tags
+      .replace(/<[^>]+?>/g, ''); //Unclosed Tags
+  }
+
   $('#FastaOrLinkFile').change(e => {
     reset(true);
 
@@ -204,10 +211,10 @@ $(function(){
         header: true,
         preview: 1,
         complete: results => {
-          app.data.links = results.data;
-          let keys = Object.keys(app.data.links[0]);
+          let keys = results.meta.fields;
           $('.linkVariables').html(
             keys
+              .map(striptags)
               .map(key => '<option value="' + key + '">' + key + '</option>')
               .join('\n')
           );
@@ -239,6 +246,7 @@ $(function(){
           let keys = Object.keys(results.data[0]);
           $('.nodeVariables').html(
             keys
+              .map(striptags)
               .map(key => '<option value="' + key + '">' + key + '</option>')
               .join('\n')
           );
@@ -296,7 +304,7 @@ $(function(){
 
   $('#refSeqPaste').click(e => {
     $('#refSeqHXB2, #refSeqFirst').removeClass('active').attr('aria-pressed', false);
-    $('#reference').val(electron.clipboard.readText());
+    $('#reference').val(striptags(electron.clipboard.readText()));
     $('#referenceRow').slideDown();
     $('#refSeqFile').slideUp();
   });
@@ -308,7 +316,7 @@ $(function(){
     }, paths => {
       if(paths){
         $('#refSeqFile').text(paths[0].split(/[/\\]/).pop()).slideDown();
-        $('#reference').val(jetpack.read(paths[0]).split(/[\n>]/)[2]);
+        $('#reference').val(striptags(jetpack.read(paths[0]).split(/[\n>]/)[2]));
         $('#referenceRow').slideDown();
       }
     });
@@ -374,6 +382,7 @@ $(function(){
     $('.nodeVariables.categorical').html(
       '<option value="none">None</option>\n' +
       keys
+        .map(striptags)
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );
@@ -392,6 +401,7 @@ $(function(){
     $('.linkVariables').html(
       '<option value="none">None</option>\n' +
       keys
+        .map(striptags)
         .map(key => '<option value="' + key + '">' + key + '</option>')
         .join('\n')
     );

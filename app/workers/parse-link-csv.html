@@ -36,10 +36,17 @@
 
   var index = 0;
 
+  function striptags(inp){
+    return inp
+      .replace(/<[^>]+?>.*?<\/[^>]+?>/g, '') //Closed Tags
+      .replace(/<[^>]+?\/\s*>/g, '') //Self-Closing Tags
+      .replace(/<[^>]+?>/g, ''); //Unclosed Tags
+  }
+
   electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
     Object.assign(instructions, i);
     electron.ipcRenderer.send('message', 'Parsing Link CSV...');
-    var results = Papa.parse(jetpack.read(instructions.file), {
+    var results = Papa.parse(striptags(jetpack.read(instructions.file)), {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true
@@ -74,7 +81,7 @@
     electron.ipcRenderer.send('message', 'Parsing Node CSV...');
     var k = 0, l = 0;
 
-    let results = Papa.parse(jetpack.read(instructions.supplement), {
+    let results = Papa.parse(striptags(jetpack.read(instructions.supplement)), {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true

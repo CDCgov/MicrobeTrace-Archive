@@ -43,6 +43,13 @@
 
   var index = 0;
 
+  function striptags(inp){
+    return inp
+      .replace(/<[^>]+?>.*?<\/[^>]+?>/g, '') //Closed Tags
+      .replace(/<[^>]+?\/\s*>/g, '') //Self-Closing Tags
+      .replace(/<[^>]+?>/g, ''); //Unclosed Tags
+  }
+
   electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
     Object.assign(instructions, i);
     electron.ipcRenderer.send('message', 'Parsing FASTA file' + (instructions.align ? ' and aligning sequences' : '') + '...');
@@ -54,6 +61,8 @@
         let node = d.toString();
         covered += node.length;
         node = Object.assign(defaultNode(), JSON.parse(node));
+        node.id = node.id;
+        node.seq = node.seq;
         if(instructions.align){
           if(index === 0 && reference === 'first'){
             reference = node.seq;
@@ -78,7 +87,7 @@
         if(instructions.supplement) matchCSV();
         computeLinks();
       });
-    parser.write(jetpack.read(instructions.file));
+    parser.write(striptags(jetpack.read(instructions.file)));
     parser.end();
   });
 
@@ -86,7 +95,7 @@
     electron.ipcRenderer.send('message', 'Parsing Node CSV...');
     let k = 0, l = 0;
 
-    let results = Papa.parse(jetpack.read(instructions.supplement), {
+    let results = Papa.parse(stripTags(jetpack.read(instructions.supplement)), {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true
