@@ -160,10 +160,12 @@
     function reorder(){ window.table.draw(false); }
 
     electron.ipcRenderer.on('update-node-selection', (e, newNodes) => {
-      window.table.rows().deselect();
-      window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
-      window.table.rows(window.nodes.filter(n => n.selected).map(n => n.index)).select();
-      reorder();
+      if($('input[name=nodelink]:checked')[0].id === 'node'){
+        window.table.rows().deselect();
+        window.nodes.forEach(d => d.selected = newNodes.find(e => e.id == d.id).selected);
+        window.table.rows(window.nodes.filter(n => n.selected).map(n => n.index)).select();
+        reorder();
+      }
     });
 
     electron.ipcRenderer.on('update-visibility', (e, data) => {
@@ -223,7 +225,7 @@
         let index = cell.index().row;
         window.data[index].selected = !window.data[index].selected;
         window.table.row(index).data(window.data[index]);
-        if(nodelink === 'node'){
+        if($('input[name=nodelink]:checked')[0].id === 'node'){
           electron.ipcRenderer.send('update-node-selection', window.data);
         }
         reorder();
