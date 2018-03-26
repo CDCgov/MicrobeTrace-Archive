@@ -95,7 +95,7 @@
     electron.ipcRenderer.send('message', 'Parsing Node CSV...');
     let k = 0, l = 0;
 
-    let results = Papa.parse(stripTags(jetpack.read(instructions.supplement)), {
+    let results = Papa.parse(striptags(jetpack.read(instructions.supplement)), {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true
