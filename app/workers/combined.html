@@ -33,6 +33,13 @@
 
   var anySequences = false;
 
+  function striptags(inp){
+    return inp
+      .replace(/<[^>]+?>.*?<\/[^>]+?>/g, '') //Closed Tags
+      .replace(/<[^>]+?\/\s*>/g, '') //Self-Closing Tags
+      .replace(/<[^>]+?>/g, ''); //Unclosed Tags
+  }
+
   electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
     Object.assign(instructions, i);
     instructions.files.sort((a, b) => hierarchy.indexOf(a.type) - hierarchy.indexOf(b.type));
@@ -46,6 +53,8 @@
         let n = 0, contents = fs.readFileSync(file.path, 'utf-8');
         let seqs = parseFASTA(contents);
         seqs.forEach(node => {
+          node.id = striptags(node.id);
+          node.seq = striptags(node.seq);
           node.origin = filename;
           n += addNode(node);
         });
@@ -54,7 +63,7 @@
       } else if(file.type === 'link'){
 
         electron.ipcRenderer.send('message', `Parsing ${filename} as Link CSV...`);
-        let results = Papa.parse(fs.readFileSync(file.path, 'utf-8'), {
+        let results = Papa.parse(striptags(fs.readFileSync(file.path, 'utf-8')), {
           header: true,
           dynamicTyping: true,
           skipEmptyLines: true
@@ -87,7 +96,7 @@
 
         electron.ipcRenderer.send('message', `Parsing ${filename} as Node CSV...`);
 
-        let results = Papa.parse(fs.readFileSync(file.path, 'utf-8'), {
+        let results = Papa.parse(striptags(fs.readFileSync(file.path, 'utf-8')), {
           header: true,
           dynamicTyping: true,
           skipEmptyLines: true
@@ -108,7 +117,7 @@
 
         electron.ipcRenderer.send('message', `Parsing ${filename} as Distance Matrix...`);
 
-        let results = Papa.parse(fs.readFileSync(file.path, 'utf-8'), {
+        let results = Papa.parse(striptags(fs.readFileSync(file.path, 'utf-8')), {
           dynamicTyping: true,
           skipEmptyLines: true
         });

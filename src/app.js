@@ -317,7 +317,12 @@ $(function(){
           Papa.parse(jetpack.createReadStream(path), {
             header: true,
             step: function(row, parser){
-              headers = row.meta.fields;
+              headers = row.meta.fields.map(function(inp){
+                return inp
+                  .replace(/<[^>]+?>.*?<\/[^>]+?>/g, '') //Closed Tags
+                  .replace(/<[^>]+?\/\s*>/g, '') //Self-Closing Tags
+                  .replace(/<[^>]+?>/g, ''); //Unclosed Tags
+              });
               parser.abort();
             },
             complete: function(){
