@@ -2,7 +2,7 @@
   "name": "microbetrace",
   "productName": "MicrobeTRACE",
   "description": "A Platform for Genomic Network Analysis",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "author": "Tony Boyles <NSP3@cdc.gov>",
   "copyright": "©2018 CDC",
   "homepage": "http://aaboyles.github.io/MicrobeTrace",
