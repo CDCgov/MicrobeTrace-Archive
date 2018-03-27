@@ -1,12 +1,12 @@
-[![MicrobeTrace](https://github.com/CDCgov/MicrobeTRACE/raw/multi-layer/app/img/img179.png "MicrobeTrace")](https://github.com/CDCgov/MicrobeTRACE/releases/latest)
+[![MicrobeTrace](https://raw.githubusercontent.com/CDCgov/MicrobeTRACE/v0.1.12/app/img/image256.png)](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.1.12)
 
-## [Download MicrobeTrace](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.1.11)
+## [Download MicrobeTrace](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.1.12)
 
-[Download Sample Data](https://github.com/CDCgov/MicrobeTRACE/releases/download/v0.1.11/demoFiles.zip)
+[Download Sample Data](https://github.com/CDCgov/MicrobeTRACE/releases/download/v0.1.12/MicrobeTraceDemoData.zip)
 
 ---
 
-©2017 [Centers for Disease Control and Prevention](https://www.cdc.gov)
+©2017-2018 [Centers for Disease Control and Prevention](https://www.cdc.gov)
 
 Developed By [Tony Boyles](mailto:nsp3@cdc.gov) and Eric Aslakson
 
