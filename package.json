@@ -19,7 +19,16 @@
     "directories": {
       "buildResources": "resources"
     },
-    "publish": null
+    "publish": null,
+  	"win": {
+  	  "target": [{
+  		  "target": "nsis",
+  		  "arch": [
+    			"x64",
+    			"ia32"
+  		  ]
+  		}]
+  	}
   },
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
