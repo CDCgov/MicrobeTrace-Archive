@@ -11,6 +11,7 @@
   const Papa     = require('papaparse');
   const math     = require('bettermath');
   const hamming  = require('plain-hamming');
+  const xss      = require('xss');
 
   var data = {
     nodes: [],
@@ -42,13 +43,6 @@
   };
 
   var index = 0;
-
-  function striptags(inp){
-    return inp
-      .replace(/<[^>]+?>.*?<\/[^>]+?>/g, '') //Closed Tags
-      .replace(/<[^>]+?\/\s*>/g, '') //Self-Closing Tags
-      .replace(/<[^>]+?>/g, ''); //Unclosed Tags
-  }
 
   electron.ipcRenderer.on('deliver-instructions', (sender, i) => {
     Object.assign(instructions, i);
@@ -87,7 +81,7 @@
         if(instructions.supplement) matchCSV();
         computeLinks();
       });
-    parser.write(striptags(jetpack.read(instructions.file)));
+    parser.write(xss(jetpack.read(instructions.file)));
     parser.end();
   });
 
@@ -95,7 +89,7 @@
     electron.ipcRenderer.send('message', 'Parsing Node CSV...');
     let k = 0, l = 0;
 
-    let results = Papa.parse(striptags(jetpack.read(instructions.supplement)), {
+    let results = Papa.parse(xss(jetpack.read(instructions.supplement)), {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true
