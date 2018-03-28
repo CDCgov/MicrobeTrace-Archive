@@ -4,6 +4,7 @@ import math from 'bettermath';
 import jetpack from 'fs-jetpack';
 import './helpers/window.js';
 import _ from 'lodash';
+import xss from 'xss';
 
 const d3 = require('d3');
 const extraSymbols = require('d3-symbol-extra');
@@ -317,12 +318,7 @@ $(function(){
           Papa.parse(jetpack.createReadStream(path), {
             header: true,
             step: function(row, parser){
-              headers = row.meta.fields.map(function(inp){
-                return inp
-                  .replace(/<[^>]+?>.*?<\/[^>]+?>/g, '') //Closed Tags
-                  .replace(/<[^>]+?\/\s*>/g, '') //Self-Closing Tags
-                  .replace(/<[^>]+?>/g, ''); //Unclosed Tags
-              });
+              headers = row.meta.fields.map(xss);
               parser.abort();
             },
             complete: function(){
