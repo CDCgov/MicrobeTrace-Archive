@@ -55,8 +55,8 @@
         let node = d.toString();
         covered += node.length;
         node = Object.assign(defaultNode(), JSON.parse(node));
-        node.id = node.id;
-        node.seq = node.seq;
+        node.id = xss(node.id);
+        node.seq = xss(node.seq);
         if(instructions.align){
           if(index === 0 && reference === 'first'){
             reference = node.seq;
@@ -81,7 +81,7 @@
         if(instructions.supplement) matchCSV();
         computeLinks();
       });
-    parser.write(xss(jetpack.read(instructions.file)));
+    parser.write(jetpack.read(instructions.file));
     parser.end();
   });
 
