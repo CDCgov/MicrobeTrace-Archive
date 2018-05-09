@@ -1,8 +1,9 @@
-[![MicrobeTrace](https://raw.githubusercontent.com/CDCgov/MicrobeTRACE/v0.1.12/app/img/image256.png)](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.1.12)
+[![MicrobeTrace](https://raw.githubusercontent.com/CDCgov/MicrobeTRACE/v0.1.12/app/img/image256.png)](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.2.1)
 
-## [Download MicrobeTrace](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.1.12)
-
-[Download Sample Data](https://github.com/CDCgov/MicrobeTRACE/releases/download/v0.1.12/MicrobeTraceDemoData.zip)
+## Downloads
+* [MicrobeTrace](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.2.1)
+* [Sample Data](https://github.com/CDCgov/MicrobeTRACE/releases/download/v0.2.1/MicrobeTraceDemoData.zip)
+* [User Manual](https://github.com/CDCgov/MicrobeTRACE/raw/master/MicrobeTrace_Manual.docx)
 
 ---
 
