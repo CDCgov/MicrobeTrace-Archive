@@ -3,7 +3,7 @@
 ## Downloads
 * [MicrobeTrace](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.2.1)
 * [Sample Data](https://github.com/CDCgov/MicrobeTRACE/releases/download/v0.2.1/MicrobeTraceDemoData.zip)
-* [User Manual](https://github.com/CDCgov/MicrobeTRACE/raw/master/MicrobeTrace_Manual.docx)
+* [User Manual](https://github.com/CDCgov/MicrobeTRACE/raw/master/docs/MicrobeTrace_Manual.docx)
 
 ---
 
@@ -17,6 +17,13 @@ If you've discovered a bug or would like to request a new feature, please check
 to see if it's an existing issue. If not, please file a [new issue](https://github.com/CDCgov/MicrobeTRACE/issues).
 
 ---
+
+## Accessibility and 508 Compliance
+
+The MicrobeTrace application is not compliant with all 508 standards, and as
+such, it is not accessible by individuals with disabilities. However, the
+application complies with the 508 Accommodations stated in our [Voluntary
+Product Accessibility Template (VPAT) form](https://github.com/CDCgov/MicrobeTRACE/raw/master/docs/0.1.12_VPAT.docx).
 
 ## Public Domain
 This project constitutes a work of the United States Government and is not
