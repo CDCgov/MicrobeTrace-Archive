@@ -1,9 +1,11 @@
-[![MicrobeTrace](https://raw.githubusercontent.com/CDCgov/MicrobeTRACE/v0.1.12/app/img/image256.png)](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.2.1)
+[![MicrobeTrace](https://raw.githubusercontent.com/CDCgov/MicrobeTRACE/v0.1.12/app/img/image256.png)](http://microbetrace.herokuapp.com/)
+
+[Click Here to Launch the Latest Version of MicrobeTrace](http://microbetrace.herokuapp.com/)
 
 ## Downloads
-* [MicrobeTrace](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.2.1)
 * [Sample Data](https://github.com/CDCgov/MicrobeTRACE/releases/download/v0.2.1/MicrobeTraceDemoData.zip)
-* [User Manual](https://github.com/CDCgov/MicrobeTRACE/raw/master/docs/MicrobeTrace_Manual.docx)
+
+Alternately, if you'd like to download the older, executable version of MicrobeTrace, [click here](https://github.com/CDCgov/MicrobeTRACE/releases/tag/v0.2.1). The old version also has a [User Manual](https://github.com/CDCgov/MicrobeTRACE/raw/master/docs/MicrobeTrace_Manual.docx). We're working on the User manual for the new version, but it isn't ready yet. In the meanwhile, much of the functionality is very similar, so the old user manual may be instructive (if not completely accurate). Additionally, the new MicrobeTrace has an [unofficial wiki](https://github.com/AABoyles/WebMicrobeTrace/wiki) that should be accurate (if not complete).
 
 ---
 
